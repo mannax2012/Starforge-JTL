@@ -380,6 +380,18 @@ bool DroidObjectImplementation::isCombatDroid() {
 	return false;
 }
 
+bool DroidObjectImplementation::isBombDroid() {
+	for (int i = 0; i < modules.size(); i++) {
+		auto& module = modules.get(i);
+
+		if (module->isDetonationModule()) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
 bool DroidObjectImplementation::isTrapDroid() {
 	for (int i = 0; i < modules.size(); i++) {
 		auto& module = modules.get(i);
@@ -527,27 +539,4 @@ String DroidObjectImplementation::getPersonalityStf() {
 	}
 
 	return "";
-}
-
-int DroidObjectImplementation::getDataStorageCapacity() {
-	int capacity = 0;
-
-	for (int i = 0; i < modules.size(); i++) {
-		auto module = modules.get(i);
-
-		if (module == nullptr || module->getModuleName() != "datapad_storage_module") {
-			continue;
-		}
-
-		DroidDataStorageModuleDataComponent* dataModule = cast<DroidDataStorageModuleDataComponent*>(module.get());
-
-		if (dataModule == nullptr) {
-			continue;
-		}
-
-		capacity += (dataModule->getRating() * 10);
-		break;
-	}
-
-	return capacity + 10;
 }

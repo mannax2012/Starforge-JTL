@@ -452,13 +452,13 @@ class DroidObject extends AiAgent {
 	public native string getPersonalityStf();
 
 	@dirty
-	public native int getDataStorageCapacity();
-
-	@dirty
 	public native boolean isAdvancedModel();
 
 	@dirty
 	public native boolean isCombatDroid();
+
+	@dirty
+	public native boolean isBombDroid();
 
 	@dirty
 	public native boolean isTrapDroid();
