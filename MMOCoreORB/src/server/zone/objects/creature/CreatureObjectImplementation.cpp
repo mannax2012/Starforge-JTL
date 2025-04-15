@@ -1408,7 +1408,7 @@ void CreatureObjectImplementation::addSkill(Skill* skill, bool notifyClient) {
 			String skillName = skill->getSkillName();
 
 			if (baseName == skillName) {
-				shouldSpawnHelper = true;
+				shouldSpawnHelper = false;
 				break;
 			}
 		}
@@ -2976,13 +2976,18 @@ void CreatureObjectImplementation::activateHAMRegeneration(int latency) {
 	if (isKneeling())
 		modifier *= 1.25f;
 	else if (isSitting())
-		modifier *= 1.75f;
+		modifier *= 5.75f;
 
 	// this formula gives the amount of regen per second
 	uint32 healthTick = (uint32) ceil((float) Math::max(0, getHAM(
 			CreatureAttribute::CONSTITUTION)) * 13.0f / 2100.0f * modifier);
+
+	/*Original Forumla for action*/
+	/*uint32 actionTick = (uint32) ceil((float) Math::max(0, getHAM(
+			CreatureAttribute::STAMINA)) * 13.0f / 2100.0f * modifier);*/
+
 	uint32 actionTick = (uint32) ceil((float) Math::max(0, getHAM(
-			CreatureAttribute::STAMINA)) * 13.0f / 2100.0f * modifier);
+			CreatureAttribute::STAMINA)) * 0.225);
 	uint32 mindTick = (uint32) ceil((float) Math::max(0, getHAM(
 			CreatureAttribute::WILLPOWER)) * 13.0f / 2100.0f * modifier);
 

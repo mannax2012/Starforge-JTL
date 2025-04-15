@@ -419,6 +419,9 @@ void SuiManager::handleCharacterBuilderSelectItem(CreatureObject* player, SuiBox
 			} else if (templatePath == "enhance_character") {
 				bluefrog->enhanceCharacter(player);
 
+			} else if (templatePath == "enhance_character_new") {
+				bluefrog->enhanceCharacterNew(player);
+
 			} else if (templatePath == "credits") {
 				{
 					TransactionLog trx(TrxCode::CHARACTERBUILDER, player, 50000, true);

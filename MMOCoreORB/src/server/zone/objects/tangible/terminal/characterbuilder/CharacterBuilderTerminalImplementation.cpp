@@ -49,7 +49,7 @@ void CharacterBuilderTerminalImplementation::sendInitialChoices(CreatureObject* 
 	debug() << "entering sendInitialChoices";
 
 	if (rootNode == nullptr) {
-		player->sendSystemMessage("There was an error initializing the menu for this character builder terminal. Sorry for the inconvenience.");
+		player->sendSystemMessage("There was an error initializing the menu for this new character terminal. Sorry for the inconvenience.");
 		return;
 	}
 
@@ -63,7 +63,7 @@ void CharacterBuilderTerminalImplementation::sendInitialChoices(CreatureObject* 
 void CharacterBuilderTerminalImplementation::enhanceCharacter(CreatureObject* player) {
 	PlayerManager* pm = player->getZoneServer()->getPlayerManager();
 
-	pm->enhanceCharacter(player);
+	pm->enhanceCharacterFrog(player);
 
 	ManagedReference<PlayerObject*> ghost = player->getPlayerObject();
 
@@ -76,7 +76,28 @@ void CharacterBuilderTerminalImplementation::enhanceCharacter(CreatureObject* pl
 		if (pet != nullptr) {
 			Locker crossLocker(pet, player);
 
-			pm->enhanceCharacter(pet);
+			pm->enhanceCharacterFrog(pet);
+		}
+	}
+}
+
+void CharacterBuilderTerminalImplementation::enhanceCharacterNew(CreatureObject* player) {
+	PlayerManager* pm = player->getZoneServer()->getPlayerManager();
+
+	pm->enhanceCharacterNew(player);
+
+	ManagedReference<PlayerObject*> ghost = player->getPlayerObject();
+
+	if (ghost == nullptr)
+		return;
+
+	for (int i = 0; i < ghost->getActivePetsSize(); i++) {
+		ManagedReference<AiAgent*> pet = ghost->getActivePet(i);
+
+		if (pet != nullptr) {
+			Locker crossLocker(pet, player);
+
+			pm->enhanceCharacterNew(pet);
 		}
 	}
 }

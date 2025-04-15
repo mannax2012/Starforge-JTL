@@ -45,6 +45,8 @@
 --Children folder includes
 includeFile("tangible/terminal/base/serverobjects.lua")
 
+--CUSTOM--
+includeFile("tangible/terminal/terminal_new_character.lua")
 -- Server Objects
 includeFile("tangible/terminal/terminal_ballot_box.lua")
 includeFile("tangible/terminal/terminal_bank.lua")

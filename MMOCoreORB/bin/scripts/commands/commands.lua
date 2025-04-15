@@ -832,3 +832,8 @@ RunSlashCommandsFile("waypoint.lua")
 RunSlashCommandsFile("unstick.lua")
 RunSlashCommandsFile("launchIntoSpace.lua")
 RunSlashCommandsFile("createVendor.lua")
+
+--CUSTOM--
+RunSlashCommandsFile("findStructure.lua")
+RunSlashCommandsFile("village.lua")
+--RunSlashCommandsFile("regrantSkills.lua")

@@ -240,6 +240,8 @@ void PlayerManagerImplementation::loadLuaConfig() {
 	onlineCharactersPerAccount = lua->getGlobalInt("onlineCharactersPerAccount");
 	performanceBuff = lua->getGlobalInt("performanceBuff");
 	medicalBuff = lua->getGlobalInt("medicalBuff");
+	newPlayerBuff = lua->getGlobalInt("newPlayerBuff");
+	terminalBuff = lua->getGlobalInt("terminalBuff");
 	performanceDuration = lua->getGlobalInt("performanceDuration");
 	medicalDuration = lua->getGlobalInt("medicalDuration");
 
@@ -6481,6 +6483,51 @@ void PlayerManagerImplementation::enhanceCharacter(CreatureObject* player) {
 
 	if (message && player->isPlayerCreature())
 		player->sendSystemMessage("An unknown force strengthens you for battles yet to come.");
+}
+
+void PlayerManagerImplementation::enhanceCharacterFrog(CreatureObject* player) {
+	if (player == nullptr)
+		return;
+
+	bool message = true;
+
+	message = message && doEnhanceCharacter(0x98321369, player, terminalBuff, medicalDuration, BuffType::MEDICAL, 0); // medical_enhance_health
+	message = message && doEnhanceCharacter(0x7F86D2C6, player, terminalBuff, medicalDuration, BuffType::MEDICAL, 2); // medical_enhance_constitution
+	message = message && doEnhanceCharacter(0x4BF616E2, player, terminalBuff, medicalDuration, BuffType::MEDICAL, 3); // medical_enhance_action
+	message = message && doEnhanceCharacter(0xED0040D9, player, terminalBuff, medicalDuration, BuffType::MEDICAL, 5); // medical_enhance_stamina
+
+	if (message && player->isPlayerCreature())
+		player->sendSystemMessage("Your health and action have been enhanced.");
+}
+
+void PlayerManagerImplementation::enhanceCharacterNew(CreatureObject* player) {
+	if (player == nullptr)
+		return;
+
+	bool message = true;
+
+	message = message && doEnhanceCharacter(0x98321369, player, newPlayerBuff, medicalDuration, BuffType::MEDICAL, 0); // medical_enhance_health
+	message = message && doEnhanceCharacter(0x7F86D2C6, player, newPlayerBuff, medicalDuration, BuffType::MEDICAL, 2); // medical_enhance_constitution
+	message = message && doEnhanceCharacter(0x4BF616E2, player, newPlayerBuff, medicalDuration, BuffType::MEDICAL, 3); // medical_enhance_action
+	message = message && doEnhanceCharacter(0xED0040D9, player, newPlayerBuff, medicalDuration, BuffType::MEDICAL, 5); // medical_enhance_stamina
+
+	if (message && player->isPlayerCreature())
+		player->sendSystemMessage("An unknown force strengthens you for battles yet to come.");
+}
+
+void PlayerManagerImplementation::enhanceCharacterDroid(CreatureObject* player) {
+	if (player == nullptr)
+		return;
+
+	bool message = true;
+
+	message = message && doEnhanceCharacter(0x98321369, player, medicalBuff, medicalDuration, BuffType::MEDICAL, 0); // medical_enhance_health
+	message = message && doEnhanceCharacter(0x7F86D2C6, player, medicalBuff, medicalDuration, BuffType::MEDICAL, 2); // medical_enhance_constitution
+	message = message && doEnhanceCharacter(0x4BF616E2, player, medicalBuff, medicalDuration, BuffType::MEDICAL, 3); // medical_enhance_action
+	message = message && doEnhanceCharacter(0xED0040D9, player, medicalBuff, medicalDuration, BuffType::MEDICAL, 5); // medical_enhance_stamina
+
+	if (message && player->isPlayerCreature())
+		player->sendSystemMessage("Your health and action have been enhanced.");
 }
 
 void PlayerManagerImplementation::sendAdminJediList(CreatureObject* player) {

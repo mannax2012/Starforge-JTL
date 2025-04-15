@@ -40,6 +40,11 @@
 --this exception also makes it possible to release a modified version
 --which carries forward this exception.
 
+object_tangible_terminal_shared_terminal_new_character = SharedTangibleObjectTemplate:new {
+	clientTemplateFileName = "object/tangible/terminal/shared_terminal_new_character.iff"}
+ObjectTemplates:addClientTemplate(object_tangible_terminal_shared_terminal_new_character,
+ "object/tangible/terminal/shared_terminal_new_character.iff")
+
 
 object_tangible_terminal_shared_terminal_ballot_box = SharedTangibleObjectTemplate:new {
 	clientTemplateFileName = "object/tangible/terminal/shared_terminal_ballot_box.iff"

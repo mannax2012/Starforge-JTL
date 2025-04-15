@@ -1523,9 +1523,9 @@ int CombatManager::applyDamage(TangibleObject* attacker, WeaponObject* weapon, C
 		spillOverDebug << " Action Spill Over Amount: " << spilledDamage << "\n";
 #endif
 
-		defender->inflictDamage(attacker, CreatureAttribute::ACTION, (int)actionDamage, true, xpType, true, true);
+		defender->inflictDamage(attacker, CreatureAttribute::HEALTH, (int)actionDamage, true, xpType, true, true);
 
-		poolsToWound.add(CreatureAttribute::ACTION);
+		poolsToWound.add(CreatureAttribute::HEALTH);
 	}
 
 	if (mindDamaged) {
@@ -1557,9 +1557,9 @@ int CombatManager::applyDamage(TangibleObject* attacker, WeaponObject* weapon, C
 		spillOverDebug << " Mind Spill Over Amount: " << spilledDamage << "\n";
 #endif
 
-		defender->inflictDamage(attacker, CreatureAttribute::MIND, (int)mindDamage, true, xpType, true, true);
+		defender->inflictDamage(attacker, CreatureAttribute::HEALTH, (int)mindDamage, true, xpType, true, true);
 
-		poolsToWound.add(CreatureAttribute::MIND);
+		poolsToWound.add(CreatureAttribute::HEALTH);
 	}
 
 	if (numSpillOverPools > 0) {
@@ -1582,14 +1582,14 @@ int CombatManager::applyDamage(TangibleObject* attacker, WeaponObject* weapon, C
 #ifdef DEBUG_SPILL_DAMAGE
 			spillOverDebug << " Action Spill Over Damage: " << spillToApply << "\n";
 #endif
-			defender->inflictDamage(attacker, CreatureAttribute::ACTION, spillToApply, true, xpType, true, true);
+			defender->inflictDamage(attacker, CreatureAttribute::HEALTH, spillToApply, true, xpType, true, true);
 		}
 
-		if ((poolsToDamage ^ 0x7) & MIND) {
+		if ((poolsToDamage ^ 0x7) & HEALTH) {
 #ifdef DEBUG_SPILL_DAMAGE
 			spillOverDebug << " Mind Spill Over Damage: " << spillToApply << "\n";
 #endif
-			defender->inflictDamage(attacker, CreatureAttribute::MIND, spillToApply, true, xpType, true, true);
+			defender->inflictDamage(attacker, CreatureAttribute::HEALTH, spillToApply, true, xpType, true, true);
 		}
 	}
 
@@ -1809,9 +1809,9 @@ uint8 CombatManager::getPoolForDot(uint64 dotType, int poolsToDamage) const {
 		if (poolsToDamage & HEALTH) {
 			pool = CreatureAttribute::HEALTH;
 		} else if (poolsToDamage & ACTION) {
-			pool = CreatureAttribute::ACTION;
+			pool = CreatureAttribute::HEALTH;
 		} else if (poolsToDamage & MIND) {
-			pool = CreatureAttribute::MIND;
+			pool = CreatureAttribute::HEALTH;
 		}
 		break;
 	case CreatureState::DISEASED:
@@ -1820,7 +1820,7 @@ uint8 CombatManager::getPoolForDot(uint64 dotType, int poolsToDamage) const {
 		} else if (poolsToDamage & ACTION) {
 			pool = CreatureAttribute::ACTION + System::random(2);
 		} else if (poolsToDamage & MIND) {
-			pool = CreatureAttribute::MIND + System::random(2);
+			pool = CreatureAttribute::HEALTH + System::random(2);
 		}
 		break;
 	default:
@@ -2292,12 +2292,24 @@ float CombatManager::getDefenderToughnessModifier(CreatureObject* defender, int 
 	}
 
 	int jediToughness = defender->getSkillMod("jedi_toughness");
-	if (damType != SharedWeaponObjectTemplate::LIGHTSABER && jediToughness > 0)
-		damage *= 1.f - (jediToughness / 100.f);
-
+	if (damType != SharedWeaponObjectTemplate::LIGHTSABER && jediToughness > 0){
+		int maxReduction = 71;
+		int curvePlacement = 2.5;
+		float growthRate = -0.085;
+	    float growthCurve = 2.5;
+	damage *= 1 - (.01f * (maxReduction / (pow(1 + curvePlacement * exp(growthRate * jediToughness), growthCurve))));
+	}
 	return damage < 0 ? 0 : damage;
 }
 
+bool CombatManager::isWearingArmor(CreatureObject* creo) const {
+	for (int i = 0; i < creo->getSlottedObjectsSize(); ++i) {
+		SceneObject* item = creo->getSlottedObject(i);
+		if (item != nullptr && item->isArmorObject())
+			return true;
+	}
+	return false;
+}
 /*
 
 	Armor Reduction and Calculations - Player, Ai, Turret, Vehcile
@@ -2517,8 +2529,8 @@ int CombatManager::getArmorReduction(TangibleObject* attacker, WeaponObject* wea
 			float splitDmg = feedbackDmg / 3;
 
 			attacker->inflictDamage(defender, CreatureAttribute::HEALTH, splitDmg, true, true, true);
-			attacker->inflictDamage(defender, CreatureAttribute::ACTION, splitDmg, true, true, true);
-			attacker->inflictDamage(defender, CreatureAttribute::MIND, splitDmg, true, true, true);
+			//attacker->inflictDamage(defender, CreatureAttribute::ACTION, splitDmg, true, true, true);
+			//attacker->inflictDamage(defender, CreatureAttribute::HEALTH, splitDmg, true, true, true);
 			defender->notifyObservers(ObserverEventType::FORCEFEEDBACK, attacker, feedbackDmg);
 			defender->playEffect("clienteffect/pl_force_feedback_block.cef", "");
 			hitList->setForceFeedback(feedbackDmg);
@@ -2711,12 +2723,12 @@ float CombatManager::doObjectDetonation(TangibleObject* attackerTanO, CreatureOb
 			case ACTION: {
 				static const uint8 legLocations[] = {HIT_LLEG, HIT_RLEG};
 				hitLocation = legLocations[System::random(1)];
-				attribute = CreatureAttribute::ACTION;
+				attribute = CreatureAttribute::HEALTH;
 				break;
 			}
 			case MIND: {
 				hitLocation = HIT_HEAD;
-				attribute = CreatureAttribute::MIND;
+				attribute = CreatureAttribute::HEALTH;
 				break;
 			}
 			default:
@@ -2903,11 +2915,11 @@ bool CombatManager::applySpecialAttackCost(CreatureObject* attacker, WeaponObjec
 	float health = weapon->getHealthAttackCost() * data.getHealthCostMultiplier();
 	float action = weapon->getActionAttackCost() * data.getActionCostMultiplier();
 	float mind = weapon->getMindAttackCost() * data.getMindCostMultiplier();
-
+/*
 	health = attacker->calculateCostAdjustment(CreatureAttribute::STRENGTH, health);
 	action = attacker->calculateCostAdjustment(CreatureAttribute::QUICKNESS, action);
 	mind = attacker->calculateCostAdjustment(CreatureAttribute::FOCUS, mind);
-
+*/
 	if (attacker->getHAM(CreatureAttribute::HEALTH) <= health)
 		return false;
 
@@ -2918,13 +2930,13 @@ bool CombatManager::applySpecialAttackCost(CreatureObject* attacker, WeaponObjec
 		return false;
 
 	if (health > 0)
-		attacker->inflictDamage(attacker, CreatureAttribute::HEALTH, health, true, true, true);
+		attacker->inflictDamage(attacker, CreatureAttribute::ACTION, health, true, true, true);
 
 	if (action > 0)
 		attacker->inflictDamage(attacker, CreatureAttribute::ACTION, action, true, true, true);
 
 	if (mind > 0)
-		attacker->inflictDamage(attacker, CreatureAttribute::MIND, mind, true, true, true);
+		attacker->inflictDamage(attacker, CreatureAttribute::ACTION, mind, true, true, true);
 
 	return true;
 }

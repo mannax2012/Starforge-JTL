@@ -8,6 +8,11 @@
 #ifndef COMMANDSNEW_H_
 #define COMMANDSNEW_H_
 
+/*CUSTOM*/
+#include "FindStructureCommand.h"
+#include "VillageCommand.h"
+// #include "RegrantSkillsCommand.h"
+
 #include "ActionShot1Command.h"
 #include "ActionShot2Command.h"
 #include "ActivateCloneCommand.h"

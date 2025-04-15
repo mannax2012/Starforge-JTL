@@ -27,6 +27,10 @@ require("sui.custom.SuiProcessorPuzzle")
 require("sui.custom.SuiRadiationSensor")
 require("sui.custom.SuiReceiverPuzzle")
 
+--CUSTOM STARFORGE--
+includeFile("new_player/newPlayerTerminalMenuComponent.lua")
+
+
 includeFile("helperfuncs.lua")
 includeFile("playerTriggers.lua")
 
@@ -61,6 +65,7 @@ includeFile("utils/quest_spawner.lua")
 includeFile("tools/tools.lua")
 includeFile("tools/shuttle_dropoff.lua")
 includeFile("tools/firework_event.lua")
+includeFile("tools/mission_terminal/mission_direction_choice.lua")
 
 includeFile("trainers/trainerData.lua")
 includeFile("trainers/skillTrainer.lua")
@@ -163,6 +168,7 @@ includeFile("dungeon/corellian_corvette/ticket_takers/lt_lance.lua")
 -- Village
 includeFile("village/village_community_crafting.lua")
 includeFile("village/village_gm_sui.lua")
+includeFile("village/village_sui.lua")
 includeFile("village/village_jedi_manager_common.lua")
 includeFile("village/village_jedi_manager_holocron.lua")
 includeFile("village/village_jedi_manager_township.lua")
