@@ -107,7 +107,7 @@ void SkillManager::loadClientData() {
 		}
 	}
 
-	// Load Droid Command Sizes
+	// Load Droid Commands
 	iffStream = TemplateManager::instance()->openIffFile("datatables/space_command/droid_program_size.iff");
 
 	if (iffStream != nullptr) {
@@ -134,6 +134,13 @@ void SkillManager::loadClientData() {
 			}
 
 			droidProgramSizes.put(programName.hashCode(), programSize);
+
+			String droidCommand = "droid+" + programName;
+			if (!abilityMap.containsKey(droidCommand))
+				abilityMap.put(droidCommand, new Ability(droidCommand));
+
+			if (!droidCommands.contains(programName))
+				droidCommands.put(programName);
 		}
 	}
 
@@ -219,6 +226,10 @@ void SkillManager::loadXpLimits() {
 }
 
 void SkillManager::addAbility(PlayerObject* ghost, const String& abilityName, bool notifyClient) {
+	if (ghost == nullptr) {
+		return;
+	}
+
 	Ability* ability = abilityMap.get(abilityName);
 
 	if (ability != nullptr)
@@ -226,6 +237,10 @@ void SkillManager::addAbility(PlayerObject* ghost, const String& abilityName, bo
 }
 
 void SkillManager::removeAbility(PlayerObject* ghost, const String& abilityName, bool notifyClient) {
+	if (ghost == nullptr) {
+		return;
+	}
+
 	Ability* ability = abilityMap.get(abilityName);
 
 	if (ability != nullptr)
@@ -233,6 +248,10 @@ void SkillManager::removeAbility(PlayerObject* ghost, const String& abilityName,
 }
 
 void SkillManager::addAbilities(PlayerObject* ghost, const Vector<String>& abilityNames, bool notifyClient) {
+	if (ghost == nullptr) {
+		return;
+	}
+
 	Vector<Ability*> abilities;
 
 	for (int i = 0; i < abilityNames.size(); ++i) {
@@ -248,6 +267,10 @@ void SkillManager::addAbilities(PlayerObject* ghost, const Vector<String>& abili
 }
 
 void SkillManager::removeAbilities(PlayerObject* ghost, const Vector<String>& abilityNames, bool notifyClient) {
+	if (ghost == nullptr) {
+		return;
+	}
+
 	Vector<Ability*> abilities;
 
 	for (int i = 0; i < abilityNames.size(); ++i) {
@@ -260,6 +283,40 @@ void SkillManager::removeAbilities(PlayerObject* ghost, const Vector<String>& ab
 	}
 
 	ghost->removeAbilities(abilities, notifyClient);
+}
+
+void SkillManager::addDroidCommands(PlayerObject* ghost, const Vector<String>& abilityNames, bool notifyClient) {
+	if (ghost == nullptr || abilityNames.size() == 0) {
+		return;
+	}
+
+	Vector<Ability*> droidCommands;
+
+	for (int i = 0; i < abilityNames.size(); ++i) {
+		const String& abilityName = abilityNames.get(i);
+
+		if (ghost->hasDroidCommand(abilityName)) {
+			continue;
+		}
+
+		Ability* ability = abilityMap.get(abilityName);
+
+		if (ability == nullptr) {
+			continue;
+		}
+
+		droidCommands.add(ability);
+	}
+
+	ghost->addDroidCommands(droidCommands, notifyClient);
+}
+
+void SkillManager::removeDroidCommands(PlayerObject* ghost) {
+	if (ghost == nullptr) {
+		return;
+	}
+
+	ghost->removeDroidCommands();
 }
 
 /*bool SkillManager::checkPrerequisiteSkill(const String& skillName, CreatureObject* creature) {
@@ -938,4 +995,15 @@ bool SkillManager::villageKnightPrereqsMet(CreatureObject* creature, const Strin
 	}
 
 	return fullTrees >= 2 && totalJediPoints >= 206;
+}
+
+void SkillManager::getPlayerDroidCommands(PlayerObject* ghost, Vector<String>& playerDroidCommands) {
+	if (ghost == nullptr) {
+		return;
+	}
+
+	for (int i = 0; i < droidCommands.size(); ++i) {
+		if (ghost->hasAbility(droidCommands.get(i)))
+			playerDroidCommands.add(droidCommands.get(i));
+	}
 }
