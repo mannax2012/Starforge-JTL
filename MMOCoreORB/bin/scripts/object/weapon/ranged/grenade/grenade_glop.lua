@@ -101,9 +101,9 @@ object_weapon_ranged_grenade_grenade_glop = object_weapon_ranged_grenade_shared_
 	combatSpam = "throw_glop",
 	animationType = "glop",
 
-	healthAttackCost = 100,
-	actionAttackCost = 40,
-	mindAttackCost = 15,
+	healthAttackCost = 0,
+	actionAttackCost = 350,
+	mindAttackCost = 0,
 
 	pointBlankRange = 0,
 	pointBlankAccuracy = -10,

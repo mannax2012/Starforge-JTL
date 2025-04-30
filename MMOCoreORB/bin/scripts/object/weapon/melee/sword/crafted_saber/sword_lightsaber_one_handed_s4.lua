@@ -98,9 +98,9 @@ object_weapon_melee_sword_crafted_saber_sword_lightsaber_one_handed_s4 = object_
 	damageModifiers = { },
 
 	-- The values below are the default values.  To be used for blue frog objects primarily
-	healthAttackCost = 20,
-	actionAttackCost = 35,
-	mindAttackCost = 40,
+	healthAttackCost = 0,
+	actionAttackCost = 300,
+	mindAttackCost = 0,
 	forceCost = 12,
 
 	pointBlankRange = 0,

@@ -100,10 +100,9 @@ object_weapon_ranged_grenade_grenade_imperial_detonator = object_weapon_ranged_g
 
 	combatSpam = "throw_imperial_detonator",
 	animationType = "imperial_detonator",
-
-	healthAttackCost = 125,
-	actionAttackCost = 125,
-	mindAttackCost = 50,
+	healthAttackCost = 0,
+	actionAttackCost = 350,
+	mindAttackCost = 0,
 
 	pointBlankRange = 0,
 	pointBlankAccuracy = -10,

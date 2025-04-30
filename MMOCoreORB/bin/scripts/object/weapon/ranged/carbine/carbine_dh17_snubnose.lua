@@ -101,9 +101,9 @@ object_weapon_ranged_carbine_carbine_dh17_snubnose = object_weapon_ranged_carbin
 
 
 	-- The values below are the default values.  To be used for blue frog objects primarily
-	healthAttackCost = 22,
-	actionAttackCost = 24,
-	mindAttackCost = 12,
+	healthAttackCost = 0,
+	actionAttackCost = 300,
+	mindAttackCost = 0,
 	forceCost = 0,
 
 	pointBlankRange = 0,

@@ -99,9 +99,9 @@ object_weapon_melee_polearm_crafted_saber_sword_lightsaber_polearm_gen2_ranged =
 
 
 	-- The values below are the default values.  To be used for blue frog objects primarily
-	healthAttackCost = 47,
-	actionAttackCost = 55,
-	mindAttackCost = 25,
+	healthAttackCost = 0,
+	actionAttackCost = 300,
+	mindAttackCost = 0,
 	forceCost = 24,
 
 	pointBlankRange = 0,

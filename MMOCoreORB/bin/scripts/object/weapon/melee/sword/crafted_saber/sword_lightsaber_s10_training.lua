@@ -100,9 +100,9 @@ object_weapon_melee_sword_crafted_saber_sword_lightsaber_s10_training = object_w
 	defenderToughnessModifiers = { "lightsaber_toughness" },
 
 	-- The values below are the default values.  To be used for blue frog objects primarily
-	healthAttackCost = 20,
-	actionAttackCost = 35,
-	mindAttackCost = 40,
+	healthAttackCost = 0,
+	actionAttackCost = 300,
+	mindAttackCost = 0,
 	forceCost = 15,
 
 	pointBlankRange = 0,

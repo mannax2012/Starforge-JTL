@@ -103,9 +103,9 @@ object_weapon_ranged_heavy_heavy_lightning_beam = object_weapon_ranged_heavy_sha
 	combatSpam = "lightning_beam",
 	animationType = "lightning_beam",
 
-	healthAttackCost = 35,
-	actionAttackCost = 75,
-	mindAttackCost = 20,
+	healthAttackCost = 0,
+	actionAttackCost = 350,
+	mindAttackCost = 0,
 	forceCost = 0,
 
 	pointBlankRange = 0,

@@ -104,9 +104,9 @@ object_weapon_melee_baton_baton_gaderiffi = object_weapon_melee_baton_shared_bat
 
 
 	-- The values below are the default values.  To be used for blue frog objects primarily
-	healthAttackCost = 50,
-	actionAttackCost = 29,
-	mindAttackCost = 12,
+	healthAttackCost = 0,
+	actionAttackCost = 300,
+	mindAttackCost = 0,
 	forceCost = 0,
 
 	pointBlankRange = 0,

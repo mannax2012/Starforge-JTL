@@ -101,9 +101,9 @@ object_weapon_melee_2h_sword_2h_sword_maul_ranged = object_weapon_melee_2h_sword
 
 
 	-- The values below are the default values.  To be used for blue frog objects primarily
-	healthAttackCost = 99,
-	actionAttackCost = 28,
-	mindAttackCost = 17,
+	healthAttackCost = 0,
+	actionAttackCost = 300,
+	mindAttackCost = 0,
 	forceCost = 0,
 
 	pointBlankRange = 0,

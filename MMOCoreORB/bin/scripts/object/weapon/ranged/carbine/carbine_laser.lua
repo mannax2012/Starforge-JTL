@@ -101,9 +101,9 @@ object_weapon_ranged_carbine_carbine_laser = object_weapon_ranged_carbine_shared
 
 
 	-- The values below are the default values.  To be used for blue frog objects primarily
-	healthAttackCost = 45,
-	actionAttackCost = 60,
-	mindAttackCost = 35,
+	healthAttackCost = 0,
+	actionAttackCost = 300,
+	mindAttackCost = 0,
 	forceCost = 0,
 
 	pointBlankRange = 0,

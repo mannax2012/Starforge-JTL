@@ -99,9 +99,9 @@ object_weapon_melee_2h_sword_crafted_saber_sword_lightsaber_two_handed_s2_gen3 =
 
 
 	-- The values below are the default values.  To be used for blue frog objects primarily
-	healthAttackCost = 85,
-	actionAttackCost = 50,
-	mindAttackCost = 35,
+	healthAttackCost = 0,
+	actionAttackCost = 300,
+	mindAttackCost = 0,
 	forceCost = 36,
 
 	pointBlankRange = 0,

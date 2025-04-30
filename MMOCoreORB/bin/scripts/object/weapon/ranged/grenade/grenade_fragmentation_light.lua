@@ -100,9 +100,9 @@ object_weapon_ranged_grenade_grenade_fragmentation_light = object_weapon_ranged_
 
 	combatSpam = "throw_fragmentation",
 
-	healthAttackCost = 50,
-	actionAttackCost = 50,
-	mindAttackCost = 10,
+	healthAttackCost = 0,
+	actionAttackCost = 350,
+	mindAttackCost = 0,
 
 	pointBlankRange = 0,
 	pointBlankAccuracy = -10,

@@ -101,9 +101,9 @@ object_weapon_melee_2h_sword_2h_sword_cleaver = object_weapon_melee_2h_sword_sha
 
 
 	-- The values below are the default values.  To be used for blue frog objects primarily
-	healthAttackCost = 38,
-	actionAttackCost = 35,
-	mindAttackCost = 20,
+	healthAttackCost = 0,
+	actionAttackCost = 300,
+	mindAttackCost = 0,
 	forceCost = 0,
 
 	pointBlankRange = 0,

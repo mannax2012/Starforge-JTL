@@ -100,9 +100,9 @@ object_weapon_melee_sword_sword_lightsaber_luke_2h_test = object_weapon_melee_sw
 	
 
 	-- The values below are the default values.  To be used for blue frog objects primarily
-	healthAttackCost = 20,
-	actionAttackCost = 35,
-	mindAttackCost = 40,
+	healthAttackCost = 0,
+	actionAttackCost = 300,
+	mindAttackCost = 0,
 	forceCost = 15,
 
 	pointBlankRange = 0,

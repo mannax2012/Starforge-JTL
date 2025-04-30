@@ -100,9 +100,9 @@ object_weapon_melee_2h_sword_2h_sword_blacksun_hack = object_weapon_melee_2h_swo
 	damageModifiers = { },
 
 	-- The values below are the default values.  To be used for blue frog objects primarily
-	healthAttackCost = 49,
-	actionAttackCost = 74,
-	mindAttackCost = 42,
+	healthAttackCost = 0,
+	actionAttackCost = 300,
+	mindAttackCost = 0,
 	forceCost = 0,
 
 	pointBlankAccuracy = -3,

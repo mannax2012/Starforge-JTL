@@ -101,9 +101,9 @@ object_weapon_melee_knife_knife_survival = object_weapon_melee_knife_shared_knif
 
 
 	-- The values below are the default values.  To be used for blue frog objects primarily
-	healthAttackCost = 7,
-	actionAttackCost = 22,
-	mindAttackCost = 5,
+	healthAttackCost = 0,
+	actionAttackCost = 300,
+	mindAttackCost = 0,
 	forceCost = 0,
 
 	pointBlankAccuracy = 30,

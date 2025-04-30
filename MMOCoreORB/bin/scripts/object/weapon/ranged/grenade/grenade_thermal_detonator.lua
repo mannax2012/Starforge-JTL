@@ -101,9 +101,9 @@ object_weapon_ranged_grenade_grenade_thermal_detonator = object_weapon_ranged_gr
 	combatSpam = "throw_thermal_detonator",
 	animationType = "thermal_detonator",
 
-	healthAttackCost = 75,
-	actionAttackCost = 75,
-	mindAttackCost = 35,
+	healthAttackCost = 0,
+	actionAttackCost = 350,
+	mindAttackCost = 0,
 
 	pointBlankRange = 0,
 	pointBlankAccuracy = -10,
