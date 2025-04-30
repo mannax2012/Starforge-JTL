@@ -15,19 +15,19 @@ void PerformanceBuffImplementation::activate(bool applyModifiers) {
 	if(type == PerformanceBuffType::DANCE_MIND) {
 		int mindStrength = round(strength * (float)creature.get()->getBaseHAM(CreatureAttribute::ACTION));
 		setAttributeModifier(CreatureAttribute::ACTION, mindStrength);
-		creature.get()->sendSystemMessage("@healing:performance_enhance_dance_mind_d");
+		creature.get()->sendSystemMessage("Your Action has been enhanced by watching a dancer's performance.");
 
 	}
 	else if(type == PerformanceBuffType::MUSIC_FOCUS) {
 		int focusStrength = round(strength * (float)creature.get()->getBaseHAM(CreatureAttribute::ACTION));
 		setAttributeModifier(CreatureAttribute::ACTION, focusStrength);
-		creature.get()->sendSystemMessage("@healing:performance_enhance_music_focus_d");
+		creature.get()->sendSystemMessage("Your Action has been enhanced by watching a musician's performance.");
 
 	}
 	else if(type == PerformanceBuffType::MUSIC_WILLPOWER) {
 		int willStrength = round(strength * (float)creature.get()->getBaseHAM(CreatureAttribute::STAMINA));
 		setAttributeModifier(CreatureAttribute::STAMINA, willStrength);
-		creature.get()->sendSystemMessage("@healing:performance_enhance_music_willpower_d");
+		creature.get()->sendSystemMessage("Your Stamina has been enhanced by listening a musician's performance.");
 	}
 
 	BuffImplementation::activate(true);
