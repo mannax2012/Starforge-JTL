@@ -276,6 +276,9 @@ public:
 		SHIP_TEXTURE_SELECT					= 1100,
 		REVERSE_ENGINEER					= 1101,
 		DROID_CHIP_PROGRAMMING					= 1102,
+
+		//custom 1111-1120
+		NEW_PLAYER_LIST             = 1111,
 	};
 };
 

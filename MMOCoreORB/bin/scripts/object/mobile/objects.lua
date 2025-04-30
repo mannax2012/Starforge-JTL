@@ -40,6 +40,15 @@
 --this exception also makes it possible to release a modified version
 --which carries forward this exception.
 
+object_mobile_shared_tusken_king_boss = SharedCreatureObjectTemplate:new {
+	clientTemplateFileName = "object/mobile/shared_tusken_king_boss.iff"}
+ObjectTemplates:addClientTemplate(object_mobile_shared_tusken_king_boss, 
+"object/mobile/shared_tusken_king_boss.iff")
+
+object_mobile_shared_rakata_disciple = SharedCreatureObjectTemplate:new {
+	clientTemplateFileName = "object/mobile/shared_wod_third_sister.iff"}
+ObjectTemplates:addClientTemplate(object_mobile_shared_rakata_disciple, 
+"object/mobile/shared_wod_third_sister.iff")
 
 object_mobile_shared_21b_surgical_droid = SharedCreatureObjectTemplate:new {
 	clientTemplateFileName = "object/mobile/shared_21b_surgical_droid.iff"

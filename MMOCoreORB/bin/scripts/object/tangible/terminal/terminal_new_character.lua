@@ -8,11 +8,12 @@
 --Be sure to pay attention to commas.
 
 object_tangible_terminal_terminal_new_character = object_tangible_terminal_shared_terminal_new_character:new {
-	gameObjectType = 16400,
+
+	gameObjectType = 04200,
 
 	maxCondition = 0,
 
-	templateType = CHARACTERBUILDERTERMINAL,
+	templateType = NEWPLAYERTERMINAL,
 
 	itemList = {
 		"Enhance Character", "enhance_character_new",

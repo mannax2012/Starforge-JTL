@@ -49,7 +49,7 @@ void CharacterBuilderTerminalImplementation::sendInitialChoices(CreatureObject* 
 	debug() << "entering sendInitialChoices";
 
 	if (rootNode == nullptr) {
-		player->sendSystemMessage("There was an error initializing the menu for this new character terminal. Sorry for the inconvenience.");
+		player->sendSystemMessage("There was an error initializing the menu for this character building terminal. Sorry for the inconvenience.");
 		return;
 	}
 

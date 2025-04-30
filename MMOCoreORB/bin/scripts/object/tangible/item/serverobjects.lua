@@ -48,6 +48,9 @@ includeFile("tangible/item/plant/serverobjects.lua")
 includeFile("tangible/item/quest/serverobjects.lua")
 
 -- Server Objects
+includeFile("tangible/item/dath_disciple_alter.lua")
+includeFile("tangible/item/dath_disciple_skull.lua")
+includeFile("tangible/item/starforge_token_generic.lua")
 includeFile("tangible/item/con_drinking_glass_01.lua")
 includeFile("tangible/item/droid_customization.lua")
 includeFile("tangible/item/loot_credit_chip.lua")

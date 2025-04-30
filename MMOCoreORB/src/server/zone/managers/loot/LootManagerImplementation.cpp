@@ -21,7 +21,7 @@
 #include "templates/params/creature/CreatureAttribute.h"
 #include "server/zone/objects/ship/components/ShipComponent.h"
 #include "server/zone/objects/ship/ai/ShipAiAgent.h"
-
+#include "server/zone/managers/creature/CreatureTemplateManager.h"
 // #define DEBUG_LOOT_MAN
 
 void LootManagerImplementation::initialize() {
@@ -667,7 +667,27 @@ bool LootManagerImplementation::createLoot(TransactionLog& trx, SceneObject* con
 		return false;
 	}
 
-	return createLootFromCollection(trx, container, lootCollection, creature->getLevel());
+	int cLevel = creature->getLevel();
+ 	String lootNpcTemplate = "starforge_vendor_token";
+ 
+ 	if (cLevel > 1) {
+ 		lootNpcTemplate = "starforge_vendor_token";
+ 	}
+
+	if (cLevel > 200){
+		lootNpcTemplate = "heavy_starforge_vendor_token";
+	}
+ 
+ 	CreatureTemplate* obj = CreatureTemplateManager::instance()->getTemplate(lootNpcTemplate.hashCode());
+ 
+ 	if (obj != nullptr) {
+ 		const LootGroupCollection* collection = obj->getLootGroups();
+ 
+ 		if (collection != nullptr)
+ 			createLootFromCollection(trx, container, collection, cLevel);
+ 	}
+ 
+ 	return createLootFromCollection(trx, container, lootCollection, cLevel);
 }
 
 uint64 LootManagerImplementation::createLoot(TransactionLog& trx, SceneObject* container, ShipAiAgent* shipAgent) {

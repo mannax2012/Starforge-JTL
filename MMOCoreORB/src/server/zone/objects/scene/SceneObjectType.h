@@ -192,6 +192,7 @@ public:
 	const static int INTERACTIVETERMINAL = 0x400C;
 	const static int NEWBIETUTORIALTERMINAL = 0x400F;
 	const static int CHARACTERBUILDERTERMINAL = 0x4010;
+	const static int NEWPLAYERTERMINAL = 0x1068;
 	const static int TICKETCOLLECTOR = 0x4011;
 	const static int TRAVELTERMINAL = 0x4012; // not in the client (See 0x400A)
 	const static int GUILDTERMINAL = 0x4014;

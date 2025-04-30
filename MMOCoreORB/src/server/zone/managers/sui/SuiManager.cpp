@@ -9,6 +9,7 @@
 #include "server/zone/objects/player/sui/SuiWindowType.h"
 #include "server/zone/objects/player/sui/banktransferbox/SuiBankTransferBox.h"
 #include "server/zone/objects/player/sui/characterbuilderbox/SuiCharacterBuilderBox.h"
+#include "server/zone/objects/player/sui/characterbuilderbox/SuiNewPlayerBox.h"
 #include "server/zone/objects/player/sui/transferbox/SuiTransferBox.h"
 #include "server/zone/objects/creature/commands/UnconsentCommand.h"
 #include "server/zone/managers/skill/SkillManager.h"
@@ -20,6 +21,7 @@
 #include "server/zone/objects/player/sui/keypadbox/SuiKeypadBox.h"
 #include "server/zone/objects/player/sui/callbacks/LuaSuiCallback.h"
 #include "server/zone/objects/tangible/terminal/characterbuilder/CharacterBuilderTerminal.h"
+#include "server/zone/objects/tangible/terminal/characterbuilder/NewPlayerTerminal.h"
 #include "templates/params/creature/CreatureAttribute.h"
 #include "templates/params/creature/CreatureState.h"
 #include "server/zone/objects/tangible/deed/eventperk/EventPerkDeed.h"
@@ -106,6 +108,9 @@ void SuiManager::handleSuiEventNotification(uint32 boxID, CreatureObject* player
 		break;
 	case SuiWindowType::CHARACTER_BUILDER_LIST:
 		handleCharacterBuilderSelectItem(player, suiBox, eventIndex, args);
+		break;
+	case SuiWindowType::NEW_PLAYER_LIST:
+		handleNewPlayerSelectItem(player, suiBox, eventIndex, args);
 		break;
 	case SuiWindowType::OBJECT_NAME:
 		handleSetObjectName(player, suiBox, eventIndex, args);
@@ -944,4 +949,513 @@ int32 SuiManager::sendSuiPage(CreatureObject* creature, SuiPageData* pageData, c
 	}
 
 	return 0;
+}
+void SuiManager::handleNewPlayerSelectItem(CreatureObject* player, SuiBox* suiBox, uint32 cancel, Vector<UnicodeString>* args) {
+	if (!ConfigManager::instance()->getCharacterBuilderEnabled())
+		return;
+
+	ZoneServer* zserv = player->getZoneServer();
+
+	if (args->size() < 1)
+		return;
+
+	bool otherPressed = false;
+	int index = 0;
+
+	if(args->size() > 1) {
+		otherPressed = Bool::valueOf(args->get(0).toString());
+		index = Integer::valueOf(args->get(1).toString());
+	} else {
+		index = Integer::valueOf(args->get(0).toString());
+	}
+
+	if (!suiBox->isNewPlayerBox())
+		return;
+
+	ManagedReference<SuiNewPlayerBox*> cbSui = cast<SuiNewPlayerBox*>( suiBox);
+
+	const NewPlayerMenuNode* currentNode = cbSui->getCurrentNode();
+
+	auto ghost = player->getPlayerObject();
+
+	//If cancel was pressed then we kill the box/menu.
+	if (cancel != 0 || ghost == nullptr)
+		return;
+
+	//Back was pressed. Send the node above it.
+	if (otherPressed) {
+		const NewPlayerMenuNode* parentNode = currentNode->getParentNode();
+
+		if(parentNode == nullptr)
+			return;
+
+		cbSui->setCurrentNode(parentNode);
+
+		ghost->addSuiBox(cbSui);
+		player->sendMessage(cbSui->generateMessage());
+		return;
+	}
+
+	const NewPlayerMenuNode* node = currentNode->getChildNodeAt(index);
+
+	//Node doesn't exist or the index was out of bounds. Should probably resend the menu here.
+	if (node == nullptr) {
+		ghost->addSuiBox(cbSui);
+		player->sendMessage(cbSui->generateMessage());
+		return;
+	}
+
+	if (node->hasChildNodes()) {
+		//If it has child nodes, display them.
+		cbSui->setCurrentNode(node);
+		ghost->addSuiBox(cbSui);
+		player->sendMessage(cbSui->generateMessage());
+	} else {
+		ManagedReference<SceneObject*> scob = cbSui->getUsingObject().get();
+
+		if (scob == nullptr)
+			return;
+
+		NewPlayerTerminal* bluefrog = scob.castTo<NewPlayerTerminal*>();
+
+		if (bluefrog == nullptr)
+			return;
+
+		String templatePath = node->getTemplatePath();
+
+		if (templatePath.indexOf(".iff") < 0) { // Non-item selections
+
+			if (templatePath == "unlearn_all_skills") {
+
+				SkillManager::instance()->surrenderAllSkills(player, true, false, true);
+				player->sendSystemMessage("All skills unlearned.");
+
+			} else if (templatePath == "cleanse_character") {
+				if (!player->isInCombat()) {
+					player->sendSystemMessage("You have been cleansed from the signs of previous battles.");
+
+					for (int i = 0; i < 9; ++i) {
+						player->setWounds(i, 0);
+					}
+
+					player->setShockWounds(0);
+				} else {
+					player->sendSystemMessage("Not within combat.");
+					return;
+				}
+			} else if (templatePath == "fill_force_bar") {
+				if (ghost->isJedi()) {
+					if (!player->isInCombat()) {
+						player->sendSystemMessage("You force bar has been filled.");
+
+						ghost->setForcePower(ghost->getForcePowerMax(), true);
+					} else {
+						player->sendSystemMessage("Not within combat.");
+					}
+				}
+			} else if (templatePath == "drain_force_bar") {
+				if (ghost->isJedi()) {
+					player->sendSystemMessage("Your Force power has been depleted.");
+					ghost->setForcePower(1, true);
+				}
+			} else if (templatePath == "reset_buffs") {
+				if (!player->isInCombat()) {
+					player->sendSystemMessage("Your buffs have been reset.");
+
+					player->clearBuffs(true, false);
+
+					ghost->setFoodFilling(0);
+					ghost->setDrinkFilling(0);
+				} else {
+					player->sendSystemMessage("Not within combat.");
+					return;
+				}
+
+			} else if (templatePath.beginsWith("crafting_apron_")) {
+				//"object/tangible/wearables/apron/apron_chef_s01.iff"
+				//"object/tangible/wearables/ithorian/apron_chef_jacket_s01_ith.iff"
+
+				ManagedReference<SceneObject*> inventory = player->getSlottedObject("inventory");
+				if (inventory == nullptr) {
+					return;
+				}
+
+				uint32 itemCrc = ( player->getSpecies() != CreatureObject::ITHORIAN ) ? 0x5DDC4E5D : 0x6C191FBB;
+
+				ManagedReference<WearableObject*> apron = zserv->createObject(itemCrc, 2).castTo<WearableObject*>();
+
+				if (apron == nullptr) {
+					player->sendSystemMessage("There was an error creating the requested item. Please report this issue.");
+					ghost->addSuiBox(cbSui);
+					player->sendMessage(cbSui->generateMessage());
+
+					error("could not create frog crafting apron");
+					return;
+				}
+
+				Locker locker(apron);
+
+				apron->createChildObjects();
+
+				if (apron->isWearableObject()) {
+					apron->addMagicBit(false);
+
+					UnicodeString modName = "(General)";
+					apron->addSkillMod(SkillModManager::WEARABLE, "general_assembly", 25);
+					apron->addSkillMod(SkillModManager::WEARABLE, "general_experimentation", 25);
+
+					if(templatePath == "crafting_apron_armorsmith") {
+						modName = "(Armorsmith)";
+						apron->addSkillMod(SkillModManager::WEARABLE, "armor_assembly", 25);
+						apron->addSkillMod(SkillModManager::WEARABLE, "armor_experimentation", 25);
+						apron->addSkillMod(SkillModManager::WEARABLE, "armor_repair", 25);
+					} else if(templatePath == "crafting_apron_weaponsmith") {
+						modName = "(Weaponsmith)";
+						apron->addSkillMod(SkillModManager::WEARABLE, "weapon_assembly", 25);
+						apron->addSkillMod(SkillModManager::WEARABLE, "weapon_experimentation", 25);
+						apron->addSkillMod(SkillModManager::WEARABLE, "weapon_repair", 25);
+						apron->addSkillMod(SkillModManager::WEARABLE, "grenade_assembly", 25);
+						apron->addSkillMod(SkillModManager::WEARABLE, "grenade_experimentation", 25);
+					} else if(templatePath == "crafting_apron_tailor") {
+						modName = "(Tailor)";
+						apron->addSkillMod(SkillModManager::WEARABLE, "clothing_assembly", 25);
+						apron->addSkillMod(SkillModManager::WEARABLE, "clothing_experimentation", 25);
+						apron->addSkillMod(SkillModManager::WEARABLE, "clothing_repair", 25);
+					} else if(templatePath == "crafting_apron_chef") {
+						modName = "(Chef)";
+						apron->addSkillMod(SkillModManager::WEARABLE, "food_assembly", 25);
+						apron->addSkillMod(SkillModManager::WEARABLE, "food_experimentation", 25);
+					} else if(templatePath == "crafting_apron_architect") {
+						modName = "(Architect)";
+						apron->addSkillMod(SkillModManager::WEARABLE, "structure_assembly", 25);
+						apron->addSkillMod(SkillModManager::WEARABLE, "structure_experimentation", 25);
+						apron->addSkillMod(SkillModManager::WEARABLE, "structure_complexity", 25);
+					} else if(templatePath == "crafting_apron_droid_engineer") {
+						modName = "(Droid Engineer)";
+						apron->addSkillMod(SkillModManager::WEARABLE, "droid_assembly", 25);
+						apron->addSkillMod(SkillModManager::WEARABLE, "droid_experimentation", 25);
+						apron->addSkillMod(SkillModManager::WEARABLE, "droid_complexity", 25);
+					} else if(templatePath == "crafting_apron_doctor") {
+						modName = "(Doctor)";
+						apron->addSkillMod(SkillModManager::WEARABLE, "medicine_assembly", 25);
+						apron->addSkillMod(SkillModManager::WEARABLE, "medicine_experimentation", 25);
+					} else if(templatePath == "crafting_apron_combat_medic") {
+						modName = "(Combat Medic)";
+						apron->addSkillMod(SkillModManager::WEARABLE, "combat_medicine_assembly", 25);
+						apron->addSkillMod(SkillModManager::WEARABLE, "combat_medicine_experimentation", 25);
+					}
+
+					UnicodeString apronName = "Crafting Apron " + modName;
+					apron->setCustomObjectName(apronName, false);
+				}
+
+				TransactionLog trx(TrxCode::CHARACTERBUILDER, player, apron);
+
+				if (inventory->transferObject(apron, -1, true)) {
+					trx.commit();
+					apron->sendTo(player, true);
+				} else {
+					trx.abort() << "Failed to transferObject to player inventory";
+					apron->destroyObjectFromDatabase(true);
+					return;
+				}
+
+				StringIdChatParameter stringId;
+				stringId.setStringId("@faction_perk:bonus_base_name"); //You received a: %TO.
+				stringId.setTO(apron->getObjectID());
+				player->sendSystemMessage(stringId);
+
+			} else if (templatePath == "enhance_character_new") {
+				bluefrog->enhanceCharacterNew(player);
+
+			} else if (templatePath == "credits") {
+				{
+					TransactionLog trx(TrxCode::CHARACTERBUILDER, player, 50000, true);
+					player->addCashCredits(50000, true);
+				}
+				player->sendSystemMessage("You have received 50.000 Credits");
+
+			} else if (templatePath == "faction_rebel") {
+				ghost->increaseFactionStanding("rebel", 100000);
+
+			} else if (templatePath == "faction_imperial") {
+				ghost->increaseFactionStanding("imperial", 100000);
+
+			} else if (templatePath == "language") {
+				bluefrog->giveLanguages(player);
+
+			} else if (templatePath == "apply_all_dots") {
+				player->addDotState(player, CreatureState::POISONED, scob->getObjectID(), 100, CreatureAttribute::UNKNOWN, 60, -1, 0);
+				player->addDotState(player, CreatureState::BLEEDING, scob->getObjectID(), 100, CreatureAttribute::UNKNOWN, 60, -1, 0);
+				player->addDotState(player, CreatureState::DISEASED, scob->getObjectID(), 100, CreatureAttribute::UNKNOWN, 60, -1, 0);
+				player->addDotState(player, CreatureState::ONFIRE, scob->getObjectID(), 100, CreatureAttribute::UNKNOWN, 60, -1, 0, 20);
+
+			} else if (templatePath == "apply_poison_dot") {
+				player->addDotState(player, CreatureState::POISONED, scob->getObjectID(), 100, CreatureAttribute::UNKNOWN, 60, -1, 0);
+
+			} else if (templatePath == "apply_bleed_dot") {
+				player->addDotState(player, CreatureState::BLEEDING, scob->getObjectID(), 100, CreatureAttribute::UNKNOWN, 60, -1, 0);
+
+			} else if (templatePath == "apply_disease_dot") {
+				player->addDotState(player, CreatureState::DISEASED, scob->getObjectID(), 100, CreatureAttribute::UNKNOWN, 60, -1, 0);
+			} else if (templatePath == "apply_disease_dot_health") {
+				player->addDotState(player, CreatureState::DISEASED, scob->getObjectID(), 200, CreatureAttribute::HEALTH, 240, -1, 0);
+			} else if (templatePath == "apply_disease_dot_action") {
+				player->addDotState(player, CreatureState::DISEASED, scob->getObjectID(), 200, CreatureAttribute::ACTION, 240, -1, 0);
+			} else if (templatePath == "apply_disease_dot_mind") {
+				player->addDotState(player, CreatureState::DISEASED, scob->getObjectID(), 200, CreatureAttribute::MIND, 240, -1, 0);
+			} else if (templatePath == "apply_fire_dot") {
+				player->addDotState(player, CreatureState::ONFIRE, scob->getObjectID(), 100, CreatureAttribute::UNKNOWN, 60, -1, 0, 20);
+
+			} else if (templatePath == "clear_dots") {
+				player->clearDots();
+			} else if (templatePath == "frs_light_side") {
+				PlayerManager* pman = zserv->getPlayerManager();
+				pman->unlockFRSForTesting(player, 1);
+			} else if (templatePath == "frs_dark_side") {
+				PlayerManager* pman = zserv->getPlayerManager();
+				pman->unlockFRSForTesting(player, 2);
+
+			} else if (templatePath == "color_crystals" || templatePath == "krayt_pearls") {
+				ManagedReference<SceneObject*> inventory = player->getSlottedObject("inventory");
+
+				if (inventory == nullptr)
+					return;
+
+				LootManager* lootManager = zserv->getLootManager();
+				TransactionLog trx(TrxCode::CHARACTERBUILDER, player);
+				if (lootManager->createLoot(trx, inventory, templatePath, 300, true) > 0) {
+					trx.commit(true);
+				} else {
+					trx.abort() << "createLoot " << templatePath << " failed.";
+				}
+
+			} else if (templatePath == "max_xp") {
+				ghost->maximizeExperience();
+				player->sendSystemMessage("You have maximized all xp types.");
+
+			} else if (templatePath == "become_glowy") {
+				bluefrog->grantGlowyBadges(player);
+
+			} else if (templatePath == "unlock_jedi_initiate") {
+				bluefrog->grantJediInitiate(player);
+
+			// Bio-Engineer Testing
+			} else if (templatePath.contains("dna_set:")) {
+				bluefrog->giveDnaTestingSet(player, templatePath.subString(8));
+			} else {
+				if (templatePath.length() > 0) {
+					SkillManager::instance()->awardSkill(templatePath, player, true, true, true);
+
+					if (player->hasSkill(templatePath)) {
+						player->sendSystemMessage("You have learned a skill.");
+
+						// Set pilot tier here
+						if (templatePath.contains("pilot")) {
+							Locker lock(player);
+
+							if (templatePath.contains("_novice") || templatePath.contains("_01")) {
+								ghost->setPilotTier(1);
+							} else if (templatePath.contains("_02")) {
+								ghost->setPilotTier(2);
+							} else if (templatePath.contains("_03")) {
+								ghost->setPilotTier(3);
+							} else if (templatePath.contains("_04")) {
+								ghost->setPilotTier(4);
+							} else {
+								ghost->setPilotTier(5);
+							}
+						}
+					}
+				} else {
+					player->sendSystemMessage("Unknown selection.");
+					return;
+				}
+			}
+
+			ghost->addSuiBox(cbSui);
+			player->sendMessage(cbSui->generateMessage());
+
+		} else { // Items
+			if (templatePath.contains("ship/player/")) {
+				player->sendSystemMessage("Creating player ship: " + node->getDisplayName());
+				ShipManager::instance()->createPlayerShip(player, templatePath, "", true);
+				ghost->addSuiBox(cbSui);
+				return;
+			// Creating Ship Deed from Chassis Token
+			} else if (templatePath.beginsWith("object/draft_schematic/space/chassis/")) {
+				auto shipManager = ShipManager::instance();
+
+				if (shipManager == nullptr) {
+					return;
+				}
+
+				ManagedReference<CraftingManager*> craftingManager = zserv->getCraftingManager();
+
+				if (craftingManager == nullptr) {
+					return;
+				}
+
+				ManagedReference<DraftSchematic*> draftSchematic = zserv->createObject(node->getTemplateCRC(), 0).castTo<DraftSchematic*>();
+
+				if (draftSchematic == nullptr || !draftSchematic->isValidDraftSchematic()) {
+					player->sendSystemMessage("Invalid Chassis Draft Schematic: " + node->getTemplatePath());
+					return;
+				}
+
+				ManagedReference<ManufactureSchematic*> manuSchematic = (draftSchematic->createManufactureSchematic()).castTo<ManufactureSchematic*>();
+
+				if (manuSchematic == nullptr) {
+					player->sendSystemMessage("Error creating ManufactureSchematic from DraftSchematic: " + node->getTemplatePath());
+					return;
+				}
+
+				unsigned int targetTemplate = draftSchematic->getTanoCRC();
+
+				ManagedReference<ShipChassisComponent*> prototypeChassis = (zserv->createObject(targetTemplate, 2)).castTo<ShipChassisComponent*>();
+
+				if (prototypeChassis == nullptr) {
+					player->sendSystemMessage("Unable to create ShipChassisComponent: " + node->getTemplatePath());
+					return;
+				}
+
+				Locker locker(prototypeChassis);
+				Locker mlock(manuSchematic, prototypeChassis);
+
+				craftingManager->setInitialCraftingValues(prototypeChassis, manuSchematic, CraftingManager::GREATSUCCESS);
+
+				Reference<CraftingValues*> craftingValues = manuSchematic->getCraftingValues();
+				craftingValues->setManufactureSchematic(manuSchematic);
+				craftingValues->setPlayer(player);
+
+				int nRows = craftingValues->getTotalVisibleAttributeGroups();
+
+				prototypeChassis->updateCraftingValues(craftingValues, true);
+
+				int quality = 50;
+
+				if (quality > 0) {
+					for (int i = 0; i < nRows; i++) {
+						String visibleGroup = craftingValues->getVisibleAttributeGroup(i);
+
+						for (int j = 0; j < craftingValues->getTotalExperimentalAttributes(); ++j) {
+							String attribute = craftingValues->getAttribute(j);
+							String group = craftingValues->getAttributeGroup(attribute);
+
+							if (group == visibleGroup) {
+								float maxValue = craftingValues->getMaxValue(attribute);
+								float minValue = craftingValues->getMinValue(attribute);
+
+								craftingValues->setCurrentPercentage(attribute, (float)quality / 100.f, 5.f);
+							}
+						}
+					}
+
+					craftingValues->recalculateValues(true);
+					prototypeChassis->updateCraftingValues(craftingValues, true);
+				}
+
+				mlock.release();
+
+				prototypeChassis->createChildObjects();
+
+				// Set Crafter name and generate serial number
+				String name = player->getFirstName();
+
+				prototypeChassis->setCraftersName(name);
+				prototypeChassis->setCraftersID(player->getObjectID());
+
+				StringBuffer customName;
+				customName << prototypeChassis->getDisplayedName() << " (Frog Generated by " << name << ")";
+				prototypeChassis->setCustomObjectName(customName.toString(), false);
+
+				String serial = craftingManager->generateSerial();
+				prototypeChassis->setSerialNumber(serial);
+
+				prototypeChassis->updateToDatabase();
+
+				locker.release();
+
+				shipManager->createDeedFromChassis(player, prototypeChassis, player);
+
+				return;
+			}
+			// END Creating Ship Deed from Chassis Token
+
+			ManagedReference<SceneObject*> inventory = player->getInventory();
+
+			if (inventory == nullptr) {
+				return;
+			}
+
+			if (templatePath.contains("event_perk")) {
+				if (!ghost->hasGodMode() && ghost->getEventPerkCount() >= 5) {
+					player->sendSystemMessage("@event_perk:pro_too_many_perks"); // You cannot rent any more items right now.
+					ghost->addSuiBox(cbSui);
+					player->sendMessage(cbSui->generateMessage());
+					return;
+				}
+			}
+
+			ManagedReference<SceneObject*> item = zserv->createObject(node->getTemplateCRC(), 1);
+
+			if (item == nullptr) {
+				player->sendSystemMessage("There was an error creating the requested item. Please report this issue.");
+				ghost->addSuiBox(cbSui);
+				player->sendMessage(cbSui->generateMessage());
+
+				error("could not create frog item: " + node->getDisplayName());
+				return;
+			}
+
+			Locker locker(item);
+
+			item->createChildObjects();
+
+			if (item->isEventPerkDeed()) {
+				EventPerkDeed* deed = item.castTo<EventPerkDeed*>();
+				deed->setOwner(player);
+				ghost->addEventPerk(deed);
+			}
+
+			if (item->isEventPerkItem()) {
+				if (item->getServerObjectCRC() == 0x46BD798B) { // Jukebox
+					Jukebox* jbox = item.castTo<Jukebox*>();
+
+					if (jbox != nullptr)
+						jbox->setOwner(player);
+				} else if (item->getServerObjectCRC() == 0x255F612C) { // Shuttle Beacon
+					ShuttleBeacon* beacon = item.castTo<ShuttleBeacon*>();
+
+					if (beacon != nullptr)
+						beacon->setOwner(player);
+				}
+				ghost->addEventPerk(item);
+			}
+
+			TransactionLog trx(TrxCode::CHARACTERBUILDER, player, item);
+
+			if (inventory->transferObject(item, -1, true)) {
+				trx.commit();
+
+				item->sendTo(player, true);
+
+				StringIdChatParameter stringId;
+				stringId.setStringId("@faction_perk:bonus_base_name"); //You received a: %TO.
+				stringId.setTO(item->getObjectID());
+				player->sendSystemMessage(stringId);
+
+			} else {
+				trx.abort() << "Failed to transferObject to player inventory";
+				item->destroyObjectFromDatabase(true);
+				player->sendSystemMessage("Error putting item in inventory.");
+				return;
+			}
+
+			ghost->addSuiBox(cbSui);
+			player->sendMessage(cbSui->generateMessage());
+		}
+
+		player->info("[New Player Terminal] gave player " + templatePath, true);
+	}
 }

@@ -203,6 +203,7 @@ public:
 	const static int SHIPCOMPONENT = 0x400005A;
 	const static int SCHEMATICFRAGMENT = 0x400005B;
 	const static int NAVICOMPUTERDEED = 0x400005C;
+	const static int NEWPLAYERTERMINAL = 0x400005D;
 public:
 	SharedObjectTemplate();
 

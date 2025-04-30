@@ -107,9 +107,9 @@ TatooineMosEisleyScreenPlay = CityScreenPlay:new {
 		{"trainer_shipwright",60,-3.2,0.6,67.6,160,1106372, "neutral"},
 
 		-- Front of Starport
-		{"vincie_kalhoon", 0, 3525.6, 5.0, -4799.7, 123, 0, ""},
-		{"mooch_davoney", 0, 3526.8, 5.0, -4799.0, 123, 0, ""},
-		{"guillo_parootchie", 0, 3528.1, 5.0, -4799.4, 172, 0, ""},
+		{"vincie_kalhoon", 0, 3531.3, 5.0, -4807.4, 25, 0, ""},
+		{"mooch_davoney", 0, 3530.8, 5.0, -4805.0, 110, 0, ""},
+		{"guillo_parootchie", 0, 3533.5, 5.0, -4805.9, -142, 0, ""},
 
 		--Cantina
 		{"commoner_old",60,36,0.1,0.7,310,1082876, "npc_sitting_chair"},
@@ -364,7 +364,7 @@ TatooineMosEisleyScreenPlay = CityScreenPlay:new {
 		{"trainer_musician",0,3393,5,-4791,300,0, ""},
 		{"trainer_pistol",0,3358.6,5,-4841.3,36,0, "npc_sitting_chair"},
 		{"trainer_rifleman",0,3426,5,-4917,0,0, ""},
-		{"trainer_scout",0,3519.76,5,-4786.9,77,0, ""},
+		{"trainer_scout",0,3532.0,5,-4778.1,-137,0, ""},
 		{"trainer_smuggler",0,3401,5,-4879,340,0, "worried"}
 	}
 }

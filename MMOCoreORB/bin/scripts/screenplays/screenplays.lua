@@ -29,6 +29,8 @@ require("sui.custom.SuiReceiverPuzzle")
 
 --CUSTOM STARFORGE--
 includeFile("new_player/newPlayerTerminalMenuComponent.lua")
+includeFile("new_player/starforge_new_player_terminals.lua")
+includeFile("tools/VendorTokenMenuComponent.lua")
 
 
 includeFile("helperfuncs.lua")

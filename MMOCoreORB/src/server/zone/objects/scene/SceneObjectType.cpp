@@ -125,7 +125,7 @@ const String SceneObjectType::typeToString(int gameObjectType) {
 		case FSBUFFITEM:				return "@got_n:misc";
 		case DEADEYEPROTOTYPE:			return "@got_n:misc";
 		case CONTRACTCRATE:				return "@got_n:misc";
-		case SCHEMATICFRAGMENT:				return "@got_n:misc";
+		case SCHEMATICFRAGMENT:			return "@got_n:misc";
 		case TERMINAL:					return "@got_n:terminal";
 		case BANK:						return "@got_n:terminal_bank";
 		case BAZAAR:					return "@got_n:terminal_bazaar";
@@ -140,6 +140,7 @@ const String SceneObjectType::typeToString(int gameObjectType) {
 		case INTERACTIVETERMINAL:		return "@got_n:terminal_misc";
 		case NEWBIETUTORIALTERMINAL:	return "@got_n:terminal_misc";
 		case CHARACTERBUILDERTERMINAL:	return "@got_n:terminal_misc";
+		case NEWPLAYERTERMINAL:			return "@got_n:terminal_misc";
 		case TICKETCOLLECTOR:			return "@got_n:terminal";
 		case TRAVELTERMINAL:			return "@got_n:terminal_travel";
 		case GUILDTERMINAL:				return "@got_n:terminal_manage";

@@ -73,6 +73,7 @@
 #include "templates/tangible/CamoKitTemplate.h"
 #include "templates/tangible/CampKitTemplate.h"
 #include "templates/tangible/CharacterBuilderTerminalTemplate.h"
+#include "templates/tangible/NewPlayerTerminalTemplate.h"
 #include "templates/tangible/ConsumableTemplate.h"
 #include "templates/tangible/ContainerTemplate.h"
 #include "templates/tangible/CreatureHabitatTemplate.h"
@@ -516,6 +517,7 @@ void TemplateManager::registerTemplateObjects() {
 	templateFactory.registerObject<SharedTangibleObjectTemplate>(SharedObjectTemplate::STOT);
 	templateFactory.registerObject<SharedUniverseObjectTemplate>(SharedObjectTemplate::SUNI);
 	templateFactory.registerObject<CharacterBuilderTerminalTemplate>(SharedObjectTemplate::CHARACTERBUILDERTERMINAL);
+	templateFactory.registerObject<NewPlayerTerminalTemplate>(SharedObjectTemplate::NEWPLAYERTERMINAL);
 	templateFactory.registerObject<LootkitObjectTemplate>(SharedObjectTemplate::LOOTKIT);
 	templateFactory.registerObject<LootSchematicTemplate>(SharedObjectTemplate::LOOTSCHEMATIC);
 	templateFactory.registerObject<GamblingTerminalTemplate>(SharedObjectTemplate::GAMBLINGTERMINAL);
@@ -706,6 +708,7 @@ void TemplateManager::registerGlobals() {
 	luaTemplatesInstance->setGlobalInt("SCNC", SharedObjectTemplate::SCNC);
 	luaTemplatesInstance->setGlobalInt("SCOT", SharedObjectTemplate::SCOT);
 	luaTemplatesInstance->setGlobalInt("CHARACTERBUILDERTERMINAL", SharedObjectTemplate::CHARACTERBUILDERTERMINAL);
+	luaTemplatesInstance->setGlobalInt("NEWPLAYERTERMINAL", SharedObjectTemplate::NEWPLAYERTERMINAL);
 	luaTemplatesInstance->setGlobalInt("LOOTKIT", SharedObjectTemplate::LOOTKIT);
 	luaTemplatesInstance->setGlobalInt("LOOTSCHEMATIC", SharedObjectTemplate::LOOTSCHEMATIC);
 	luaTemplatesInstance->setGlobalInt("GAMBLINGTERMINAL", SharedObjectTemplate::GAMBLINGTERMINAL);
