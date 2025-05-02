@@ -44,6 +44,19 @@
 
 --Children folder includes
 includeFile("draft_schematic/clothing/component/serverobjects.lua")
+includeFile("draft_schematic/clothing/custom/serverobjects.lua")
+
+--Custom (Local)
+includeFile("draft_schematic/clothing/clothing_armor_clone_trooper_neutral_s01_bicep_l.lua")
+includeFile("draft_schematic/clothing/clothing_armor_clone_trooper_neutral_s01_bicep_r.lua")
+includeFile("draft_schematic/clothing/clothing_armor_clone_trooper_neutral_s01_bracer_l.lua")
+includeFile("draft_schematic/clothing/clothing_armor_clone_trooper_neutral_s01_bracer_r.lua")
+includeFile("draft_schematic/clothing/clothing_armor_clone_trooper_neutral_s01_boots.lua")
+includeFile("draft_schematic/clothing/clothing_armor_clone_trooper_neutral_s01_chest_plate.lua")
+includeFile("draft_schematic/clothing/clothing_armor_clone_trooper_neutral_s01_helmet.lua")
+includeFile("draft_schematic/clothing/clothing_armor_clone_trooper_neutral_s01_gloves.lua")
+includeFile("draft_schematic/clothing/clothing_armor_clone_trooper_neutral_s01_leggings.lua")
+includeFile("draft_schematic/clothing/clothing_armor_clone_trooper_neutral_s01_belt.lua")
 
 -- Server Objects
 includeFile("draft_schematic/clothing/clothing_apron_chef_01.lua")

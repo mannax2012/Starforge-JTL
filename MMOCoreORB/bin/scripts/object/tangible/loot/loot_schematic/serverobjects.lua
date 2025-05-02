@@ -44,6 +44,33 @@
 
 --Children folder includes
 
+--Custom
+--includeFile("tangible/loot/loot_schematic/lance_trando_pike_schematic.lua")
+--includeFile("tangible/loot/loot_schematic/baton_gaderiffi_elite_schematic.lua")
+--includeFile("tangible/loot/loot_schematic/starforge_backpack_schematic.lua")
+includeFile("tangible/loot/loot_schematic/armor_clone_trooper_neutral_s01_belt_schematic.lua")
+includeFile("tangible/loot/loot_schematic/armor_clone_trooper_neutral_s01_bicep_l_schematic.lua")
+includeFile("tangible/loot/loot_schematic/armor_clone_trooper_neutral_s01_bicep_r_schematic.lua")
+includeFile("tangible/loot/loot_schematic/armor_clone_trooper_neutral_s01_boots_schematic.lua")
+includeFile("tangible/loot/loot_schematic/armor_clone_trooper_neutral_s01_bracer_l_schematic.lua")
+includeFile("tangible/loot/loot_schematic/armor_clone_trooper_neutral_s01_bracer_r_schematic.lua")
+includeFile("tangible/loot/loot_schematic/armor_clone_trooper_neutral_s01_chest_plate_schematic.lua")
+includeFile("tangible/loot/loot_schematic/armor_clone_trooper_neutral_s01_gloves_schematic.lua")
+includeFile("tangible/loot/loot_schematic/armor_clone_trooper_neutral_s01_helmet_schematic.lua")
+includeFile("tangible/loot/loot_schematic/armor_clone_trooper_neutral_s01_leggings_schematic.lua")
+
+includeFile("tangible/loot/loot_schematic/tusken_raider_bandolier_s01_schematic.lua")
+includeFile("tangible/loot/loot_schematic/tusken_raider_bandolier_s02_schematic.lua")
+includeFile("tangible/loot/loot_schematic/tusken_raider_bandolier_s03_schematic.lua")
+includeFile("tangible/loot/loot_schematic/tusken_raider_bracer_r_schematic.lua")
+includeFile("tangible/loot/loot_schematic/tusken_raider_bracer_l_schematic.lua")
+includeFile("tangible/loot/loot_schematic/tusken_raider_robe_s01_schematic.lua")
+includeFile("tangible/loot/loot_schematic/tusken_raider_robe_s02_schematic.lua")
+includeFile("tangible/loot/loot_schematic/tusken_raider_gloves_schematic.lua")
+includeFile("tangible/loot/loot_schematic/tusken_raider_belt_schematic.lua")
+includeFile("tangible/loot/loot_schematic/tusken_raider_boots_schematic.lua")
+includeFile("tangible/loot/loot_schematic/tusken_raider_hat_schematic.lua")
+
 -- Server Objects
 includeFile("tangible/loot/loot_schematic/agitator_motor_schematic.lua")
 includeFile("tangible/loot/loot_schematic/assorted_fruit_schematic.lua")

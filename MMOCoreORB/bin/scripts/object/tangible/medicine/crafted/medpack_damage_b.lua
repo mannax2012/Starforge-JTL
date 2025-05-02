@@ -49,7 +49,7 @@ object_tangible_medicine_crafted_medpack_damage_b = object_tangible_medicine_cra
 	medicineUse = 37,
 	effectiveness = 150,
 	medicineClass = STIM_B,
-	attributes = {0, 3, 6},
+	attributes = {0, 1, 6},
 
 	numberExperimentalProperties = {1, 1, 2, 2, 1, 1},
 	experimentalProperties = {"XX", "XX", "OQ", "PE", "OQ", "UT", "XX", "XX"},
