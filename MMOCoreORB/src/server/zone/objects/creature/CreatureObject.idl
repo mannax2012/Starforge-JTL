@@ -2393,6 +2393,9 @@ class CreatureObject extends TangibleObject {
 	public native boolean checkInConversationRange(SceneObject object);
 
 	@preLocked
+ 	public native void checkForSpecialSkillMods(final string modType, int value);
+
+	@preLocked
 	public native void setQueueCommandDeltaTime(@dereferenced final String commandName, @dereferenced final String commandGroup);
 
 	public native unsigned long getQueueCommandDeltaTime(@dereferenced final String commandName);

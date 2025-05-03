@@ -563,6 +563,9 @@ bool PlayerCreationManager::createCharacter(ClientCreateCharacterCallback* callb
 	//Join auction chat room
 	ghost->addChatRoom(chatManager->getAuctionRoom()->getRoomID());
 
+ 	//Join Holo-Net chat room
+ 	ghost->addChatRoom(chatManager->getHolonetRoom()->getRoomID());
+
 	ManagedReference<SuiMessageBox*> box = new SuiMessageBox(playerCreature, SuiWindowType::NONE);
 	box->setPromptTitle("PLEASE NOTE");
 	box->setPromptText("You are limited to creating one character per hour. Attempting to create another character or deleting your character before the 1 hour timer expires will reset the timer.");
@@ -570,6 +573,52 @@ bool PlayerCreationManager::createCharacter(ClientCreateCharacterCallback* callb
 	ghost->addSuiBox(box);
 	playerCreature->sendMessage(box->generateMessage());
 
+	//broadcast new character creations to galaxy
+	StringBuffer buff;
+
+	String welcomeMessages[] = {
+		"HoloNet transmission received: Sensors detect a new lifeform %s %s has arrived in our galaxy.",
+		"Word spreads from the spaceports: %s %s has touched down. Welcome to Starforge!",
+		"The cantinas buzz with news, %s %s just stepped off the transport. Their journey begins now.",
+		"A ripple echoes through the Force... %s %s has arrived. Welcome to Starforge.",
+		"Locals whisper of a new arrival... %s %s. What tales will follow? Welcome to Starforge.",
+		"A new signature appears in the Force... %s %s has entered the galaxy. Welcome to Starforge.",
+		"Starport control confirms: %s %s has just landed. Their legacy begins now.",
+		"A hyperspace ripple is detected: %s %s exits their vessel and surveys their new destiny.",
+		"Word spreads fast, %s %s has arrived. A new tale begins in Starforge.",
+		"Dispatch from the Outer Rim: Traveler %s %s has touched down on Starforge.",
+		"The HoloNet lights up: %s %s has joined the galaxy. Welcome to Starforge.",
+		"Sensors show a new arrival. %s %s has stepped into the Starforge system.",
+		"An unfamiliar ID tag is logged... Welcome %s %s to Starforge. Stay sharp.",
+		"From the depths of the Unknown Regions, %s %s arrives with purpose.",
+		"Cantina bartenders rejoice! %s %s has entered the system. Drinks soon?",
+		"Incoming transmission: %s %s has arrived... and already forgot their datapad.",
+		"Starforge's HR department has been notified... %s %s has joined the madness.",
+		"Krayt dragons beware! %s %s just crash-landed with style.",
+		"TIE fighter traffic jam caused by new arrival: %s %s.",
+		"Unit %s %s registered. Personality matrix: Chaotic. Threat level: Mildly entertaining.",
+		"Processing... new meatbag %s %s approved for planetary mischief.",
+		"Galactic systems synchronized. Welcome, %s %s. Try not to break anything... again."
+		"Statement: Another meatbag, %s %s, has arrived. Joy.",
+		"Query: Shall I eliminate %s %s now, or let them embarrass themselves first?",
+		"Observation: %s %s appears armed with ambition and poor decisions. Delicious.",
+		"Announcement: Fresh meatbag designated %s %s detected. Threat level: comically low.",
+		"Clarification: %s %s is not on my kill list... yet.",
+		"Sarcastic: Oh, look. %s %s. Just what this galaxy needed... more incompetence.",
+		"Statement: %s %s has joined the server. Activating dramatic sigh protocol.",
+		"Observation: Meatbag %s %s has entered the galaxy. Recommend keeping explosives nearby.",
+		"Confession: I had hoped for someone more... threatening. %s %s will have to do.",
+		"Mockery: Greetings %s %s. Try not to perish too quickly. I prefer a challenge."
+	};
+	
+		int messageCount = sizeof(welcomeMessages) / sizeof(String);
+		int randomIndex = System::random(messageCount);
+
+		const char* templateStr = welcomeMessages[randomIndex].toCharArray();
+		String finalMessage = String::format(templateStr, firstName.toCharArray(), lastName.toCharArray());
+		finalMessage = finalMessage.trim();
+
+		chatManager->broadcastGalaxy(nullptr, finalMessage.toCharArray());
 	return true;
 }
 

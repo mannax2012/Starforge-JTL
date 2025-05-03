@@ -1,7 +1,7 @@
 /*
  				Copyright <SWGEmu>
 		See file COPYING for copying conditions. */
-
+#include <cstdlib>
 #include "ResourceSpawner.h"
 #include "server/zone/Zone.h"
 #include "server/zone/objects/player/PlayerObject.h"
@@ -371,6 +371,7 @@ void ResourceSpawner::shiftResources() {
 	manualPool->update();
 
 	dumpResources();
+	ghDumpAll();
 }
 
 ResourceSpawn* ResourceSpawner::createRecycledResourceSpawn(const ResourceTreeEntry* entry) const {
@@ -797,16 +798,16 @@ void ResourceSpawner::sendResourceListForSurvey(CreatureObject* player,
 
 void ResourceSpawner::sendSurvey(CreatureObject* player, const String& resname) const {
 
-	/*if (player->getHAM(CreatureAttribute::MIND) < 100) {
+	/*if (player->getHAM(CreatureAttribute::ACTION) < 100) {
 		player->setPosture(CreaturePosture::UPRIGHT, true);
 		player->sendSystemMessage("@error_message:survey_mind"); //You are exhausted. You nee to clear your head before you can survey again.
 		return;
 	}*/
 
 	//Adjust cost based upon player's focus
-	int mindCost = 100 - (int)(player->getHAM(CreatureAttribute::FOCUS)/15.f);
+	int mindCost = 300 - (int)(player->getHAM(CreatureAttribute::FOCUS)/15.f);
 
-	player->inflictDamage(player, CreatureAttribute::MIND, mindCost, false, true);
+	player->inflictDamage(player, CreatureAttribute::ACTION, mindCost, false, true);
 
 	ManagedReference<SurveySession*> session = player->getActiveSession(SessionFacadeType::SURVEY).castTo<SurveySession*>();
 	if(session == nullptr) {
@@ -1064,7 +1065,7 @@ void ResourceSpawner::sendSampleResults(TransactionLog& trx, CreatureObject* pla
 		if (wound > 0) {
 			player->addWounds(CreatureAttribute::HEALTH, wound, true);
 			player->addWounds(CreatureAttribute::ACTION, wound, true);
-			player->addWounds(CreatureAttribute::MIND, wound, true);
+			player->addWounds(CreatureAttribute::ACTION, wound, true);
 		}
 	}
 }
@@ -1303,4 +1304,102 @@ String ResourceSpawner::healthCheck() {
 	health << manualPool->healthCheck() << endl;
 
 	return health.toString();
+}
+bool ResourceSpawner::ghDumpAll() {
+	/* This is custom code written to export resources in a way that an additional script can easily push them to Galaxy Harvester -c0pp3r */
+	if(!scriptLoading)
+		return false;
+	Vector<String>* planets =  new Vector<String> ();
+	planets->add("corellia");
+	planets->add("dantooine");
+	planets->add("dathomir");
+	planets->add("endor");
+	planets->add("lok");
+	planets->add("naboo");
+	planets->add("rori");
+	planets->add("talus");
+	planets->add("tatooine");
+	planets->add("yavin4");
+	//String planets = "corellia";
+
+	try {
+		File* ghfile = new File("scripts/managers/ghoutput.xml");
+
+		FileWriter* ghwriter = new FileWriter(ghfile);
+		ghwriter->writeLine("<SpawnOutput>");		
+		int last = 0;
+
+		for(int i = 0; i < resourceMap->size(); ++i) {
+
+			ManagedReference<ResourceSpawn*> spawn = resourceMap->get(i);
+
+			uint64 despawned = spawn->getDespawned();
+			uint64 currTime = System::getTime();
+
+			int diff = 0;
+			int inPhase = 0;
+			if(despawned > currTime) {
+				diff = despawned - currTime;
+			} else {
+				diff = currTime - despawned;
+			}
+			if(despawned > currTime) {
+				inPhase = 1;
+			}
+			if(String::valueOf(inPhase) == "1") {
+				for(int j = 0; j < planets->size(); ++j){
+					ZoneResourceMap* zoneMap = resourceMap->getZoneResourceList(planets->get(j));
+					ManagedReference<ResourceSpawn*> resourceSpawn;
+					/*ghwriter->writeLine("<resource>");*/
+					for (int b = 0; b< zoneMap->size(); ++b) {
+						resourceSpawn = zoneMap->get(b);
+						if (spawn->getName() == resourceSpawn->getName()){
+							ghwriter->writeLine("<resource>");
+
+							ghwriter->write("<SpawnName>");
+							ghwriter->write(spawn->getName());
+							ghwriter->writeLine("</SpawnName>");
+							ghwriter->write("<resType>");
+							for(int i = 0; i < 8; ++i) {
+								String spawnClass = spawn->getClass(i);
+								if(spawnClass != "") {
+									last = i;
+									String spawnClass2 = spawn->getStfClass(i);
+								}
+							}
+							ghwriter->write(spawn->getStfClass(last));
+							ghwriter->writeLine("</resType>");
+							//ghwriter->writeLine("<attributes>");
+							for(int i = 0; i < 12; ++i) {
+								String attribute = "";
+								int value = spawn->getAttributeAndValue(attribute, i);
+								if(attribute != "") {
+									ghwriter->writeLine("<attribute name=\"" + attribute + "\">" + String::valueOf(value) + "</attribute>");
+								}
+							}
+							//ghwriter->writeLine("</attributes>");
+							ghwriter->write("<planet>");
+							ghwriter->write(planets->get(j));
+							ghwriter->writeLine("</planet>");
+							ghwriter->writeLine("</resource>");
+							ghwriter->writeLine("");
+						}
+					}
+				}
+
+			}
+
+		}
+		ghwriter->writeLine("</SpawnOutput>");
+		ghwriter->close();
+		//(void)system("python3 bin/scripts/managers/gh_push.py &");
+		int runGHScript = system("python3 scripts/managers/gh_push.py &");
+		delete ghwriter;
+
+		return true;
+	} catch (Exception& e) {
+		error("Error dumping resources");
+			return false;
+	}
+	return true;
 }

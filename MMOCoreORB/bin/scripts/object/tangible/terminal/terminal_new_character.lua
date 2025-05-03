@@ -17,6 +17,7 @@ object_tangible_terminal_terminal_new_character = object_tangible_terminal_share
 
 	itemList = {
 		"Enhance Character", "enhance_character_new",
+		"Learn Languages", "language",
 		"Learn Skills",
 		{
 				"Novice Artisan", "crafting_artisan_novice",
@@ -26,8 +27,6 @@ object_tangible_terminal_terminal_new_character = object_tangible_terminal_share
 				"Novice Medic", "science_medic_novice",
 				"Novice Politician", "social_politician_novice",
 				"Novice Scout", "outdoors_scout_novice",
-
-				"Learn Languages", "language",
 		},
 		"Items",
 		{

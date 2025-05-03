@@ -371,7 +371,14 @@ TangibleObject* LootManagerImplementation::createLootObject(TransactionLog& trx,
 #endif
 
 	if (templateObject->isRandomResourceContainer()) {
-		return createLootResource(templateObject->getTemplateName(), "tatooine");
+		const String planetNames[] = {
+			"tatooine", "corellia", "naboo", "rori", "talus",
+			"lok", "dantooine", "yavin4", "endor", "dathomir"
+		};
+	
+		int numPlanets = sizeof(planetNames) / sizeof(planetNames[0]);
+		int randomIndex = System::random(numPlanets);
+		return createLootResource(templateObject->getTemplateName(), planetNames[randomIndex]);
 	}
 
 	if (templateObject->isShipComponent()) {
@@ -435,6 +442,41 @@ TangibleObject* LootManagerImplementation::createLootObject(TransactionLog& trx,
 	// Add some condition damage to the looted item if it is a weapon or piece of armor
 	if (!maxCondition && (prototype->isWeaponObject() || prototype->isArmorObject())) {
 		addConditionDamage(prototype);
+	}
+
+	if (prototype != nullptr && prototype->isAttachment()) {
+		Attachment* attachment = cast<Attachment*>(prototype.get());
+
+		if (attachment == nullptr)
+			{return nullptr;}
+
+			VectorMap<String, int>* mods = attachment->getSkillMods();
+			StringId attachmentName;
+			String key = "";
+			int currentValue = 0;
+			int highest = 0;
+			String attachmentType = "[AA] ";
+			String attachmentCustomName = "";
+			
+			if (attachment->isClothingAttachment()) {
+				attachmentType = "[CA] ";
+			}
+			
+			for (int i = 0; i < mods->size(); ++i) {
+				const VectorMapEntry<String, int>& entry = mods->elementAt(i);
+				key = entry.getKey();
+				currentValue = entry.getValue();
+			
+				if (currentValue > highest) {
+					highest = currentValue;
+					attachmentName.setStringId("stat_n", key);
+					prototype->setObjectName(attachmentName, false);
+					attachmentCustomName = attachmentType + prototype->getDisplayedName() + " " + String::valueOf(currentValue);
+				}
+			}
+			
+			prototype->setCustomObjectName(attachmentCustomName, false);
+
 	}
 
 	trx.addState("lootAdjustment", chance);

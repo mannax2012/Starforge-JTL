@@ -42,6 +42,141 @@
 
 
 schematics = {
+--[[
+	--Cal Sabers
+	{path="object/draft_schematic/weapon/lightsaber/lightsaber_one_hand_cal_gen3.iff"},
+	{path="object/draft_schematic/weapon/lightsaber/lightsaber_one_hand_cal_gen4.iff"},
+	{path="object/draft_schematic/weapon/lightsaber/lightsaber_two_hand_cal_gen3.iff"},
+	{path="object/draft_schematic/weapon/lightsaber/lightsaber_two_hand_cal_gen4.iff"},
+	{path="object/draft_schematic/weapon/lightsaber/lightsaber_polearm_cal_gen3.iff"},
+	{path="object/draft_schematic/weapon/lightsaber/lightsaber_polearm_cal_gen4.iff"},
+
+	--ezra Sabers
+	{path="object/draft_schematic/weapon/lightsaber/lightsaber_one_hand_ezra_gen3.iff"},
+	{path="object/draft_schematic/weapon/lightsaber/lightsaber_one_hand_ezra_gen4.iff"},
+	{path="object/draft_schematic/weapon/lightsaber/lightsaber_two_hand_ezra_gen3.iff"},
+	{path="object/draft_schematic/weapon/lightsaber/lightsaber_two_hand_ezra_gen4.iff"},
+
+	--ezra2 Sabers
+	{path="object/draft_schematic/weapon/lightsaber/lightsaber_one_hand_ezra2_gen3.iff"},
+	{path="object/draft_schematic/weapon/lightsaber/lightsaber_one_hand_ezra2_gen4.iff"},
+	{path="object/draft_schematic/weapon/lightsaber/lightsaber_two_hand_ezra2_gen3.iff"},
+	{path="object/draft_schematic/weapon/lightsaber/lightsaber_two_hand_ezra2_gen4.iff"},
+
+	--kanan Sabers
+	{path="object/draft_schematic/weapon/lightsaber/lightsaber_one_hand_kanan_gen3.iff"},
+	{path="object/draft_schematic/weapon/lightsaber/lightsaber_one_hand_kanan_gen4.iff"},
+	{path="object/draft_schematic/weapon/lightsaber/lightsaber_two_hand_kanan_gen3.iff"},
+	{path="object/draft_schematic/weapon/lightsaber/lightsaber_two_hand_kanan_gen4.iff"},
+
+	--kylo Sabers
+	{path="object/draft_schematic/weapon/lightsaber/lightsaber_one_hand_kylo_gen3.iff"},
+	{path="object/draft_schematic/weapon/lightsaber/lightsaber_one_hand_kylo_gen4.iff"},
+	{path="object/draft_schematic/weapon/lightsaber/lightsaber_two_hand_kylo_gen3.iff"},
+	{path="object/draft_schematic/weapon/lightsaber/lightsaber_two_hand_kylo_gen4.iff"},
+
+	--rahm Sabers
+	{path="object/draft_schematic/weapon/lightsaber/lightsaber_one_hand_rahm_gen3.iff"},
+	{path="object/draft_schematic/weapon/lightsaber/lightsaber_one_hand_rahm_gen4.iff"},
+	{path="object/draft_schematic/weapon/lightsaber/lightsaber_two_hand_rahm_gen3.iff"},
+	{path="object/draft_schematic/weapon/lightsaber/lightsaber_two_hand_rahm_gen4.iff"},
+
+	--rey5 Sabers
+	{path="object/draft_schematic/weapon/lightsaber/lightsaber_one_hand_rey5_gen3.iff"},
+	{path="object/draft_schematic/weapon/lightsaber/lightsaber_one_hand_rey5_gen4.iff"},
+	{path="object/draft_schematic/weapon/lightsaber/lightsaber_two_hand_rey5_gen3.iff"},
+	{path="object/draft_schematic/weapon/lightsaber/lightsaber_two_hand_rey5_gen4.iff"},
+	]]
+
+	--Podracers
+	--[[
+	{path="object/draft_schematic/vehicle/civilian/podracer_anakin.iff"},
+	{path="object/draft_schematic/vehicle/civilian/podracer_balta.iff"},
+	{path="object/draft_schematic/vehicle/civilian/podracer_gasgano.iff"},
+	{path="object/draft_schematic/vehicle/civilian/podracer_ipg.iff"},
+	{path="object/draft_schematic/vehicle/civilian/podracer_mawhonical.iff"},
+	{path="object/draft_schematic/vehicle/civilian/podracer_sebulba.iff"},
+	]]
+
+	--Tusken Clothing
+	{path="object/draft_schematic/clothing/custom/clothing_bandolier_tusken_raider_bag_s01_schematic.iff"},
+	{path="object/draft_schematic/clothing/custom/clothing_bandolier_tusken_raider_bag_s02_schematic.iff"},
+	{path="object/draft_schematic/clothing/custom/clothing_bandolier_tusken_raider_bag_s03_schematic.iff"},
+	{path="object/draft_schematic/clothing/custom/clothing_robe_tusken_raider_s01_schematic.iff"},
+	{path="object/draft_schematic/clothing/custom/clothing_robe_tusken_raider_s02_schematic.iff"},
+	{path="object/draft_schematic/clothing/custom/clothing_hat_tusken_raider_schematic.iff"},
+	{path="object/draft_schematic/clothing/custom/clothing_bracer_tusken_raider_r_schematic.iff"},
+	{path="object/draft_schematic/clothing/custom/clothing_bracer_tusken_raider_l_schematic.iff"},
+	{path="object/draft_schematic/clothing/custom/clothing_boots_tusken_raider_schematic.iff"},
+	{path="object/draft_schematic/clothing/custom/clothing_belt_tusken_raider_schematic.iff"},
+	{path="object/draft_schematic/clothing/custom/clothing_gloves_tusken_raider_schematic.iff"},
+  
+	--Starforge Bag
+	{path="object/draft_schematic/clothing/custom/starforge_backpack_schematic.iff"},
+
+	--Mechanic
+	--[[
+	{path="object/draft_schematic/vehicle/civilian/landspeeder_x31.iff"},
+	{path="object/draft_schematic/vehicle/civilian/speederbike_flash.iff"},
+	{path="object/draft_schematic/vehicle/civilian/air2_swoop_speeder.iff"},
+	{path="object/draft_schematic/vehicle/civilian/barc_speeder.iff"},
+	{path="object/draft_schematic/vehicle/civilian/flare_s_swoop.iff"},
+	{path="object/draft_schematic/vehicle/civilian/sith_speeder.iff"},
+	{path="object/draft_schematic/vehicle/civilian/a1_deluxe_floater.iff"},
+	{path="object/draft_schematic/vehicle/civilian/landspeeder_ab1.iff"},
+	{path="object/draft_schematic/vehicle/civilian/landspeeder_xp38.iff"},
+	{path="object/draft_schematic/vehicle/civilian/landspeeder_v35.iff"},
+	{path="object/draft_schematic/vehicle/component/armor_module.iff"},
+	{path="object/draft_schematic/vehicle/component/armor_module_advanced.iff"},
+	{path="object/draft_schematic/vehicle/component/bonding_agent.iff"},
+	{path="object/draft_schematic/vehicle/component/energy_amplifier.iff"},
+	{path="object/draft_schematic/vehicle/component/enhanced_chipset.iff"},
+	{path="object/draft_schematic/vehicle/component/experimental_circuits.iff"},
+	{path="object/draft_schematic/vehicle/component/flexible_plating.iff"},
+	{path="object/draft_schematic/vehicle/component/fuel_capacitor.iff"},
+	{path="object/draft_schematic/vehicle/component/fuel_dispersion_mechanism.iff"},
+	{path="object/draft_schematic/vehicle/component/fuel_sublimator.iff"},
+	{path="object/draft_schematic/vehicle/component/gyroscopic_stabilizer.iff"},
+	{path="object/draft_schematic/vehicle/component/gyroscopic_stabilizer_advanced.iff"},
+	{path="object/draft_schematic/vehicle/component/hydraulic_actuator.iff"},
+	{path="object/draft_schematic/vehicle/component/hyper_accelerometer.iff"},
+	{path="object/draft_schematic/vehicle/component/injector_assembly.iff"},
+	{path="object/draft_schematic/vehicle/component/injector_assembly_advanced.iff"},
+	{path="object/draft_schematic/vehicle/component/magnetometer.iff"},
+	{path="object/draft_schematic/vehicle/component/power_converter.iff"},
+	{path="object/draft_schematic/vehicle/component/power_converter_advanced.iff"},
+	{path="object/draft_schematic/vehicle/component/power_module.iff"},
+	{path="object/draft_schematic/vehicle/component/power_regulator.iff"},
+	{path="object/draft_schematic/vehicle/component/stable_circuits.iff"},
+	{path="object/draft_schematic/vehicle/component/tough_plating.iff"},
+	]]
+
+	--CloneTrooper
+	{path="object/draft_schematic/clothing/clothing_armor_clone_trooper_neutral_s01_belt.iff"},
+	{path="object/draft_schematic/clothing/clothing_armor_clone_trooper_neutral_s01_bicep_l.iff"},
+	{path="object/draft_schematic/clothing/clothing_armor_clone_trooper_neutral_s01_bicep_r.iff"},
+	{path="object/draft_schematic/clothing/clothing_armor_clone_trooper_neutral_s01_boots.iff"},
+	{path="object/draft_schematic/clothing/clothing_armor_clone_trooper_neutral_s01_bracer_l.iff"},
+	{path="object/draft_schematic/clothing/clothing_armor_clone_trooper_neutral_s01_bracer_r.iff"},
+	{path="object/draft_schematic/clothing/clothing_armor_clone_trooper_neutral_s01_chest_plate.iff"},
+	{path="object/draft_schematic/clothing/clothing_armor_clone_trooper_neutral_s01_gloves.iff"},
+	{path="object/draft_schematic/clothing/clothing_armor_clone_trooper_neutral_s01_helmet.iff"},
+	{path="object/draft_schematic/clothing/clothing_armor_clone_trooper_neutral_s01_leggings.iff"},
+
+	--Unstable Sabers
+	--[[
+	{path="object/draft_schematic/weapon/lightsaber/lightsaber_one_hand_unstable_gen3.iff"},
+	{path="object/draft_schematic/weapon/lightsaber/lightsaber_one_hand_unstable_gen4.iff"},
+	{path="object/draft_schematic/weapon/lightsaber/lightsaber_two_hand_unstable_gen3.iff"},
+	{path="object/draft_schematic/weapon/lightsaber/lightsaber_two_hand_unstable_gen4.iff"},
+	{path="object/draft_schematic/weapon/lightsaber/lightsaber_polearm_unstable_gen3.iff"},
+	{path="object/draft_schematic/weapon/lightsaber/lightsaber_polearm_unstable_gen4.iff"},
+
+	--Weapons
+	{path="object/draft_schematic/weapon/baton_gaderiffi_elite.iff"},
+	{path="object/draft_schematic/weapon/lance_trando_pike.iff"},
+	]]
+	--OG Stuff
 	{path="object/draft_schematic/community_crafting/component/connections.iff"},
 	{path="object/draft_schematic/community_crafting/component/endrost.iff"},
 	{path="object/draft_schematic/community_crafting/component/power_supply.iff"},

@@ -24,7 +24,7 @@ public:
 		: QueueCommand(name, server) {
 
 		range = 5;
-		mindCost = 50;
+		mindCost = 250;
 	}
 
 	void deactivateInjuryTreatment(CreatureObject* creature, bool isRangedStim) const {
@@ -117,7 +117,7 @@ public:
 	}
 
 	bool checkTarget(CreatureObject* creature, CreatureObject* creatureTarget) const {
-		if (!creatureTarget->hasDamage(CreatureAttribute::HEALTH) && !creatureTarget->hasDamage(CreatureAttribute::ACTION)) {
+		if (!creatureTarget->hasDamage(CreatureAttribute::HEALTH)) {
 			return false;
 		}
 
@@ -146,7 +146,7 @@ public:
 			return false;
 		}
 
-		if (creature->getHAM(CreatureAttribute::MIND) < mindCostNew) {
+		if (creature->getHAM(CreatureAttribute::ACTION) < mindCostNew) {
 			creature->sendSystemMessage("@healing_response:not_enough_mind"); //You do not have enough mind to do that.
 			return false;
 		}
@@ -488,7 +488,7 @@ public:
 
 		sendHealMessage(creature, targetCreature, healthHealed, actionHealed, mindHealed);
 
-		creature->inflictDamage(creature, CreatureAttribute::MIND, mindCostNew, false);
+		creature->inflictDamage(creature, CreatureAttribute::ACTION, mindCostNew, false);
 
 		Locker locker(stimPack);
 		stimPack->decreaseUseCount();

@@ -72,6 +72,7 @@ void ChatManagerImplementation::stop() {
 	playerMap = nullptr;
 	roomMap = nullptr;
 	server = nullptr;
+	holonetRoom = nullptr;
 	galaxyRoom = nullptr;
 	systemRoom = nullptr;
 	groupRoom = nullptr;
@@ -320,6 +321,10 @@ void ChatManagerImplementation::initiateRooms() {
 	auctionRoom = createRoom("Auction", galaxyRoom);
 	auctionRoom->setCanEnter(true);
 	auctionRoom->setChatRoomType(ChatRoom::AUCTION);
+
+	holonetRoom = createRoom("Holo-Net", galaxyRoom);
+ 	holonetRoom->setCanEnter(true);
+ 	holonetRoom->setChatRoomType(ChatRoom::CUSTOM);
 
 	if (ConfigManager::instance()->isPvpBroadcastChannelEnabled()) {
 		pvpBroadcastRoom = createRoom("PvPBroadcasts", galaxyRoom);
