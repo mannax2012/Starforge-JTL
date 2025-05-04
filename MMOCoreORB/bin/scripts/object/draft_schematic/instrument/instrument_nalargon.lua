@@ -53,7 +53,7 @@ object_draft_schematic_instrument_instrument_nalargon = object_draft_schematic_i
    factoryCrateType = "object/factory/factory_crate_generic_items.iff",
    
    xpType = "music", 
-   xp = 450, 
+   xp = 2500, 
 
    assemblySkill = "instrument_assembly", 
    experimentingSkill = "general_experimentation", 

@@ -53,7 +53,7 @@ object_draft_schematic_instrument_instrument_omni_box = object_draft_schematic_i
    factoryCrateType = "object/factory/factory_crate_generic_items.iff",
    
    xpType = "music", 
-   xp = 110, 
+   xp = 1100, 
 
    assemblySkill = "instrument_assembly", 
    experimentingSkill = "general_experimentation", 

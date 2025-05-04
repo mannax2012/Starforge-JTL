@@ -53,7 +53,7 @@ object_draft_schematic_instrument_instrument_traz = object_draft_schematic_instr
    factoryCrateType = "object/factory/factory_crate_generic_items.iff",
    
    xpType = "music", 
-   xp = 120, 
+   xp = 1200, 
 
    assemblySkill = "instrument_assembly", 
    experimentingSkill = "general_experimentation", 

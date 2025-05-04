@@ -53,7 +53,7 @@ object_draft_schematic_instrument_instrument_bandfill = object_draft_schematic_i
    factoryCrateType = "object/factory/factory_crate_generic_items.iff",
    
    xpType = "music", 
-   xp = 150, 
+   xp = 1500, 
 
    assemblySkill = "instrument_assembly", 
    experimentingSkill = "general_experimentation", 

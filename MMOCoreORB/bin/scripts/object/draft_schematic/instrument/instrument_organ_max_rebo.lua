@@ -52,8 +52,8 @@ object_draft_schematic_instrument_instrument_organ_max_rebo = object_draft_schem
    size = 1, 
    factoryCrateType = "object/factory/factory_crate_generic_items.iff",
    
-   xpType = "", 
-   xp = 0, 
+   xpType = "music", 
+   xp = 110, 
 
    assemblySkill = "instrument_assembly", 
    experimentingSkill = "instrument_experiementation", 

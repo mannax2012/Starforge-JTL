@@ -53,7 +53,7 @@ object_draft_schematic_instrument_instrument_organ_figrin_dan = object_draft_sch
    factoryCrateType = "object/factory/factory_crate_generic_items.iff",
    
    xpType = "music", 
-   xp = 0, 
+   xp = 1000, 
 
    assemblySkill = "instrument_assembly", 
    experimentingSkill = "instrument_experiementation", 

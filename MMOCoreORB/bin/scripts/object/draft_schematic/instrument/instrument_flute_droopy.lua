@@ -53,7 +53,7 @@ object_draft_schematic_instrument_instrument_flute_droopy = object_draft_schemat
    factoryCrateType = "object/factory/factory_crate_generic_items.iff",
    
    xpType = "music", 
-   xp = 100, 
+   xp = 1000, 
 
    assemblySkill = "instrument_assembly", 
    experimentingSkill = "general_experimentation", 
