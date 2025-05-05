@@ -124,6 +124,7 @@ void ResourceSpawner::setSpawningParameters(bool loadFromScript, const int dur, 
 void ResourceSpawner::start() {
 	loadResourceSpawns();
 	shiftResources();
+	ghDumpAll();
 }
 
 void ResourceSpawner::loadResourceSpawns() {
@@ -371,7 +372,6 @@ void ResourceSpawner::shiftResources() {
 	manualPool->update();
 
 	dumpResources();
-	ghDumpAll();
 }
 
 ResourceSpawn* ResourceSpawner::createRecycledResourceSpawn(const ResourceTreeEntry* entry) const {
