@@ -219,7 +219,9 @@ int CombatManager::doCombatAction(CreatureObject* attacker, WeaponObject* weapon
 
 	debug("past start combat");
 
-	if (!applySpecialAttackCost(attacker, weapon, data)) {
+	ManagedReference<WeaponObject*> offHand = attacker->getOffHandWeapon();
+
+	if (!applySpecialAttackCost(attacker, weapon, data, offHand)) {
 		return -2;
 	}
 
@@ -231,6 +233,18 @@ int CombatManager::doCombatAction(CreatureObject* attacker, WeaponObject* weapon
 	bool shouldGcwCrackdownTef = false, shouldGcwTef = false, shouldBhTef = false;
 
 	damage = doTargetCombatAction(attacker, weapon, defenderObject, &targetDefenders, data, &shouldGcwCrackdownTef, &shouldGcwTef, &shouldBhTef);
+
+	//handle dual wield stuff
+	bool dualWieldAttack = data.isDualWieldAttack();
+	bool isHardCC = false;
+
+	if (dualWieldAttack) {
+		//to not double kd/pcd
+		isHardCC = data.changesDefenderPosture();
+		if (offHand != nullptr && !isHardCC) {
+			damage += doTargetCombatAction(attacker, offHand, defenderObject, &targetDefenders, data, &shouldGcwCrackdownTef, &shouldGcwTef, &shouldBhTef);
+		}
+	}
 
 	if (data.getCommand()->isAreaAction() || data.getCommand()->isConeAction()) {
 		Reference<SortedVector<ManagedReference<TangibleObject*>>*> areaDefenders = getAreaTargets(attacker, weapon, defenderObject, data);
@@ -250,6 +264,11 @@ int CombatManager::doCombatAction(CreatureObject* attacker, WeaponObject* weapon
 				}
 
 				areaDam += doTargetCombatAction(attacker, weapon, areaDefenders->get(i), &targetDefenders, data, &shouldGcwCrackdownTef, &shouldGcwTef, &shouldBhTef);
+				if (dualWieldAttack) {
+					if (offHand != nullptr && !isHardCC) {
+						damage += doTargetCombatAction(attacker, offHand, areaDefenders->get(i), &targetDefenders, data, &shouldGcwCrackdownTef, &shouldGcwTef, &shouldBhTef);
+					}
+				}
 				areaDefenders->remove(i);
 
 				tano->unlock();
@@ -269,11 +288,16 @@ int CombatManager::doCombatAction(CreatureObject* attacker, WeaponObject* weapon
 
 		if (attacker->isPlayerCreature() && data.getCommandCRC() != STRING_HASHCODE("attack")) {
 			weapon->decay(attacker);
+			if (offHand != nullptr && !isHardCC)
+ 				offHand->decay(attacker);
 		}
 
 		// Decreases the powerup once per successful attack
 		if (!data.isForceAttack()) {
 			weapon->decreasePowerupUses(attacker);
+			//should chance be reduced if dw'ing to not burn through twice as many pups? 
+			if (offHand != nullptr && data.getCommandCRC() != STRING_HASHCODE("attack") && !isHardCC)
+			offHand->decreasePowerupUses(attacker);
 		}
 	}
 
@@ -2925,11 +2949,20 @@ void CombatManager::showHitLocationFlyText(CreatureObject* attacker, CreatureObj
 
 // Special Attack Cost
 
-bool CombatManager::applySpecialAttackCost(CreatureObject* attacker, WeaponObject* weapon, const CreatureAttackData& data) const {
+bool CombatManager::applySpecialAttackCost(CreatureObject* attacker, WeaponObject* weapon, const CreatureAttackData& data, WeaponObject* offHand) const {
 	if (attacker->isAiAgent() || data.isForceAttack())
 		return true;
 
 	float force = weapon->getForceCost() * data.getForceCostMultiplier();
+
+	if (data.isDualWieldAttack()) {
+		if (offHand != nullptr) {
+		force += offHand->getForceCost() * data.getForceCostMultiplier();
+		}
+		else {
+			return false;
+	}
+}
 
 	if (force > 0) { // Need Force check first otherwise it can be spammed.
 		ManagedReference<PlayerObject*> playerObject = attacker->getPlayerObject();
@@ -2947,6 +2980,17 @@ bool CombatManager::applySpecialAttackCost(CreatureObject* attacker, WeaponObjec
 	float health = weapon->getHealthAttackCost() * data.getHealthCostMultiplier();
 	float action = weapon->getActionAttackCost() * data.getActionCostMultiplier();
 	float mind = weapon->getMindAttackCost() * data.getMindCostMultiplier();
+	
+	if (data.isDualWieldAttack()) {
+		if (offHand != nullptr) {
+			health += offHand->getHealthAttackCost() * data.getHealthCostMultiplier();
+			action += offHand->getActionAttackCost() * data.getActionCostMultiplier();
+			mind += offHand->getMindAttackCost() * data.getMindCostMultiplier();
+		}
+		else {
+			return false;
+		}
+	}
 /*
 	health = attacker->calculateCostAdjustment(CreatureAttribute::STRENGTH, health);
 	action = attacker->calculateCostAdjustment(CreatureAttribute::QUICKNESS, action);

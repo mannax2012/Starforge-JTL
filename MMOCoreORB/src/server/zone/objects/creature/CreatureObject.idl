@@ -2393,6 +2393,20 @@ class CreatureObject extends TangibleObject {
 	public native boolean checkInConversationRange(SceneObject object);
 
 	@preLocked
+ 	public native boolean isDualWieldingLightsabers();
+ 
+ 	@prelocked
+ 	public native boolean isDualWielding();
+ 
+ 	@preLocked
+ 	public native boolean hasOffHandWeapon();
+ 
+ 	@reference
+ 	@dirty
+ 	@preLocked
+ 	public native WeaponObject getOffHandWeapon();
+
+	@preLocked
  	public native void checkForSpecialSkillMods(final string modType, int value);
 
 	@preLocked
