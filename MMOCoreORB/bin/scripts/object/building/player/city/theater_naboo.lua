@@ -44,7 +44,7 @@
 object_building_player_city_theater_naboo = object_building_player_city_shared_theater_naboo:new {
 	lotSize = 3,
 	baseMaintenanceRate = 50,
-	allowedZones = {"dantooine", "naboo", "rori"},
+	allowedZones = {"corellia", "dantooine", "lok", "naboo", "rori", "talus", "tatooine"},
 	length = 5,
 	width = 6,
 	gameObjectType = 524,
@@ -56,7 +56,7 @@ object_building_player_city_theater_naboo = object_building_player_city_shared_t
 		{"private_safe_logout", 1}
 	},
 	ejectDistance = 1.5,
-	cityRankRequired = 4,
+	cityRankRequired = 2,
 	groundZoneComponent = "StructureZoneComponent",
 	childObjects = {
 		{templateFile = "object/tangible/sign/player/house_address_naboo.iff", x = 11.1, z = 3.08, y = -14, ox = 0, oy = -0.707107, oz = 0, ow = 0.707107, cellid = -1, containmentType = -1},
