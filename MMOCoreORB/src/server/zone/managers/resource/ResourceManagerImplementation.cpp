@@ -1,7 +1,7 @@
 /*
 				Copyright <SWGEmu>
 		See file COPYING for copying conditions.*/
-
+//One Small Change.
 #include "server/zone/managers/resource/ResourceManager.h"
 #include "ResourceShiftTask.h"
 #include "resourcespawner/SampleTask.h"
@@ -194,6 +194,7 @@ void ResourceManagerImplementation::shiftResources() {
 
 	Reference<ResourceShiftTask*> resourceShift = new ResourceShiftTask(_this.getReferenceUnsafeStaticCast());
 	resourceShift->schedule(shiftInterval);
+	resourceSpawner->ghDump();
 }
 
 int ResourceManagerImplementation::getResourceRecycleType(ResourceSpawn* resource) {

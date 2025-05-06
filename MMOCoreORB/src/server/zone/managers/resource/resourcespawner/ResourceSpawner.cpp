@@ -1,7 +1,7 @@
 /*
  				Copyright <SWGEmu>
 		See file COPYING for copying conditions. */
-#include <cstdlib>
+		//One Small Change.
 #include "ResourceSpawner.h"
 #include "server/zone/Zone.h"
 #include "server/zone/objects/player/PlayerObject.h"
