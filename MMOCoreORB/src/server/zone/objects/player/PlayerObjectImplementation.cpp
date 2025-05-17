@@ -557,6 +557,15 @@ void PlayerObjectImplementation::notifySceneReady() {
 		}
 	}
 
+		// Infinity:  Let's make Discord Chat Bot Join the Bot Channel (Thanks MrObvious!)
+	if (creature->getFirstName().toLowerCase() == "Holo-net") {
+    	ManagedReference<ChatRoom*> holonetRoom = chatManager->getHolonetRoom();
+		if (holonetRoom != nullptr) {
+        	holonetRoom->sendTo(creature);
+            chatManager->handleChatEnterRoomById(creature, holonetRoom->getRoomID(), -1, true);
+        }
+    }
+
 	// Show Terms of Service window
 	checkAndShowTOS();
 
