@@ -27,6 +27,7 @@
 /*CUSTOM*/
 #include "server/zone/objects/creature/commands/FindStructureCommand.h"
 #include "server/zone/objects/creature/commands/VillageCommand.h"
+#include "server/zone/objects/creature/commands/SaberPadawanStrikeCommand.h"
 // #include "server/zone/objects/creature/commands/RegrantSkillsCommand.h"
 
 #include "server/zone/objects/creature/commands/JediQueueCommand.h"
@@ -838,5 +839,6 @@ void CommandConfigManager::registerCommands2() {
 	/*CUSTOM*/
 	commandFactory.registerCommand<FindStructureCommand>(String("findStructure").toLowerCase());
 	commandFactory.registerCommand<VillageCommand>(String("village").toLowerCase());
+	commandFactory.registerCommand<SaberPadawanStrikeCommand>(String("saberPadawanStrike").toLowerCase());
 	// commandFactory.registerCommand<RegrantSkillsCommand>(String("regrantSkills").toLowerCase());
 }

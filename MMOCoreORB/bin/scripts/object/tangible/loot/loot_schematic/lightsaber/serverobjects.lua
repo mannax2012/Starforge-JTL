@@ -46,6 +46,7 @@
 
 -- Server Objects
 includeFile("tangible/loot/loot_schematic/lightsaber/objects.lua")
+
 includeFile("tangible/loot/loot_schematic/lightsaber/lightsaber_one_hand_unstable_gen3_schematic.lua")
 includeFile("tangible/loot/loot_schematic/lightsaber/lightsaber_one_hand_unstable_gen4_schematic.lua")
 
@@ -55,7 +56,6 @@ includeFile("tangible/loot/loot_schematic/lightsaber/lightsaber_two_hand_unstabl
 includeFile("tangible/loot/loot_schematic/lightsaber/lightsaber_polearm_unstable_gen3_schematic.lua")
 includeFile("tangible/loot/loot_schematic/lightsaber/lightsaber_polearm_unstable_gen4_schematic.lua")
 
---cal
 includeFile("tangible/loot/loot_schematic/lightsaber/lightsaber_one_hand_cal_gen3_schematic.lua")
 includeFile("tangible/loot/loot_schematic/lightsaber/lightsaber_one_hand_cal_gen4_schematic.lua")
 
@@ -65,42 +65,36 @@ includeFile("tangible/loot/loot_schematic/lightsaber/lightsaber_two_hand_cal_gen
 includeFile("tangible/loot/loot_schematic/lightsaber/lightsaber_polearm_cal_gen3_schematic.lua")
 includeFile("tangible/loot/loot_schematic/lightsaber/lightsaber_polearm_cal_gen4_schematic.lua")
 
---ezra
 includeFile("tangible/loot/loot_schematic/lightsaber/lightsaber_one_hand_ezra_gen3_schematic.lua")
 includeFile("tangible/loot/loot_schematic/lightsaber/lightsaber_one_hand_ezra_gen4_schematic.lua")
 
 includeFile("tangible/loot/loot_schematic/lightsaber/lightsaber_two_hand_ezra_gen3_schematic.lua")
 includeFile("tangible/loot/loot_schematic/lightsaber/lightsaber_two_hand_ezra_gen4_schematic.lua")
 
---ezra2
 includeFile("tangible/loot/loot_schematic/lightsaber/lightsaber_one_hand_ezra2_gen3_schematic.lua")
 includeFile("tangible/loot/loot_schematic/lightsaber/lightsaber_one_hand_ezra2_gen4_schematic.lua")
 
 includeFile("tangible/loot/loot_schematic/lightsaber/lightsaber_two_hand_ezra2_gen3_schematic.lua")
 includeFile("tangible/loot/loot_schematic/lightsaber/lightsaber_two_hand_ezra2_gen4_schematic.lua")
 
---kanan
 includeFile("tangible/loot/loot_schematic/lightsaber/lightsaber_one_hand_kanan_gen3_schematic.lua")
 includeFile("tangible/loot/loot_schematic/lightsaber/lightsaber_one_hand_kanan_gen4_schematic.lua")
 
 includeFile("tangible/loot/loot_schematic/lightsaber/lightsaber_two_hand_kanan_gen3_schematic.lua")
 includeFile("tangible/loot/loot_schematic/lightsaber/lightsaber_two_hand_kanan_gen4_schematic.lua")
 
---kylo
 includeFile("tangible/loot/loot_schematic/lightsaber/lightsaber_one_hand_kylo_gen3_schematic.lua")
 includeFile("tangible/loot/loot_schematic/lightsaber/lightsaber_one_hand_kylo_gen4_schematic.lua")
 
 includeFile("tangible/loot/loot_schematic/lightsaber/lightsaber_two_hand_kylo_gen3_schematic.lua")
 includeFile("tangible/loot/loot_schematic/lightsaber/lightsaber_two_hand_kylo_gen4_schematic.lua")
 
---rahm
 includeFile("tangible/loot/loot_schematic/lightsaber/lightsaber_one_hand_rahm_gen3_schematic.lua")
 includeFile("tangible/loot/loot_schematic/lightsaber/lightsaber_one_hand_rahm_gen4_schematic.lua")
 
 includeFile("tangible/loot/loot_schematic/lightsaber/lightsaber_two_hand_rahm_gen3_schematic.lua")
 includeFile("tangible/loot/loot_schematic/lightsaber/lightsaber_two_hand_rahm_gen4_schematic.lua")
 
---rey5
 includeFile("tangible/loot/loot_schematic/lightsaber/lightsaber_one_hand_rey5_gen3_schematic.lua")
 includeFile("tangible/loot/loot_schematic/lightsaber/lightsaber_one_hand_rey5_gen4_schematic.lua")
 

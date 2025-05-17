@@ -86,7 +86,7 @@ void LightsaberCrystalComponentImplementation::generateCrystalStats() {
 		minStat = crystalData->getMinHealthSac();
 		maxStat = crystalData->getMaxHealthSac();
 
-		sacHealth = getRandomizedStat(minStat, maxStat, itemLevel);
+		sacHealth = 0;
 
 		minStat = crystalData->getMinActionSac();
 		maxStat = crystalData->getMaxActionSac();
@@ -96,7 +96,7 @@ void LightsaberCrystalComponentImplementation::generateCrystalStats() {
 		minStat = crystalData->getMinMindSac();
 		maxStat = crystalData->getMaxMindSac();
 
-		sacMind = getRandomizedStat(minStat, maxStat, itemLevel);
+		sacMind = 0;
 
 		minStat = crystalData->getMinWoundChance();
 		maxStat = crystalData->getMaxWoundChance();
@@ -147,7 +147,7 @@ void LightsaberCrystalComponentImplementation::validateCrystalStats() {
 		maxStat = crystalData->getMaxHealthSac();
 
 		if (sacHealth > maxStat || sacHealth < minStat)
-			sacHealth = getRandomizedStat(minStat, maxStat, itemLevel);
+			sacHealth = 0;
 
 		minStat = crystalData->getMinActionSac();
 		maxStat = crystalData->getMaxActionSac();
@@ -159,7 +159,7 @@ void LightsaberCrystalComponentImplementation::validateCrystalStats() {
 		maxStat = crystalData->getMaxMindSac();
 
 		if (sacMind > maxStat || sacMind < minStat)
-			sacMind = getRandomizedStat(minStat, maxStat, itemLevel);
+			sacMind = 0;
 
 		minStat = crystalData->getMinWoundChance();
 		maxStat = crystalData->getMaxWoundChance();

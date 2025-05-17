@@ -44,6 +44,10 @@
 
 --Children folder includes
 
+--Starforge Custom
+includeFile("tangible/component/weapon/lightsaber/lightsaber_unstable_crystal_pack.lua")
+includeFile("tangible/component/weapon/lightsaber/lightsaber_module_force_crystal_bw.lua")
+
 -- Server Objects
 includeFile("tangible/component/weapon/lightsaber/base_lightsaber_lance_module.lua")
 includeFile("tangible/component/weapon/lightsaber/base_lightsaber_module.lua")

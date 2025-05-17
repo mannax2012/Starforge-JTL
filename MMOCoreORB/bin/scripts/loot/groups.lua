@@ -10,6 +10,7 @@ includeFile("groups/custom/lewt_chest_common.lua")
 includeFile("groups/custom/lewt_chest_rare.lua")
 includeFile("groups/custom/tusken_king_rare.lua")
 includeFile("groups/custom/tusken_raider_schematics.lua")
+]]
 includeFile("groups/custom/rebels_lightsaber_schematics.lua")
 includeFile("groups/custom/cal_lightsaber_schematics.lua")
 includeFile("groups/custom/ezra_lightsaber_schematics.lua")
@@ -17,7 +18,7 @@ includeFile("groups/custom/ezra2_lightsaber_schematics.lua")
 includeFile("groups/custom/kanan_lightsaber_schematics.lua")
 includeFile("groups/custom/rahm_lightsaber_schematics.lua")
 includeFile("groups/custom/all_saber_schematics.lua")
-]]
+
 
 includeFile("groups/armor_attachments.lua")
 includeFile("groups/clothing_attachments.lua")

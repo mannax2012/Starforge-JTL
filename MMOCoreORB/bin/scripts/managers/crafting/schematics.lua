@@ -42,7 +42,7 @@
 
 
 schematics = {
---[[
+	
 	--Cal Sabers
 	{path="object/draft_schematic/weapon/lightsaber/lightsaber_one_hand_cal_gen3.iff"},
 	{path="object/draft_schematic/weapon/lightsaber/lightsaber_one_hand_cal_gen4.iff"},
@@ -86,17 +86,6 @@ schematics = {
 	{path="object/draft_schematic/weapon/lightsaber/lightsaber_one_hand_rey5_gen4.iff"},
 	{path="object/draft_schematic/weapon/lightsaber/lightsaber_two_hand_rey5_gen3.iff"},
 	{path="object/draft_schematic/weapon/lightsaber/lightsaber_two_hand_rey5_gen4.iff"},
-	]]
-
-	--Podracers
-	--[[
-	{path="object/draft_schematic/vehicle/civilian/podracer_anakin.iff"},
-	{path="object/draft_schematic/vehicle/civilian/podracer_balta.iff"},
-	{path="object/draft_schematic/vehicle/civilian/podracer_gasgano.iff"},
-	{path="object/draft_schematic/vehicle/civilian/podracer_ipg.iff"},
-	{path="object/draft_schematic/vehicle/civilian/podracer_mawhonical.iff"},
-	{path="object/draft_schematic/vehicle/civilian/podracer_sebulba.iff"},
-	]]
 
 	--Tusken Clothing
 	{path="object/draft_schematic/clothing/custom/clothing_bandolier_tusken_raider_bag_s01_schematic.iff"},
@@ -149,6 +138,14 @@ schematics = {
 	{path="object/draft_schematic/vehicle/component/power_regulator.iff"},
 	{path="object/draft_schematic/vehicle/component/stable_circuits.iff"},
 	{path="object/draft_schematic/vehicle/component/tough_plating.iff"},
+
+		--Podracers
+	{path="object/draft_schematic/vehicle/civilian/podracer_anakin.iff"},
+	{path="object/draft_schematic/vehicle/civilian/podracer_balta.iff"},
+	{path="object/draft_schematic/vehicle/civilian/podracer_gasgano.iff"},
+	{path="object/draft_schematic/vehicle/civilian/podracer_ipg.iff"},
+	{path="object/draft_schematic/vehicle/civilian/podracer_mawhonical.iff"},
+	{path="object/draft_schematic/vehicle/civilian/podracer_sebulba.iff"},
 	]]
 
 	--CloneTrooper
@@ -164,7 +161,7 @@ schematics = {
 	{path="object/draft_schematic/clothing/clothing_armor_clone_trooper_neutral_s01_leggings.iff"},
 
 	--Unstable Sabers
-	--[[
+	
 	{path="object/draft_schematic/weapon/lightsaber/lightsaber_one_hand_unstable_gen3.iff"},
 	{path="object/draft_schematic/weapon/lightsaber/lightsaber_one_hand_unstable_gen4.iff"},
 	{path="object/draft_schematic/weapon/lightsaber/lightsaber_two_hand_unstable_gen3.iff"},
@@ -172,6 +169,7 @@ schematics = {
 	{path="object/draft_schematic/weapon/lightsaber/lightsaber_polearm_unstable_gen3.iff"},
 	{path="object/draft_schematic/weapon/lightsaber/lightsaber_polearm_unstable_gen4.iff"},
 
+	--[[
 	--Weapons
 	{path="object/draft_schematic/weapon/baton_gaderiffi_elite.iff"},
 	{path="object/draft_schematic/weapon/lance_trando_pike.iff"},

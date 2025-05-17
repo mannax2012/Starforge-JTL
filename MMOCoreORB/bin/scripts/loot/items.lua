@@ -25,9 +25,6 @@ includeFile("items/custom/small_lewt_chest.lua")
 includeFile("items/custom/medium_lewt_chest.lua")
 includeFile("items/custom/large_lewt_chest.lua")
 
---[[
-includeFile("items/custom/lance_trando_pike_schematic.lua")
-includeFile("items/custom/baton_gaderiffi_elite_schematic.lua")
 includeFile("items/custom/lightsaber_one_hand_cal_gen3_schematic.lua")
 includeFile("items/custom/lightsaber_one_hand_cal_gen4_schematic.lua")
 includeFile("items/custom/lightsaber_two_hand_cal_gen3_schematic.lua")
@@ -54,6 +51,10 @@ includeFile("items/custom/lightsaber_one_hand_rahm_gen3_schematic.lua")
 includeFile("items/custom/lightsaber_one_hand_rahm_gen4_schematic.lua")
 includeFile("items/custom/lightsaber_two_hand_rahm_gen3_schematic.lua")
 includeFile("items/custom/lightsaber_two_hand_rahm_gen4_schematic.lua")
+
+--[[
+includeFile("items/custom/lance_trando_pike_schematic.lua")
+includeFile("items/custom/baton_gaderiffi_elite_schematic.lua")
 
 includeFile("items/custom/tusken_belt_schematic.lua")
 includeFile("items/custom/tusken_boots_schematic.lua")

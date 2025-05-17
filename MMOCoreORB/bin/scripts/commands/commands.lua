@@ -836,4 +836,5 @@ RunSlashCommandsFile("createVendor.lua")
 --CUSTOM--
 RunSlashCommandsFile("findStructure.lua")
 RunSlashCommandsFile("village.lua")
+RunSlashCommandsFile("saberPadawanStrike.lua")
 --RunSlashCommandsFile("regrantSkills.lua")

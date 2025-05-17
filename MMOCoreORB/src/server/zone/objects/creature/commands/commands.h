@@ -11,6 +11,7 @@
 /*CUSTOM*/
 #include "FindStructureCommand.h"
 #include "VillageCommand.h"
+#include "SaberPadawanStrike.h"
 // #include "RegrantSkillsCommand.h"
 
 #include "ActionShot1Command.h"
