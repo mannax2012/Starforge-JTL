@@ -52,8 +52,8 @@ object_draft_schematic_instrument_instrument_fizz = object_draft_schematic_instr
    size = 1, 
    factoryCrateType = "object/factory/factory_crate_generic_items.iff",
    
-   xpType = "entertainer_healing", 
-   xp = 1500, 
+   xpType = "music", 
+   xp = 5000, 
 
    assemblySkill = "instrument_assembly", 
    experimentingSkill = "general_experimentation", 
