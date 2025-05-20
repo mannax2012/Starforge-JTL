@@ -558,7 +558,7 @@ void PlayerObjectImplementation::notifySceneReady() {
 	}
 
 		// Infinity:  Let's make Discord Chat Bot Join the Bot Channel (Thanks MrObvious!)
-	if (creature->getFirstName().toLowerCase() == "Holo-net") {
+	if (creature->getFirstName().toLowerCase() == "holo-net") {
     	ManagedReference<ChatRoom*> holonetRoom = chatManager->getHolonetRoom();
 		if (holonetRoom != nullptr) {
         	holonetRoom->sendTo(creature);
