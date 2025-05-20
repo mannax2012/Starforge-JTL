@@ -12,6 +12,9 @@
 #include "FindStructureCommand.h"
 #include "VillageCommand.h"
 #include "SaberPadawanStrike.h"
+#include "HealHealthSelf3Command.h"
+#include "HealHealthSelf4Command.h"
+// #include "MeleeBHPalmStrikeCommand.h"
 // #include "RegrantSkillsCommand.h"
 
 #include "ActionShot1Command.h"

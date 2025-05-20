@@ -70,7 +70,7 @@ protected:
 
 	int attributesToHeal; // bitmask of which attributes to heal, HEALTH etc..
 	int woundAttributesToHeal; // bitmask of which attributes to heal, HEALTH etc..
-
+	int chainToAmount;
 	int healBattleFatigue; // amount of BF to heal
 	int healAmount; // amount to heal (HAM pools)
 	int healWoundAmount; // amount of wounds to heal
