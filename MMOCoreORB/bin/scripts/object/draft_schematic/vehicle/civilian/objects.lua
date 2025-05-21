@@ -41,6 +41,56 @@
 --which carries forward this exception.
 
 
+object_draft_schematic_vehicle_civilian_shared_landspeeder_x31 = SharedDraftSchematicObjectTemplate:new {
+clientTemplateFileName = "object/draft_schematic/vehicle/civilian/shared_landspeeder_x31.iff"}
+ObjectTemplates:addClientTemplate(object_draft_schematic_vehicle_civilian_shared_landspeeder_x31, 
+"object/draft_schematic/vehicle/civilian/shared_landspeeder_x31.iff")
+
+object_draft_schematic_vehicle_civilian_shared_speederbike_flash = SharedDraftSchematicObjectTemplate:new {
+clientTemplateFileName = "object/draft_schematic/vehicle/civilian/shared_speederbike_flash.iff"}
+ObjectTemplates:addClientTemplate(object_draft_schematic_vehicle_civilian_shared_speederbike_flash, 
+"object/draft_schematic/vehicle/civilian/shared_speederbike_flash.iff")
+
+object_draft_schematic_vehicle_civilian_shared_air2_swoop_speeder = SharedDraftSchematicObjectTemplate:new {
+clientTemplateFileName = "object/draft_schematic/vehicle/civilian/shared_air2_swoop_speeder.iff"}
+ObjectTemplates:addClientTemplate(object_draft_schematic_vehicle_civilian_shared_air2_swoop_speeder,
+ "object/draft_schematic/vehicle/civilian/shared_air2_swoop_speeder.iff")
+
+object_draft_schematic_vehicle_civilian_shared_barc_speeder = SharedDraftSchematicObjectTemplate:new {
+clientTemplateFileName = "object/draft_schematic/vehicle/civilian/shared_barc_speeder.iff"}
+ObjectTemplates:addClientTemplate(object_draft_schematic_vehicle_civilian_shared_barc_speeder,
+ "object/draft_schematic/vehicle/civilian/shared_barc_speeder.iff")
+
+object_draft_schematic_vehicle_civilian_shared_flare_s_swoop = SharedDraftSchematicObjectTemplate:new {
+clientTemplateFileName = "object/draft_schematic/vehicle/civilian/shared_flare_s_swoop.iff"}
+ObjectTemplates:addClientTemplate(object_draft_schematic_vehicle_civilian_shared_flare_s_swoop,
+ "object/draft_schematic/vehicle/civilian/shared_flare_s_swoop.iff")
+
+object_draft_schematic_vehicle_civilian_shared_sith_speeder = SharedDraftSchematicObjectTemplate:new {
+clientTemplateFileName = "object/draft_schematic/vehicle/civilian/shared_sith_speeder.iff"}
+ObjectTemplates:addClientTemplate(object_draft_schematic_vehicle_civilian_shared_sith_speeder,
+ "object/draft_schematic/vehicle/civilian/shared_sith_speeder.iff")
+
+object_draft_schematic_vehicle_civilian_shared_a1_deluxe_floater = SharedDraftSchematicObjectTemplate:new {
+	clientTemplateFileName = "object/draft_schematic/vehicle/civilian/shared_a1_deluxe_floater.iff"}
+ObjectTemplates:addClientTemplate(object_draft_schematic_vehicle_civilian_shared_a1_deluxe_floater, 
+"object/draft_schematic/vehicle/civilian/shared_a1_deluxe_floater.iff")
+
+object_draft_schematic_vehicle_civilian_shared_landspeeder_ab1 = SharedDraftSchematicObjectTemplate:new {
+	clientTemplateFileName = "object/draft_schematic/vehicle/civilian/shared_landspeeder_ab1.iff"}
+ObjectTemplates:addClientTemplate(object_draft_schematic_vehicle_civilian_shared_landspeeder_ab1, 
+"object/draft_schematic/vehicle/civilian/shared_landspeeder_ab1.iff")
+
+object_draft_schematic_vehicle_civilian_shared_landspeeder_xp38 = SharedDraftSchematicObjectTemplate:new {
+	clientTemplateFileName = "object/draft_schematic/vehicle/civilian/shared_landspeeder_xp38.iff"}
+ObjectTemplates:addClientTemplate(object_draft_schematic_vehicle_civilian_shared_landspeeder_xp38, 
+"object/draft_schematic/vehicle/civilian/shared_landspeeder_xp38.iff")
+
+object_draft_schematic_vehicle_civilian_shared_landspeeder_v35 = SharedDraftSchematicObjectTemplate:new {
+	clientTemplateFileName = "object/draft_schematic/vehicle/civilian/shared_landspeeder_v35.iff"}
+ObjectTemplates:addClientTemplate(object_draft_schematic_vehicle_civilian_shared_landspeeder_v35,
+ "object/draft_schematic/vehicle/civilian/shared_landspeeder_v35.iff")
+
 object_draft_schematic_vehicle_civilian_shared_civilian_a = SharedDraftSchematicObjectTemplate:new {
 	clientTemplateFileName = "object/draft_schematic/vehicle/civilian/shared_civilian_a.iff"
 	--Data below here is deprecated and loaded from the tres, keeping for easy lookups
@@ -579,3 +629,82 @@ object_draft_schematic_vehicle_civilian_shared_speeder_bike_swoop = SharedDraftS
 }
 
 ObjectTemplates:addClientTemplate(object_draft_schematic_vehicle_civilian_shared_speeder_bike_swoop, "object/draft_schematic/vehicle/civilian/shared_speeder_bike_swoop.iff")
+
+object_draft_schematic_vehicle_civilian_shared_speeder_bike = SharedDraftSchematicObjectTemplate:new {
+	clientTemplateFileName = "object/draft_schematic/vehicle/civilian/shared_speeder_bike.iff"
+	--Data below here is deprecated and loaded from the tres, keeping for easy lookups
+--[[
+	appearanceFilename = "",
+	arrangementDescriptorFilename = "abstract/slot/arrangement/arrangement_datapad.iff",
+
+	clearFloraRadius = 0,
+	clientDataFile = "",
+	clientGameObjectType = 2049,
+	collisionActionBlockFlags = 0,
+	collisionActionFlags = 0,
+	collisionActionPassFlags = 0,
+	collisionMaterialBlockFlags = 0,
+	collisionMaterialFlags = 0,
+	collisionMaterialPassFlags = 0,
+	containerType = 0,
+	containerVolumeLimit = 0,
+
+	detailedDescription = "string_id_table",
+
+	gameObjectType = 2049,
+
+	locationReservationRadius = 0,
+	lookAtText = "string_id_table",
+
+	noBuildRadius = 0,
+
+	objectName = "string_id_table",
+	onlyVisibleInTools = 0,
+
+	portalLayoutFilename = "",
+
+	scale = 0,
+	scaleThresholdBeforeExtentTest = 0.5,
+	sendToClient = 1,
+	slotDescriptorFilename = "",
+	snapToTerrain = 0,
+	surfaceType = 0,
+
+	totalCellNumber = 0,
+
+	clientObjectCRC = 3893680726,
+	derivedFromTemplates = {"object/object/base/shared_base_object.iff", "object/intangible/base/shared_base_intangible.iff", "object/draft_schematic/base/shared_base_draft_schematic.iff"}
+]]
+}
+
+ObjectTemplates:addClientTemplate(object_draft_schematic_vehicle_civilian_shared_speeder_bike, "object/draft_schematic/vehicle/civilian/shared_speeder_bike.iff")
+
+object_draft_schematic_vehicle_civilian_shared_podracer_anakin = SharedDraftSchematicObjectTemplate:new {
+	clientTemplateFileName = "object/draft_schematic/vehicle/civilian/shared_podracer_anakin.iff"}
+ObjectTemplates:addClientTemplate(object_draft_schematic_vehicle_civilian_shared_podracer_anakin,
+ "object/draft_schematic/vehicle/civilian/shared_podracer_anakin.iff")
+
+ object_draft_schematic_vehicle_civilian_shared_podracer_balta = SharedDraftSchematicObjectTemplate:new {
+	clientTemplateFileName = "object/draft_schematic/vehicle/civilian/shared_podracer_balta.iff"}
+ObjectTemplates:addClientTemplate(object_draft_schematic_vehicle_civilian_shared_podracer_balta,
+ "object/draft_schematic/vehicle/civilian/shared_podracer_balta.iff")
+
+ object_draft_schematic_vehicle_civilian_shared_podracer_gasgano = SharedDraftSchematicObjectTemplate:new {
+	clientTemplateFileName = "object/draft_schematic/vehicle/civilian/shared_podracer_gasgano.iff"}
+ObjectTemplates:addClientTemplate(object_draft_schematic_vehicle_civilian_shared_podracer_gasgano,
+ "object/draft_schematic/vehicle/civilian/shared_podracer_gasgano.iff")
+
+ object_draft_schematic_vehicle_civilian_shared_podracer_ipg = SharedDraftSchematicObjectTemplate:new {
+	clientTemplateFileName = "object/draft_schematic/vehicle/civilian/shared_podracer_ipg.iff"}
+ObjectTemplates:addClientTemplate(object_draft_schematic_vehicle_civilian_shared_podracer_ipg,
+ "object/draft_schematic/vehicle/civilian/shared_podracer_ipg.iff")
+
+ object_draft_schematic_vehicle_civilian_shared_podracer_mawhonical = SharedDraftSchematicObjectTemplate:new {
+	clientTemplateFileName = "object/draft_schematic/vehicle/civilian/shared_podracer_mawhonical.iff"}
+ObjectTemplates:addClientTemplate(object_draft_schematic_vehicle_civilian_shared_podracer_mawhonical,
+ "object/draft_schematic/vehicle/civilian/shared_podracer_mawhonical.iff")
+
+ object_draft_schematic_vehicle_civilian_shared_podracer_sebulba = SharedDraftSchematicObjectTemplate:new {
+	clientTemplateFileName = "object/draft_schematic/vehicle/civilian/shared_podracer_sebulba.iff"}
+ObjectTemplates:addClientTemplate(object_draft_schematic_vehicle_civilian_shared_podracer_sebulba,
+ "object/draft_schematic/vehicle/civilian/shared_podracer_sebulba.iff")

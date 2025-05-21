@@ -146,6 +146,11 @@ public:
 		float newAccel = vehicle->getAccelerationMultiplierMod();
 		float newTurn = vehicle->getTurnScale();
 
+		if (newSpeed <= 10){
+			vehicle->setRunSpeed(10);
+			newSpeed = vehicle->getRunSpeed();
+		}
+
 		// get animal mount speeds
 		if (vehicle->isMount()) {
 			PetManager* petManager = server->getZoneServer()->getPetManager();
