@@ -925,17 +925,26 @@ void EntertainingSessionImplementation::activateEntertainerBuff(CreatureObject* 
 
 		Locker locker(mindBuff);
 		creature->addBuff(mindBuff);
-		creature->addBuff(EntmindBuff);
 		locker.release();
 
 		Locker locker2(focusBuff);
 		creature->addBuff(focusBuff);
-		creature->addBuff(EntmindBuff);
 		locker.release();
 
 		Locker locker3(willBuff);
 		creature->addBuff(willBuff);
+		locker.release();
 
+		Locker locker4(EntmindBuff);
+		entertainer->addBuff(EntmindBuff);
+		locker.release();
+
+		Locker locker5(EntfocusBuff);
+		entertainer->addBuff(EntfocusBuff);
+		locker.release();
+
+		Locker locker6(EntwillBuff);
+		entertainer->addBuff(EntwillBuff);
 	
 		}else{
 		switch (performanceType) {
@@ -948,6 +957,9 @@ void EntertainingSessionImplementation::activateEntertainerBuff(CreatureObject* 
 				return;
 			ManagedReference<PerformanceBuff*> focusBuff = new PerformanceBuff(creature, focusBuffCRC, buffStrength, buffDuration * 105, PerformanceBuffType::MUSIC_FOCUS);
 			ManagedReference<PerformanceBuff*> willBuff = new PerformanceBuff(creature, willBuffCRC, buffStrength, buffDuration * 105, PerformanceBuffType::MUSIC_WILLPOWER);
+						
+			ManagedReference<PerformanceBuff*> EntfocusBuff = new PerformanceBuff(entertainer, focusBuffCRC, buffStrength, buffDuration * 105, PerformanceBuffType::MUSIC_FOCUS);
+			ManagedReference<PerformanceBuff*> EntwillBuff = new PerformanceBuff(entertainer, willBuffCRC, buffStrength, buffDuration * 105, PerformanceBuffType::MUSIC_WILLPOWER);
 
 			Locker locker(focusBuff);
 			creature->addBuff(focusBuff);
@@ -955,6 +967,14 @@ void EntertainingSessionImplementation::activateEntertainerBuff(CreatureObject* 
 
 			Locker locker2(willBuff);
 			creature->addBuff(willBuff);
+			locker.release();
+
+			Locker locker3(EntfocusBuff);
+			entertainer->addBuff(EntfocusBuff);
+			locker.release();
+
+			Locker locker4(EntwillBuff);
+			entertainer->addBuff(EntwillBuff);
 			break;
 		}
 		case PerformanceType::DANCE:
@@ -964,9 +984,14 @@ void EntertainingSessionImplementation::activateEntertainerBuff(CreatureObject* 
 			if (oldBuff != nullptr && oldBuff->getBuffStrength() > buffStrength)
 				return;
 			ManagedReference<PerformanceBuff*> mindBuff = new PerformanceBuff(creature, mindBuffCRC, buffStrength, buffDuration * 105, PerformanceBuffType::DANCE_MIND);
+			ManagedReference<PerformanceBuff*> EntmindBuff = new PerformanceBuff(entertainer, mindBuffCRC, buffStrength, buffDuration * 105, PerformanceBuffType::DANCE_MIND);	
 
 			Locker locker(mindBuff);
 			creature->addBuff(mindBuff);
+			locker.release();
+
+			Locker locker2(EntmindBuff);
+			entertainer->addBuff(EntmindBuff);
 			break;
 		}
 		}
