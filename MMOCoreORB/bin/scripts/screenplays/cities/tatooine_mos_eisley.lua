@@ -110,6 +110,7 @@ TatooineMosEisleyScreenPlay = CityScreenPlay:new {
 		{"vincie_kalhoon", 0, 3531.3, 5.0, -4807.4, 25, 0, ""},
 		{"mooch_davoney", 0, 3530.8, 5.0, -4805.0, 110, 0, ""},
 		{"guillo_parootchie", 0, 3533.5, 5.0, -4805.9, -142, 0, ""},
+		{"trainer_mechanic", 0, 3513.1, 5.0, -4764.7, -102, 0, "neutral"},
 
 		--Cantina
 		{"commoner_old",60,36,0.1,0.7,310,1082876, "npc_sitting_chair"},

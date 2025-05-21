@@ -104,7 +104,6 @@ schematics = {
 	{path="object/draft_schematic/clothing/custom/starforge_backpack_schematic.iff"},
 
 	--Mechanic
-	--[[
 	{path="object/draft_schematic/vehicle/civilian/landspeeder_x31.iff"},
 	{path="object/draft_schematic/vehicle/civilian/speederbike_flash.iff"},
 	{path="object/draft_schematic/vehicle/civilian/air2_swoop_speeder.iff"},
@@ -146,7 +145,6 @@ schematics = {
 	{path="object/draft_schematic/vehicle/civilian/podracer_ipg.iff"},
 	{path="object/draft_schematic/vehicle/civilian/podracer_mawhonical.iff"},
 	{path="object/draft_schematic/vehicle/civilian/podracer_sebulba.iff"},
-	]]
 
 	--CloneTrooper
 	{path="object/draft_schematic/clothing/clothing_armor_clone_trooper_neutral_s01_belt.iff"},
