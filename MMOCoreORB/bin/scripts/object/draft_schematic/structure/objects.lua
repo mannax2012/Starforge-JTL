@@ -40,6 +40,10 @@
 --this exception also makes it possible to release a modified version
 --which carries forward this exception.
 
+object_draft_schematic_structure_shared_installation_mining_organic_creature_heavy = SharedDraftSchematicObjectTemplate:new {
+	clientTemplateFileName = "object/draft_schematic/structure/shared_installation_mining_organic_creature_heavy.iff"}
+ObjectTemplates:addClientTemplate(object_draft_schematic_structure_shared_installation_mining_organic_creature_heavy, 
+"object/draft_schematic/structure/shared_installation_mining_organic_creature_heavy.iff")
 
 object_draft_schematic_structure_shared_corellia_house_guild_hall = SharedDraftSchematicObjectTemplate:new {
 	clientTemplateFileName = "object/draft_schematic/structure/shared_corellia_house_guild_hall.iff"

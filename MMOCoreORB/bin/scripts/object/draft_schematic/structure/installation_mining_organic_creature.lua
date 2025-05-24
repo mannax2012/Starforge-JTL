@@ -42,7 +42,38 @@
 
 
 object_draft_schematic_structure_installation_mining_organic_creature = object_draft_schematic_structure_shared_installation_mining_organic_creature:new {
-    factoryCrateType = "object/factory/factory_crate_installation.iff"
+
+    templateType = DRAFTSCHEMATIC,
+
+	customObjectName = "Deed for: Automated Creature Processing Plant",
+
+	craftingToolTab = 1024, -- (See DraftSchematicObjectTemplate.h)
+	complexity = 18,
+	size = 8,
+	factoryCrateSize = 0,
+	factoryCrateType = "object/factory/factory_crate_installation.iff",
+   
+	xpType = "crafting_general",
+	xp = 425,
+
+	assemblySkill = "general_assembly",
+	experimentingSkill = "general_experimentation",
+	customizationSkill = "clothing_customization",
+
+	customizationOptions = {},
+	customizationStringNames = {},
+	customizationDefaults = {},
+
+	ingredientTemplateNames = {"craft_structure_ingredients_n", "craft_structure_ingredients_n", "craft_structure_ingredients_n", "craft_structure_ingredients_n", "craft_structure_ingredients_n"},
+	ingredientTitleNames = {"load_bearing_frame", "body_shell_and_casing", "structure_foundation", "plant_handling_mechanism", "bio_storage_tank"},
+	ingredientSlotType = {0, 0, 0, 0, 0},
+	resourceTypes = {"metal", "steel", "ore", "metal_nonferrous", "aluminum"},
+	resourceQuantities = {110, 60, 50, 15, 15},
+	contribution = {100, 100, 100, 100, 100},
+
+	targetTemplate = "object/tangible/deed/harvester_deed/harvester_creature_deed.iff",
+
+	additionalTemplates = {}
 }
 
 ObjectTemplates:addTemplate(object_draft_schematic_structure_installation_mining_organic_creature, "object/draft_schematic/structure/installation_mining_organic_creature.iff")

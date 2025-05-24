@@ -50,11 +50,11 @@ object_draft_schematic_chemistry_component_liquid_delivery_suspension_advanced =
 	craftingToolTab = 64, -- (See DraftSchematicObjectTemplate.h)
 	complexity = 18,
 	size = 2,
-	factoryCrateSize = 50,
+	factoryCrateSize = 1000,
 	factoryCrateType = "object/factory/factory_crate_chemicals.iff",
 
 	xpType = "medical",
-	xp = 2500,
+	xp = 25,
 
 	assemblySkill = "medicine_assembly",
 	experimentingSkill = "medicine_experimentation",

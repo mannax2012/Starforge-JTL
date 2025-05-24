@@ -41,38 +41,39 @@
 --this exception also makes it possible to release a modified version 
 
 
-object_draft_schematic_chemistry_medpack_disease_health_b = object_draft_schematic_chemistry_shared_medpack_disease_health_b:new {
+object_draft_schematic_structure_installation_mining_organic_creature_heavy = object_draft_schematic_structure_shared_installation_mining_organic_creature_heavy:new {
 
-	templateType = DRAFTSCHEMATIC,
+    templateType = DRAFTSCHEMATIC,
 
-	customObjectName = "Health Disease Delivery Unit - B",
+	customObjectName = "Deed for: Heavy Automated Creature Processing Plant",
 
-	craftingToolTab = 64, -- (See DraftSchematicObjectTemplate.h)
-	complexity = 30,
-	size = 3,
+	craftingToolTab = 1024, -- (See DraftSchematicObjectTemplate.h)
+	complexity = 32,
+	size = 8,
 	factoryCrateSize = 1000,
-	factoryCrateType = "object/factory/factory_crate_chemicals.iff",
+	factoryCrateType = "object/factory/factory_crate_installation.iff",
+   
+	xpType = "crafting_structure_general",
+	xp = 3800,
 
-	xpType = "crafting_medicine_general",
-	xp = 80,
-
-	assemblySkill = "combat_medicine_assembly",
-	experimentingSkill = "combat_medicine_experimentation",
-	customizationSkill = "medicine_customization",
+	assemblySkill = "structure_assembly",
+	experimentingSkill = "structure_experimentation",
+	customizationSkill = "structure_customization",
 
 	customizationOptions = {},
 	customizationStringNames = {},
 	customizationDefaults = {},
 
-	ingredientTemplateNames = {"craft_chemical_ingredients_n", "craft_chemical_ingredients_n", "craft_chemical_ingredients_n", "craft_chemical_ingredients_n", "craft_chemical_ingredients_n", "craft_chemical_ingredients_n"},
-	ingredientTitleNames = {"body_shell", "organic_element", "inorganic_element", "delivery_medium", "drug_duration_compound", "drug_strength_compound"},
-	ingredientSlotType = {0, 0, 0, 1, 1, 1},
-	resourceTypes = {"metal_nonferrous", "meat_insect", "radioactive", "object/tangible/component/chemistry/shared_dispersal_mechanism.iff", "object/tangible/component/chemistry/shared_resilience_compound.iff", "object/tangible/component/chemistry/shared_infection_amplifier.iff"},
-	resourceQuantities = {6, 15, 20, 1, 1, 2},
-	contribution = {100, 100, 100, 100, 100, 100},
+	ingredientTemplateNames = {"craft_structure_ingredients_n", "craft_structure_ingredients_n", "craft_structure_ingredients_n", "craft_structure_ingredients_n", "craft_structure_ingredients_n", "craft_structure_ingredients_n", "craft_structure_ingredients_n", "craft_structure_ingredients_n", "craft_structure_ingredients_n"},
+	ingredientTitleNames = {"load_bearing_frame", "body_shell_and_casing", "structure_foundation", "plant_handling_mechanism", "bio_storage_tank", "boreing_mechanism_buffers_and_bushings", "power_supply_unit", "bio_storage_unit", "resource_handling_system"},
+	ingredientSlotType = {0, 0, 0, 0, 2, 0, 1, 1, 1},
+	resourceTypes = {"steel", "metal", "ore", "metal", "object/tangible/component/structure/shared_wall_module.iff", "chemical", "object/tangible/component/structure/shared_generator_turbine.iff", "object/tangible/component/structure/shared_structure_small_storage_section.iff", "object/tangible/component/structure/shared_heavy_harvesting_mechanism.iff"},
+	resourceQuantities = {400, 600, 300, 200, 6, 400, 2, 4, 2},
+	contribution = {100, 100, 100, 100, 100, 100, 100, 100, 100},
 
-	targetTemplate = "object/tangible/medicine/crafted/medpack_disease_health_b.iff",
+	targetTemplate = "object/tangible/deed/harvester_deed/harvester_creature_heavy_deed.iff",
 
 	additionalTemplates = {}
 }
-ObjectTemplates:addTemplate(object_draft_schematic_chemistry_medpack_disease_health_b, "object/draft_schematic/chemistry/medpack_disease_health_b.iff")
+
+ObjectTemplates:addTemplate(object_draft_schematic_structure_installation_mining_organic_creature_heavy, "object/draft_schematic/structure/installation_mining_organic_creature_heavy.iff")
