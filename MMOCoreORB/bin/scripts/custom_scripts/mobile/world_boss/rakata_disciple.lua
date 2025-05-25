@@ -46,14 +46,14 @@ rakata_disciple = Creature:new {
 		},
 		lootChance = 10000000,
 		},
-		--[[
+		
 		{
 		groups = {
 			{group = "rebels_lightsaber_schematics", chance = 10000000}
 		},
 		lootChance = 1500000,
 		},
-		]]
+
 		{
 		groups = {
 			{group = "acid_vibro_unit", chance = 10000000}
