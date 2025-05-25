@@ -50,7 +50,7 @@ object_draft_schematic_structure_installation_mining_organic_creature = object_d
 	craftingToolTab = 1024, -- (See DraftSchematicObjectTemplate.h)
 	complexity = 18,
 	size = 8,
-	factoryCrateSize = 0,
+	factoryCrateSize = 1000,
 	factoryCrateType = "object/factory/factory_crate_installation.iff",
    
 	xpType = "crafting_general",
