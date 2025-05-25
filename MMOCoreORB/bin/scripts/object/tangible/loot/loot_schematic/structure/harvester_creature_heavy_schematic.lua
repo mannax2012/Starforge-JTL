@@ -41,24 +41,13 @@
 --this exception also makes it possible to release a modified version 
 
 
+object_tangible_loot_loot_schematic_structure_harvester_creature_heavy_schematic = object_tangible_loot_loot_schematic_structure_shared_harvester_creature_heavy_schematic:new {
+	templateType = LOOTSCHEMATIC,
+	objectMenuComponent = "LootSchematicMenuComponent",
+	attributeListComponent = "LootSchematicAttributeListComponent",
+	requiredSkill = "crafting_architect_master",
+	targetDraftSchematic = "object/draft_schematic/structure/installation_mining_organic_creature_heavy.iff",
+	targetUseCount = 1
+}
 
---Children folder includes
-
--- Server Objects
-includeFile("tangible/deed/harvester_deed/harvester_creature_deed.lua")
-includeFile("tangible/deed/harvester_deed/harvester_creature_heavy_deed.lua")
-includeFile("tangible/deed/harvester_deed/harvester_flora_deed.lua")
-includeFile("tangible/deed/harvester_deed/harvester_flora_deed_heavy.lua")
-includeFile("tangible/deed/harvester_deed/harvester_flora_deed_medium.lua")
-includeFile("tangible/deed/harvester_deed/harvester_gas_deed.lua")
-includeFile("tangible/deed/harvester_deed/harvester_gas_deed_heavy.lua")
-includeFile("tangible/deed/harvester_deed/harvester_gas_deed_medium.lua")
-includeFile("tangible/deed/harvester_deed/harvester_liquid_deed.lua")
-includeFile("tangible/deed/harvester_deed/harvester_liquid_deed_heavy.lua")
-includeFile("tangible/deed/harvester_deed/harvester_liquid_deed_medium.lua")
-includeFile("tangible/deed/harvester_deed/harvester_moisture_deed.lua")
-includeFile("tangible/deed/harvester_deed/harvester_moisture_deed_heavy.lua")
-includeFile("tangible/deed/harvester_deed/harvester_moisture_deed_medium.lua")
-includeFile("tangible/deed/harvester_deed/harvester_ore_heavy_deed.lua")
-includeFile("tangible/deed/harvester_deed/harvester_ore_s1_deed.lua")
-includeFile("tangible/deed/harvester_deed/harvester_ore_s2_deed.lua")
+ObjectTemplates:addTemplate(object_tangible_loot_loot_schematic_structure_harvester_creature_heavy_schematic, "object/tangible/loot/loot_schematic/structure/harvester_creature_heavy_schematic.iff")

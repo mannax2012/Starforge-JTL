@@ -43,8 +43,8 @@
 
 object_installation_mining_organic_mining_organic_creature_farm = object_installation_mining_organic_shared_mining_organic_creature_farm:new {
 	lotSize = 1,
-	baseMaintenanceRate = 30,
-	basePowerRate = 25,
+	baseMaintenanceRate = 60,
+	basePowerRate = 60,
 	width = 3,
 	length = 3,
 	objectMenuComponent = "InstallationObjectMenuComponent",

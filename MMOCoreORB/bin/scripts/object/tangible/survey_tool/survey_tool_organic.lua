@@ -43,10 +43,10 @@
 
 object_tangible_survey_tool_survey_tool_organic = object_tangible_survey_tool_shared_survey_tool_organic:new {
 	templateType = SURVEYTOOL,
-	toolType = 0,
+	toolType = 11,
 	toolAnimation = "clienteffect/survey_tool_lumber.cef",
 	sampleAnimation = "clienteffect/survey_sample_lumber.cef",
-	surveyType = "organic"
+	surveyType = "creature_resources"
 
 
 }

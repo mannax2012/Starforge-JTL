@@ -116,7 +116,7 @@ void SurveySessionImplementation::startSurvey(const String& resname) {
 		return;
 	}
 
-	if (spawn->getSurveyToolType() != activeSurveyTool->getToolType() && !(activeSurveyTool->getToolType() == SurveyTool::INORGANIC && spawn->isType("inorganic"))) {
+	if (spawn->getSurveyToolType() != activeSurveyTool->getToolType() && !((activeSurveyTool->getToolType() == SurveyTool::INORGANIC && spawn->isType("inorganic")) || (activeSurveyTool->getToolType() == SurveyTool::CREATURE && spawn->isType("creature_resources")))) {
 		StringIdChatParameter message("@survey:wrong_tool"); // %TO resources cannot be located with this tool
 		message.setTO(spawn->getFinalClass());
 		surveyer->sendSystemMessage(message);
@@ -191,8 +191,14 @@ void SurveySessionImplementation::startSample(const String& resname) {
 		return;
 	}
 
+	// Do NOT let people sample from the ground for ORGANICs
+	if (activeSurveyTool->getToolType() == SurveyTool::CREATURE && resourceSpawn->isType("creature_resources") ) {
+		surveyer->sendSystemMessage("You cannot sample this resource from the ground. Hire a Ranger or buy a Creature Harvester.");
+		return;
+	}
+
 	//Get actual cost based upon player's Quickness
-	int actionCost = 124 - (int)(surveyer->getHAM(CreatureAttribute::QUICKNESS)/12.5f);
+	int actionCost = 250;
 
 	if (surveyer->getHAM(CreatureAttribute::ACTION) < actionCost) {
 		surveyer->setPosture(CreaturePosture::UPRIGHT, true);
@@ -200,7 +206,7 @@ void SurveySessionImplementation::startSample(const String& resname) {
 		return;
 	}
 
-	if (resourceSpawn->getSurveyToolType() != activeSurveyTool->getToolType() && !(activeSurveyTool->getToolType() == SurveyTool::INORGANIC && resourceSpawn->isType("inorganic"))) {
+	if (resourceSpawn->getSurveyToolType() != activeSurveyTool->getToolType() && !((activeSurveyTool->getToolType() == SurveyTool::INORGANIC && resourceSpawn->isType("inorganic")) || (activeSurveyTool->getToolType() == SurveyTool::CREATURE && resourceSpawn->isType("creature_resources")))) {
 		StringIdChatParameter message("@survey:wrong_tool"); // %TO resources cannot be located with this tool
 		message.setTO(resourceSpawn->getFinalClass());
 		surveyer->sendSystemMessage(message);

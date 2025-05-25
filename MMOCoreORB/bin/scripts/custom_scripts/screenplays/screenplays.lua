@@ -5,6 +5,7 @@ includeFile("../custom_scripts/screenplays/world_boss/dath_disciple_boss.lua")
 includeFile("../custom_scripts/screenplays/vendor/starforge_vendor_logic.lua")
 includeFile("../custom_scripts/screenplays/vendor/vendor_weapon_lightsaber.lua")
 includeFile("../custom_scripts/screenplays/vendor/vendor_backpacks.lua")
+includeFile("../custom_scripts/screenplays/vendor/vendor_structures.lua")
 includeFile("../custom_scripts/screenplays/vendor/vendor_vehicles.lua")
 includeFile("../custom_scripts/screenplays/vendor/starforge_vendor_conv_handler.lua")
 

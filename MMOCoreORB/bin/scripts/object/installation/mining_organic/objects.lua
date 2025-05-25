@@ -40,6 +40,10 @@
 --this exception also makes it possible to release a modified version
 --which carries forward this exception.
 
+object_installation_mining_organic_shared_mining_organic_creature_farm_heavy = SharedInstallationObjectTemplate:new {
+	clientTemplateFileName = "object/installation/mining_organic/shared_mining_organic_creature_farm_heavy.iff"}
+ObjectTemplates:addClientTemplate(object_installation_mining_organic_shared_mining_organic_creature_farm_heavy, 
+"object/installation/mining_organic/shared_mining_organic_creature_farm_heavy.iff")
 
 object_installation_mining_organic_shared_mining_organic_creature_farm = SharedInstallationObjectTemplate:new {
 	clientTemplateFileName = "object/installation/mining_organic/shared_mining_organic_creature_farm.iff"

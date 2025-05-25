@@ -42,6 +42,12 @@
 
 
 schematics = {
+
+	--Structures
+	{path="object/draft_schematic/structure/installation_mining_organic_creature.iff"},
+	{path="object/draft_schematic/structure/installation_mining_organic_creature_heavy.iff"},
+	{path="object/draft_schematic/item/item_survey_tool_creature.iff"},
+	
 	
 	--Cal Sabers
 	{path="object/draft_schematic/weapon/lightsaber/lightsaber_one_hand_cal_gen3.iff"},

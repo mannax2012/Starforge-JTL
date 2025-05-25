@@ -46,6 +46,8 @@
 
 --Custom
 includeFile("tangible/loot/loot_schematic/lightsaber/serverobjects.lua")
+includeFile("tangible/loot/loot_schematic/vehicle/serverobjects.lua")
+includeFile("tangible/loot/loot_schematic/structure/serverobjects.lua")
 
 --includeFile("tangible/loot/loot_schematic/lance_trando_pike_schematic.lua")
 --includeFile("tangible/loot/loot_schematic/baton_gaderiffi_elite_schematic.lua")

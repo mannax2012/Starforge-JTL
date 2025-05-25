@@ -41,24 +41,40 @@
 --this exception also makes it possible to release a modified version 
 
 
+object_draft_schematic_item_item_survey_tool_creature = object_draft_schematic_item_shared_item_survey_tool_creature:new {
 
---Children folder includes
+   templateType = DRAFTSCHEMATIC,
 
--- Server Objects
-includeFile("tangible/deed/harvester_deed/harvester_creature_deed.lua")
-includeFile("tangible/deed/harvester_deed/harvester_creature_heavy_deed.lua")
-includeFile("tangible/deed/harvester_deed/harvester_flora_deed.lua")
-includeFile("tangible/deed/harvester_deed/harvester_flora_deed_heavy.lua")
-includeFile("tangible/deed/harvester_deed/harvester_flora_deed_medium.lua")
-includeFile("tangible/deed/harvester_deed/harvester_gas_deed.lua")
-includeFile("tangible/deed/harvester_deed/harvester_gas_deed_heavy.lua")
-includeFile("tangible/deed/harvester_deed/harvester_gas_deed_medium.lua")
-includeFile("tangible/deed/harvester_deed/harvester_liquid_deed.lua")
-includeFile("tangible/deed/harvester_deed/harvester_liquid_deed_heavy.lua")
-includeFile("tangible/deed/harvester_deed/harvester_liquid_deed_medium.lua")
-includeFile("tangible/deed/harvester_deed/harvester_moisture_deed.lua")
-includeFile("tangible/deed/harvester_deed/harvester_moisture_deed_heavy.lua")
-includeFile("tangible/deed/harvester_deed/harvester_moisture_deed_medium.lua")
-includeFile("tangible/deed/harvester_deed/harvester_ore_heavy_deed.lua")
-includeFile("tangible/deed/harvester_deed/harvester_ore_s1_deed.lua")
-includeFile("tangible/deed/harvester_deed/harvester_ore_s2_deed.lua")
+   customObjectName = "Organic Surveying Tool",
+
+   craftingToolTab = 524288, -- (See DraftSchematicObjectTemplate.h)
+   complexity = 8, 
+   size = 1, 
+   factoryCrateType = "object/factory/factory_crate_electronics.iff",
+   
+   xpType = "crafting_general", 
+   xp = 42, 
+
+   assemblySkill = "general_assembly", 
+   experimentingSkill = "general_experimentation", 
+   customizationSkill = "clothing_customization", 
+
+   customizationOptions = {},
+   customizationStringNames = {},
+   customizationDefaults = {},
+
+   ingredientTemplateNames = {"craft_item_ingredients_n", "craft_item_ingredients_n", "craft_item_ingredients_n"},
+   ingredientTitleNames = {"assembly_enclosure", "controller", "scanner_assembly"},
+   ingredientSlotType = {0, 0, 0},
+   resourceTypes = {"metal", "metal", "hide"},
+   resourceQuantities = {28, 15, 13},
+   contribution = {100, 100, 100},
+
+
+   targetTemplate = "object/tangible/survey_tool/survey_tool_organic.iff",
+
+   additionalTemplates = {
+             }
+
+}
+ObjectTemplates:addTemplate(object_draft_schematic_item_item_survey_tool_creature, "object/draft_schematic/item/item_survey_tool_creature.iff")

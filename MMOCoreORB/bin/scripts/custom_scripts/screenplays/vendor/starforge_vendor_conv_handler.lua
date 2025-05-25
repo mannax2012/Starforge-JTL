@@ -56,6 +56,7 @@ function VendorConvoHandler:runScreenHandlers(pConvTemplate, pPlayer, pNpc, sele
 		clonedScreen:addOption(self.buyArmor, "buy_armor")
 		clonedScreen:addOption(self.buyWeapons, "buy_weapons")
 		clonedScreen:addOption(self.buyBackpacks, "buy_backpacks")
+		clonedScreen:addOption(self.buyStructures, "buy_structures")
 		clonedScreen:addOption(self.buyVehicles, "buy_vehicles")
 	end
 
@@ -129,6 +130,11 @@ function VendorConvoHandler:runScreenHandlers(pConvTemplate, pPlayer, pNpc, sele
 		self.backpacksLogic:openSUIBackpacks(pPlayer)
 	end
 
+		if (screenID == "buy_structures") then
+		clonedScreen:setCustomDialogText(self.openSUItext)
+		self.structuresLogic:openSUIStructures(pPlayer)
+	end
+
 	if (screenID == "information_first") then
 		clonedScreen:setCustomDialogText(self.informationFirstDialog)
 		clonedScreen:addOption(self.buyWindow, "buy_window")
@@ -152,6 +158,7 @@ StarforgeVendorConvoHandler = VendorConvoHandler:new {
 	vendorLogicType = StarforgeVendorLogic,
 	weaponsSabersLogic = WeaponsLightsaberVendorLogic,
 	backpacksLogic = BackpacksVendorLogic,
+	structuresLogic = StructuresVendorLogic,
 	vehiclesLogic = VehiclesVendorLogic,
 	--Vendor Greeting
 	initialDialog = "Ya-hoo, name is Busten Cyder, I travel da world sellen items per Starforge Currency. Do you want to be buyin something?",
@@ -159,9 +166,10 @@ StarforgeVendorConvoHandler = VendorConvoHandler:new {
 	buyWindow = "Show me what you have for sale.",
 	buyArmorDialog = "I have a few thing available for armor, take a look.",
 	buyArmor = "I am interested in improving my armor.",
-	buyWeapons = "I am interested in improving my weapons.",
-	buyBackpacks = "I am interested in improving my backpack look.",
-	buyVehicles = "I am interested in improving my ride.",
+	buyWeapons = "Do you have any new weapon scheamtics in stock?.",
+	buyBackpacks = "I need more backpack space, do you have any thing new in stock?",
+	buyStructures = "Can I take a look at what structures you have available?",
+	buyVehicles = "I need a new vehicle, my old one doesnt have flames on the side.",
 	buyArmorAWDialog = "This is what I have available for Armorweaving.",
 	buyArmorASDialog = "This is what I have available for Armorsmithing.",
 	saleOption_buy_armor_as = "I am interested in Armorsmithing Schematics",
