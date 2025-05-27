@@ -781,7 +781,7 @@ void ResourceSpawner::sendResourceListForSurvey(CreatureObject* player,
 		if (!resourceSpawn->inShift())
 			continue;
 
-		if (resourceSpawn->getSurveyToolType() == toolType || (toolType == SurveyTool::INORGANIC && resourceSpawn->isType("inorganic"))) {
+		if (resourceSpawn->getSurveyToolType() == toolType || (toolType == SurveyTool::INORGANIC && resourceSpawn->isType("inorganic")) || (toolType == SurveyTool::CREATURE && resourceSpawn->isType("creature_resources"))) {
 			matchingResources.put(resourceSpawn->getDespawned(), resourceSpawn);
 		}
 	}
