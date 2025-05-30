@@ -230,8 +230,8 @@ void FactoryObjectImplementation::fillAttributeList(AttributeListMessage* alm, C
 	}else {
 		alm->insertAttribute("@starforge_n:schematic_loaded", "NONE");
 	}
-		alm->insertAttribute("@starforge_n:installation_percent_power", powerTimeRemaining);
 		alm->insertAttribute("@starforge_n:installation_maintenance_time", maintTimeRemaining);
+		alm->insertAttribute("@starforge_n:installation_percent_power", powerTimeRemaining);
 	}
 }
 

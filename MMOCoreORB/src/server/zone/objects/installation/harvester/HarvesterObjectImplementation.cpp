@@ -144,8 +144,8 @@ alm->insertAttribute("@starforge_n:harvester_harvesting", currentSpawn);
 
 if (object != nullptr && isOnAdminList(object)){
 alm->insertAttribute("@starforge_n:installation_hopper_amount", hopperString);
-alm->insertAttribute("@starforge_n:installation_percent_power", powerTimeRemaining);
 alm->insertAttribute("@starforge_n:installation_maintenance_time", maintTimeRemaining);
+alm->insertAttribute("@starforge_n:installation_percent_power", powerTimeRemaining);
 }
 
 if(isSelfPowered()){
