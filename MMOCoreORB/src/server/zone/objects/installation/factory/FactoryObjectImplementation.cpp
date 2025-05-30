@@ -134,6 +134,55 @@ void FactoryObjectImplementation::createChildObjects() {
 void FactoryObjectImplementation::fillAttributeList(AttributeListMessage* alm, CreatureObject* object) {
 	InstallationObjectImplementation::fillAttributeList(alm, object);
 
+	InstallationObject* installation = cast<InstallationObject*>(_this.get().get());
+
+		installation->updateStructureStatus();
+		bool isOperational = installation->isActive();
+		float hopperFilledPercent = 0.0f;
+		int remainingMaint = installation->getSurplusMaintenance();
+		int remainingPower = installation->getSurplusPower();
+		float secsRemainingPower = 0.f;
+		float secsRemainingMaint = 0.f;
+		float percentRemaining = 100.0f;
+		float basePowerRate = installation->getBasePowerRate();
+		float baseMaintRate = installation->getMaintenanceRate();
+		String currentSpawn = installation->getCurrentSpawnName();
+		String hopperAmount = String::valueOf((int)installation->getHopperSize());
+		String hopperAmountMax = String::valueOf((int)installation->getHopperSizeMax());
+		String hopperPercentString = "0%";
+		String hopperString = hopperAmount + " / " + hopperAmountMax + " (" + hopperPercentString + ")";
+		String statusString = "OFFLINE";
+		String powerTimeRemaining = "0";
+		String maintTimeRemaining = "0";
+
+		if (hopperAmount.isEmpty())
+			hopperAmount = "hopperAmount: Empty";
+
+		if (installation->getHopperSize() > 0.0f) {
+				hopperFilledPercent = Math::getPrecision((installation->getHopperSize() / installation->getHopperSizeMax()) * 100.0f, 2);  // round % to two decimal places
+				hopperPercentString = String::valueOf((float)hopperFilledPercent) + "%";
+				hopperString = hopperAmount + " / " + hopperAmountMax + " (" + hopperPercentString + ")";
+			}
+
+		if (isOperational){
+			statusString = "ONLINE";
+		}else{
+			statusString = "OFFLINE";
+		}
+
+		if((installation->getSurplusPower() > 0) && (basePowerRate != 0)){
+			secsRemainingPower = ((float)installation->getSurplusPower() / (float)basePowerRate)*3600;
+			powerTimeRemaining = getTimeString((uint32)secsRemainingPower);
+		}
+
+		if((installation->getSurplusMaintenance() > 0) && (baseMaintRate != 0)){
+			secsRemainingMaint = ((float)installation->getSurplusMaintenance() / (float)baseMaintRate)*3600;
+			maintTimeRemaining = getTimeString((uint32)secsRemainingMaint);
+		}
+
+
+		alm->insertAttribute("@starforge_n:installation_status", statusString);
+
 	if (isActive() && object != nullptr && isOnAdminList(object)) {
 		if (getContainerObjectsSize() == 0)
 			return;
@@ -157,6 +206,32 @@ void FactoryObjectImplementation::fillAttributeList(AttributeListMessage* alm, C
 			alm->insertAttribute("manf_limit", schematic->getManufactureLimit());
 			alm->insertAttribute("manufacture_count", currentRunCount); // Manufactured Items:
 		}
+
+		alm->insertAttribute("@starforge_n:installation_percent_power", powerTimeRemaining);
+		alm->insertAttribute("@starforge_n:installation_maintenance_time", maintTimeRemaining);
+
+	} 
+	
+	if (!isActive() && object != nullptr && isOnAdminList(object)){
+		
+		if (getContainerObjectsSize() != 0){
+
+		ManagedReference<ManufactureSchematic*> schematic = getContainerObject(0).castTo<ManufactureSchematic*>();
+
+		if (schematic == nullptr)
+			return;
+
+		ManagedReference<TangibleObject*> prototype = dynamic_cast<TangibleObject*>(schematic->getPrototype());
+
+		//alm->insertAttribute("@starforge_n:installation_hopper_amount", hopperString);
+		if (prototype != nullptr) {
+		alm->insertAttribute("@starforge_n:schematic_loaded", prototype->getDisplayedName());
+		} 
+	}else {
+		alm->insertAttribute("@starforge_n:schematic_loaded", "NONE");
+	}
+		alm->insertAttribute("@starforge_n:installation_percent_power", powerTimeRemaining);
+		alm->insertAttribute("@starforge_n:installation_maintenance_time", maintTimeRemaining);
 	}
 }
 

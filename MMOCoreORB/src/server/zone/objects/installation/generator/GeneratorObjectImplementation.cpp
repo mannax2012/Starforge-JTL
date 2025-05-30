@@ -68,3 +68,54 @@ String GeneratorObjectImplementation::getRedeedMessage() {
 
 	return "";
 }
+
+void GeneratorObjectImplementation::fillAttributeList(AttributeListMessage* alm, CreatureObject* object) {
+	InstallationObjectImplementation::fillAttributeList(alm, object);
+
+		InstallationObject* installation = cast<InstallationObject*>(_this.get().get());
+
+		installation->updateStructureStatus();
+		bool isOperational = installation->isActive();
+		float hopperFilledPercent = 0.0f;
+		int remainingMaint = installation->getSurplusMaintenance();
+		float secsRemainingMaint = 0.f;
+		float percentRemaining = 100.0f;
+		float baseMaintRate = installation->getMaintenanceRate();
+		String currentSpawn = installation->getCurrentSpawnName();
+		String hopperAmount = String::valueOf((int)installation->getHopperSize());
+		String hopperAmountMax = String::valueOf((int)installation->getHopperSizeMax());
+		String hopperPercentString = "0%";
+		String hopperString = hopperAmount + " / " + hopperAmountMax + " (" + hopperPercentString + ")";
+		String statusString = "OFFLINE";
+		String maintTimeRemaining = "0";
+
+		if (hopperAmount.isEmpty())
+			hopperAmount = "hopperAmount: Empty";
+
+		if (installation->getHopperSize() > 0.0f) {
+				hopperFilledPercent = Math::getPrecision((installation->getHopperSize() / installation->getHopperSizeMax()) * 100.0f, 2);  // round % to two decimal places
+				hopperPercentString = String::valueOf((float)hopperFilledPercent) + "%";
+				hopperString = hopperAmount + " / " + hopperAmountMax + " (" + hopperPercentString + ")";
+			}
+
+		if (isOperational){
+			statusString = "ONLINE";
+		}else{
+			statusString = "OFFLINE";
+		}
+
+		if((installation->getSurplusMaintenance() > 0) && (baseMaintRate != 0)){
+			secsRemainingMaint = ((float)installation->getSurplusMaintenance() / (float)baseMaintRate)*3600;
+			maintTimeRemaining = getTimeString((uint32)secsRemainingMaint);
+		}
+
+
+		alm->insertAttribute("@starforge_n:installation_status", statusString);
+		alm->insertAttribute("@starforge_n:harvester_harvesting", currentSpawn);
+
+		if (object != nullptr && isOnAdminList(object)){
+		alm->insertAttribute("@starforge_n:installation_hopper_amount", hopperString);
+		alm->insertAttribute("@starforge_n:installation_maintenance_time", maintTimeRemaining);
+		}
+
+}

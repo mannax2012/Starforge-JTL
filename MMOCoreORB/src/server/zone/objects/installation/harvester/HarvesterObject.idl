@@ -15,6 +15,8 @@ import server.zone.objects.creature.CreatureObject;
 class HarvesterObject extends InstallationObject {
 
 	protected boolean selfPowered;
+	private string hopperQuantityString;
+
 
 	public HarvesterObject() {
 		Logger.setLoggingName("HarvesterObject");
@@ -24,6 +26,16 @@ class HarvesterObject extends InstallationObject {
 	@preLocked
 	public void setSelfPowered(boolean isSelfPowered) {
 		selfPowered = isSelfPowered;
+	}
+
+	@read
+	public string getHopperQuantityString() {
+		return hopperQuantityString;
+	}
+
+	@write
+	public void setHopperQuantityString(string value) {
+		hopperQuantityString = value;
 	}
 
 	@read

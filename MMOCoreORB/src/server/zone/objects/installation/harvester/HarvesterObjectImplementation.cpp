@@ -11,6 +11,7 @@
 #include "server/zone/packets/object/ObjectMenuResponse.h"
 #include "server/zone/packets/harvester/ResourceHarvesterActivatePageMessage.h"
 
+
 void HarvesterObjectImplementation::fillObjectMenuResponse(ObjectMenuResponse* menuResponse, CreatureObject* player) {
 	if (!isOnAdminList(player))
 		return;
@@ -87,13 +88,68 @@ String HarvesterObjectImplementation::getRedeedMessage() {
 	return "";
 }
 
-
 void HarvesterObjectImplementation::fillAttributeList(AttributeListMessage* alm,
 		CreatureObject* object) {
 	InstallationObjectImplementation::fillAttributeList(alm, object);
 
-	if(isSelfPowered()){
-		alm->insertAttribute("@veteran_new:harvester_examine_title", "@veteran_new:harvester_examine_text");
+InstallationObject* installation = cast<InstallationObject*>(_this.get().get());
+
+installation->updateStructureStatus();
+bool isOperational = installation->isActive();
+float hopperFilledPercent = 0.0f;
+int remainingMaint = installation->getSurplusMaintenance();
+int remainingPower = installation->getSurplusPower();
+float secsRemainingPower = 0.f;
+float secsRemainingMaint = 0.f;
+float percentRemaining = 100.0f;
+float basePowerRate = installation->getBasePowerRate();
+float baseMaintRate = installation->getMaintenanceRate();
+String currentSpawn = installation->getCurrentSpawnName();
+String hopperAmount = String::valueOf((int)installation->getHopperSize());
+String hopperAmountMax = String::valueOf((int)installation->getHopperSizeMax());
+String hopperPercentString = "0%";
+String hopperString = hopperAmount + " / " + hopperAmountMax + " (" + hopperPercentString + ")";
+String statusString = "OFFLINE";
+String powerTimeRemaining = "0";
+String maintTimeRemaining = "0";
+
+if (hopperAmount.isEmpty())
+	hopperAmount = "hopperAmount: Empty";
+
+if (installation->getHopperSize() > 0.0f) {
+		hopperFilledPercent = Math::getPrecision((installation->getHopperSize() / installation->getHopperSizeMax()) * 100.0f, 2);  // round % to two decimal places
+		hopperPercentString = String::valueOf((float)hopperFilledPercent) + "%";
+		hopperString = hopperAmount + " / " + hopperAmountMax + " (" + hopperPercentString + ")";
 	}
+
+if (isOperational){
+	statusString = "ONLINE";
+}else{
+	statusString = "OFFLINE";
+}
+
+if((installation->getSurplusPower() > 0) && (basePowerRate != 0)){
+	secsRemainingPower = ((float)installation->getSurplusPower() / (float)basePowerRate)*3600;
+	powerTimeRemaining = getTimeString((uint32)secsRemainingPower);
+}
+
+if((installation->getSurplusMaintenance() > 0) && (baseMaintRate != 0)){
+	secsRemainingMaint = ((float)installation->getSurplusMaintenance() / (float)baseMaintRate)*3600;
+	maintTimeRemaining = getTimeString((uint32)secsRemainingMaint);
+}
+
+
+alm->insertAttribute("@starforge_n:installation_status", statusString);
+alm->insertAttribute("@starforge_n:harvester_harvesting", currentSpawn);
+
+if (object != nullptr && isOnAdminList(object)){
+alm->insertAttribute("@starforge_n:installation_hopper_amount", hopperString);
+alm->insertAttribute("@starforge_n:installation_percent_power", powerTimeRemaining);
+alm->insertAttribute("@starforge_n:installation_maintenance_time", maintTimeRemaining);
+}
+
+if(isSelfPowered()){
+	alm->insertAttribute("@veteran_new:harvester_examine_title", "@veteran_new:harvester_examine_text");
+}
 
 }

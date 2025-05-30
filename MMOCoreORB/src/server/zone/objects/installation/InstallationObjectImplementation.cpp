@@ -6,6 +6,8 @@
  */
 
 #include "server/zone/objects/installation/InstallationObject.h"
+#include "server/zone/objects/installation/harvester/HarvesterObject.h"
+
 #include "sui/InsertPowerSuiCallback.h"
 
 #include "server/zone/managers/resource/ResourceManager.h"
@@ -62,8 +64,8 @@ void InstallationObjectImplementation::sendBaselinesTo(SceneObject* player) {
 
 void InstallationObjectImplementation::fillAttributeList(AttributeListMessage* alm, CreatureObject* object) {
 	// TangibleObjectImplementation::fillAttributeList(alm, object);
-
-	if (object != nullptr && isOnAdminList(object)) {
+	
+	if (object != nullptr) {
 		// Add the owner name to the examine window.
 		ManagedReference<SceneObject*> obj = object->getZoneServer()->getObject(ownerObjectID);
 
@@ -423,7 +425,6 @@ void InstallationObjectImplementation::updateHopper(Time& workingTime, bool shut
 	harvestAmount = (int) harvestAmount;
 
 	float currentQuantity = container->getQuantity();
-
 
 	if(harvestAmount > 0 || !isActive()) {
 		Locker spawnLocker(currentSpawn);
@@ -945,4 +946,13 @@ float InstallationObjectImplementation::getHitChance() const {
 		return 0;
 
 	return inso->getChanceHit();
+}
+
+String InstallationObjectImplementation::getCurrentSpawnName(){
+	if(currentSpawn != nullptr)
+	{
+		//return currentSpawn->getType() + " - " + currentSpawn->getName();
+		return currentSpawn->getName();
+	}
+	else return "";
 }
