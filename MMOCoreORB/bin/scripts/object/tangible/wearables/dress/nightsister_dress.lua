@@ -59,7 +59,12 @@ object_tangible_wearables_dress_nightsister_dress = object_tangible_wearables_dr
 				"object/mobile/vendor/sullustan_female.iff",
 				"object/mobile/vendor/trandoshan_female.iff",
 				"object/mobile/vendor/twilek_female.iff",
-				"object/mobile/vendor/zabrak_female.iff" },
+				"object/mobile/vendor/zabrak_female.iff",
+				"object/creature/player/aqualish_female.iff",
+				"object/creature/player/bith_female.iff",
+				"object/creature/player/chiss_female.iff",
+				"object/creature/player/nightsister_female.iff",
+				"object/creature/player/smc_female.iff" },
 }
 
 ObjectTemplates:addTemplate(object_tangible_wearables_dress_nightsister_dress, "object/tangible/wearables/dress/nightsister_dress.iff")

@@ -45,6 +45,25 @@
 --Children folder includes
 includeFile("creature/player/base/serverobjects.lua")
 
+--custom
+includeFile("creature/player/aqualish_female.lua")
+includeFile("creature/player/aqualish_male.lua")
+includeFile("creature/player/bith_female.lua")
+includeFile("creature/player/bith_male.lua")
+includeFile("creature/player/chiss_female.lua")
+includeFile("creature/player/chiss_male.lua")
+includeFile("creature/player/devaronian_male.lua")
+includeFile("creature/player/gotal_male.lua")
+includeFile("creature/player/gran_male.lua")
+includeFile("creature/player/ishi_tib_male.lua")
+includeFile("creature/player/kel_dor_male.lua")
+includeFile("creature/player/nautolan_male.lua")
+includeFile("creature/player/nightsister_female.lua")
+includeFile("creature/player/nikto_male.lua")
+includeFile("creature/player/quarren_male.lua")
+includeFile("creature/player/smc_female.lua")
+includeFile("creature/player/weequay_male.lua")
+
 -- Server Objects
 includeFile("creature/player/bothan_female.lua")
 includeFile("creature/player/bothan_male.lua")

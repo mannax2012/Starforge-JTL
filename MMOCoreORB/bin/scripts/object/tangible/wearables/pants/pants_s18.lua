@@ -42,10 +42,16 @@
 
 
 object_tangible_wearables_pants_pants_s18 = object_tangible_wearables_pants_shared_pants_s18:new {
-	playerRaces = { "object/creature/player/bothan_female.iff",
+	playerRaces = { 				
+				"object/creature/player/aqualish_female.iff",
+				"object/creature/player/bith_female.iff",
+				"object/creature/player/bothan_female.iff",
+				"object/creature/player/chiss_female.iff",
 				"object/creature/player/human_female.iff",
 				"object/creature/player/moncal_female.iff",
+				"object/creature/player/nightsister_female.iff",
 				"object/creature/player/rodian_female.iff",
+				"object/creature/player/smc_female.iff",
 				"object/creature/player/sullustan_female.iff",
 				"object/creature/player/trandoshan_female.iff",
 				"object/creature/player/twilek_female.iff",

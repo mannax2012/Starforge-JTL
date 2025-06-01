@@ -18,7 +18,12 @@ object_tangible_wearables_armored_clothing_skirt_skirt_s07_armored = object_tang
         "object/mobile/vendor/sullustan_female.iff",
         "object/mobile/vendor/trandoshan_female.iff",
         "object/mobile/vendor/twilek_female.iff",
-        "object/mobile/vendor/zabrak_female.iff" },
+        "object/mobile/vendor/zabrak_female.iff",
+				"object/creature/player/aqualish_female.iff",
+				"object/creature/player/bith_female.iff",
+				"object/creature/player/chiss_female.iff",
+				"object/creature/player/nightsister_female.iff",
+				"object/creature/player/smc_female.iff" },
 
 	vulnerability = HEAT + LIGHTSABER, 
 	
