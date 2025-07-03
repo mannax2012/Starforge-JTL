@@ -7,7 +7,6 @@
 #include "server/zone/objects/creature/ai/HelperDroidObject.h"
 #include "templates/params/creature/CreatureState.h"
 #include "templates/params/creature/ObjectFlag.h"
-
 #include "server/zone/managers/object/ObjectManager.h"
 #include "server/zone/managers/objectcontroller/ObjectController.h"
 #include "server/zone/managers/skill/SkillManager.h"
@@ -1763,19 +1762,30 @@ void CreatureObjectImplementation::updateSpeedAndAccelerationMods() {
 		mScale *= getSpeedModifier();
 	}
 
+	/*
+	if (isPlayerCreature()) {
+		auto msg = info(true);
+		msg << "CreatureObjectImplementation::updateSpeedAndAccelerationMods -- " << getDisplayedName() << endl;
+		msg << "Acceleration Old: " << accelerationMultiplierMod << " Acceleration New: " << aScale << endl;
+		msg << "Speed Mod Old: " << speedMultiplierMod << " Speed Mod New: " << mScale << endl;
+		msg << "Turnscale Old: " << turnScale << " Turnscale New: " << tScale << endl;
+		msg.flush();
+
+	}
+	*/
 	int updateSize = 0;
 
-	if (accelerationMultiplierMod != aScale) {
+	if (accelerationMultiplierMod != aScale && !isRidingMount()) {
 		setAccelerationMultiplierMod(aScale, false, false);
 		updateSize++;
 	}
 
-	if (speedMultiplierMod != mScale) {
+	if (speedMultiplierMod != mScale && !isRidingMount()) {
 		setSpeedMultiplierMod(mScale, false, false);
 		updateSize++;
 	}
 
-	if (turnScale != tScale) {
+	if (turnScale != tScale && !isRidingMount()) {
 		setTurnScale(tScale, false);
 		updateSize++;
 	}
@@ -1785,19 +1795,6 @@ void CreatureObjectImplementation::updateSpeedAndAccelerationMods() {
 	if (notifyClient && updateSize != 0) {
 		broadcastSpeedAndAccelerationMods(false);
 		sendSpeedAndAccelerationMods(asSceneObject());
-	}
-
-	float speedboost = 0;
-	if(posture == CreaturePosture::PRONE && !hasBuff(CreatureState::COVER)) {
-		speedboost = getSkillMod("slope_move") >= 50
-				? ((getSkillMod("slope_move") - 50.0f) / 100.0f) / 2 : 0;
-	}
-
-	if (!isRidingMount()) {
-        setSpeedMultiplierMod(CreaturePosture::instance()->getMovementScale((uint8) posture + speedboost), true);
-        setAccelerationMultiplierMod(CreaturePosture::instance()->getAccelerationScale((uint8) posture), true);
-
-        setTurnScale(CreaturePosture::instance()->getTurnScale((uint8) posture), true);
 	}
 
 	// Terrain Negotiation.

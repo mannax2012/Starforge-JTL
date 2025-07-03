@@ -26,6 +26,9 @@ public:
 		if (!creature->isPlayerCreature())
 			return GENERALERROR;
 
+		if (creature->isRidingMount())
+			return GENERALERROR;
+
 		ManagedReference<CreatureObject*> player = cast<CreatureObject*>(creature);
 		ManagedReference<GroupObject*> group = player->getGroup();
 
@@ -72,7 +75,11 @@ public:
 			if (!isValidGroupAbilityTarget(leader, member, true))
 				continue;
 
+			if (member->isRidingMount()) 
+			return false;
+
 			Locker clocker(member, leader);
+
 
 			if (member != leader)
 				member->sendSystemMessage("@cbt_spam:rally_success_group_msg"); //"Your group rallies to the attack!"

@@ -23,7 +23,7 @@ public:
 
 		if (!creature->isPlayerCreature())
 			return GENERALERROR;
-
+		
 		PlayerObject* ghost = creature->getPlayerObject();
 
 		if (creature->hasBuff(STRING_HASHCODE("centerofbeing"))) {
