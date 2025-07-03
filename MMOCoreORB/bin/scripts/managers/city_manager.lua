@@ -81,8 +81,8 @@ RadiusPerRank = {150, 200, 300, 400, 450}
 
 -- Maximum for each rank.  ex. rank 1 = DecorationsPerRank * 1, rank 5 = DecorationsPerRank * 5
 DecorationsPerRank = 10
-TrainersPerRank = 3
-MissionTerminalsPerRank = 3
+TrainersPerRank = 10
+MissionTerminalsPerRank = 5
 
 -- Amount to discount city maintenance  float.  1 = 100%, .75 =75%, .5=50% etc
 maintenanceDiscount = 1.0
@@ -98,7 +98,7 @@ CitiesAllowed = {
 	{"corellia", {20, 20, 15, 10, 10}},
 	{"dantooine", {50, 50, 30, 20, 20}},
 	{"dathomir", {0, 0, 0, 0, 0}},
-	{"endor", {0, 0, 0, 0, 0}},
+	{"endor", {20, 20, 10, 5, 5}},
 	{"lok", {50, 50, 30, 20, 20}},
 	{"naboo", {20, 20, 15, 10, 10}},
 	{"rori", {50, 50, 30, 20, 20}},

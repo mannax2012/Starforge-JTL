@@ -14,6 +14,7 @@
 #include "SaberPadawanStrike.h"
 #include "HealHealthSelf3Command.h"
 #include "HealHealthSelf4Command.h"
+#include "RecruitCityNPCCommand.h"
 // #include "MeleeBHPalmStrikeCommand.h"
 // #include "RegrantSkillsCommand.h"
 
