@@ -87,6 +87,8 @@ void PlayerVehicleBuffImplementation::updateRiderSpeeds() {
 
 		// get vehicle speed
 		float newSpeed = vehicle->getRunSpeed();
+		float newAccel = vehicle->getAccelerationMultiplierMod();
+		float newTurn = vehicle->getTurnScale();
 
 		// get animal mount speeds
 		if (vehicle->isMount()) {
@@ -97,16 +99,28 @@ void PlayerVehicleBuffImplementation::updateRiderSpeeds() {
 			}
 		}
 
-		// add speed multiplier mod
-		newSpeed *= vehicle->getSpeedMultiplierMod();
+		// add speed multiplier mod for existing buffs
+		if(vehicle->getSpeedMultiplierMod() != 0){
+			newSpeed *= vehicle->getSpeedMultiplierMod();
+		}else{
+			rider->sendSystemMessage("Debug - vehicle->getSpeedMultiplierMod(): " + String::valueOf(vehicle->getSpeedMultiplierMod()));
+		}
+
+		// Force Sensitive SkillMods
+		if (vehicle->isVehicleObject()) {
+			newAccel += rider->getSkillMod("force_vehicle_speed");
+			newTurn += rider->getSkillMod("force_vehicle_control");
+		}
 
 		// Add a fake "skillmod" change
-		changeBuffer->add(SpeedModChange(newSpeed / rider->getRunSpeed()));
-
-		// Commit changebuffer ?
-		rider->updateToDatabase();
+		changeBuffer->add(SpeedModChange(newSpeed / 10));
 
 		// Update riders speed to match mount speed
+		rider->setSpeedMultiplierMod(vehicle->getRunSpeed() / 10);
 		rider->setRunSpeed(newSpeed);
+		rider->setTurnScale(newTurn, true);
+		rider->setAccelerationMultiplierMod(newAccel, true);
+		rider->sendSystemMessage("Debug - newSpeed: " + String::valueOf(newSpeed));
+		rider->updateToDatabase();
 	}, "UpdateRiderSpeedsLambda");
 }
