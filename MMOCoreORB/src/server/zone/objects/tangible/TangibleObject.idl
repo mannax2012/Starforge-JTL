@@ -851,7 +851,7 @@ class TangibleObject extends SceneObject {
 	}
 
 	@dirty
-	public native void broadcastPvpStatusBitmask();
+	public native abstract void broadcastPvpStatusBitmask();
 
 	public native void addActiveArea(ActiveArea area);
 
@@ -980,6 +980,10 @@ class TangibleObject extends SceneObject {
 			return adk;
 		}
 		return null;
+	}
+
+	@preLocked
+	public abstract void refreshPaint() {
 	}
 
 	public abstract native void destroyObjectFromDatabase(boolean destroyContainedObjects = false);

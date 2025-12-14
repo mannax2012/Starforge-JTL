@@ -53,8 +53,9 @@ template<> bool CheckFollowHasState::check(AiAgent* agent) const {
 template<> bool CheckProspectInRange::check(AiAgent* agent) const {
 	ManagedReference<SceneObject*> tar = nullptr;
 
-	if (agent->peekBlackboard("targetProspect"))
+	if (agent->peekBlackboard("targetProspect")) {
 		tar = agent->readBlackboard("targetProspect").get<ManagedReference<SceneObject*> >();
+	}
 
 	if (checkVar > 0.f) {
 		return tar != nullptr && agent->isInRange(tar, checkVar);
@@ -62,8 +63,9 @@ template<> bool CheckProspectInRange::check(AiAgent* agent) const {
 		float aggroMod = agent->readBlackboard("aggroMod").get<float>();
 		float radius = agent->getAggroRadius();
 
-		if (radius == 0)
+		if (radius == 0) {
 			radius = AiAgent::DEFAULTAGGRORADIUS;
+		}
 
 		radius = Math::min(96.f, radius * aggroMod);
 
@@ -129,61 +131,71 @@ template<> bool CheckFollowPosture::check(AiAgent* agent) const {
 }
 
 template<> bool CheckFollowInWeaponRange::check(AiAgent* agent) const {
-	if (!agent->peekBlackboard("followRange"))
+	if (!agent->peekBlackboard("followRange")) {
 		return false;
+	}
 
-	float dist = agent->readBlackboard("followRange").get<float>();
+	float followRange = agent->readBlackboard("followRange").get<float>();
 
-	WeaponObject* weao = nullptr;
-	if (checkVar == DataVal::PRIMARYWEAPON)
-		weao = agent->getPrimaryWeapon();
-	else if (checkVar == DataVal::SECONDARYWEAPON)
-		weao = agent->getSecondaryWeapon();
+	WeaponObject* weapon = nullptr;
+
+	if (checkVar == DataVal::PRIMARYWEAPON) {
+		weapon = agent->getPrimaryWeapon();
+	} else if (checkVar == DataVal::SECONDARYWEAPON) {
+		weapon = agent->getSecondaryWeapon();
+	}
+
+	if (weapon == nullptr) {
+		return false;
+	}
+
+	float maxRange = weapon->getMaxRange();
 
 #ifdef DEBUG_AI
 	if (agent->peekBlackboard("aiDebug") && agent->readBlackboard("aiDebug") == true) {
-		int maxRange = 0;
-
-		if (weao != nullptr)
-			maxRange = weao->getMaxRange();
-
-		agent->info("CheckFollowInWeaponRange: dist: " + String::valueOf(dist) + " maxRange: " + String::valueOf(maxRange));
+		agent->info(true) << "CheckFollowInWeaponRange -- followRange: " << followRange << " maxRange squared: " << (maxRange * maxRange);
 	}
 #endif // DEBUG_AI
 
-	return weao != nullptr && weao->getMaxRange() >= dist;
+	return (maxRange * maxRange) > followRange;
 }
 
 template<> bool CheckFollowClosestIdealRange::check(AiAgent* agent) const {
-	if (!agent->peekBlackboard("followRange"))
+	if (!agent->peekBlackboard("followRange")) {
 		return false;
-
-	float dist = agent->readBlackboard("followRange").get<float>();
-
-	WeaponObject* weao = nullptr;
-	WeaponObject* otherWeao = nullptr;
-	if (checkVar == DataVal::PRIMARYWEAPON) {
-		weao = agent->getPrimaryWeapon();
-		otherWeao = agent->getSecondaryWeapon();
-	} else if (checkVar == DataVal::SECONDARYWEAPON) {
-		weao = agent->getSecondaryWeapon();
-		otherWeao = agent->getPrimaryWeapon();
 	}
 
-	if (otherWeao == nullptr)
-		return true;
-	else if (weao == nullptr)
+	float followRange = agent->readBlackboard("followRange").get<float>();
+
+	WeaponObject* primaryWeapon = nullptr;
+	WeaponObject* secondaryWeapon = nullptr;
+
+	if (checkVar == DataVal::PRIMARYWEAPON) {
+		primaryWeapon = agent->getPrimaryWeapon();
+		secondaryWeapon = agent->getSecondaryWeapon();
+	} else if (checkVar == DataVal::SECONDARYWEAPON) {
+		primaryWeapon = agent->getSecondaryWeapon();
+		secondaryWeapon = agent->getPrimaryWeapon();
+	}
+
+	// Primary weapon is null, this should never happen. Agent will use unarmed
+	if (primaryWeapon == nullptr) {
 		return false;
+	// Secondary Weapon is null, always choose primary
+	} else if (secondaryWeapon == nullptr) {
+		return true;
+	}
+
+	float primaryRange = primaryWeapon->getIdealRange();
+	float secondaryRange = secondaryWeapon->getIdealRange();
 
 #ifdef DEBUG_AI
 	if (agent->peekBlackboard("aiDebug") && agent->readBlackboard("aiDebug") == true)
-		agent->info("CheckFollowClosestIdealRange: dist: " + String::valueOf(dist) + " weao: " + String::valueOf(weao->getMaxRange()) + " otherWeao: " + String::valueOf(otherWeao->getMaxRange()));
+		agent->info(true) << "CheckFollowClosestIdealRange -- Follow Range: " << followRange << " primaryWeapon ideal range: " << primaryRange << " secondaryWeapon ideal range: " << secondaryRange;
 #endif // DEBUG_AI
 
-	if (otherWeao->getMaxRange() < dist)
-		return true;
-
-	return fabs(weao->getIdealRange() - dist) <= fabs(otherWeao->getIdealRange() - dist + 1.f);
+	// Choose the weapon that whose ideal range is closest to current follow range
+	return fabs((primaryRange * primaryRange) - (followRange + System::frandom(2.0f))) < fabs((secondaryRange * secondaryRange) - (followRange + System::frandom(2.0f)));
 }
 
 template<> bool CheckRandomLevel::check(AiAgent* agent) const {
@@ -248,17 +260,25 @@ template<> bool CheckRetreat::check(AiAgent* agent) const {
 }
 
 template<> bool CheckFlee::check(AiAgent* agent) const {
-	if (agent == nullptr || agent->getParent().get() != nullptr || agent->getParentID() > 0)
+	if (agent == nullptr || agent->getParentID() > 0) {
 		return false;
+	}
+
+	int fleeChance = 75;
+
+	if (agent->getPvpStatusBitmask() & ObjectFlag::AGGRESSIVE) {
+		fleeChance = 25;
+	}
+
+	if (System::random(1000) > fleeChance) {
+		return false;
+	}
 
 	Time* fleeDelay = agent->getFleeDelay();
-	int fleeChance = 30;
 
-	if (agent->getPvpStatusBitmask() & ObjectFlag::AGGRESSIVE)
-		fleeChance = 15;
-
-	if (fleeDelay == nullptr || !fleeDelay->isPast() || System::random(100) > fleeChance)
+	if (fleeDelay == nullptr || !fleeDelay->isPast()) {
 		return false;
+	}
 
 	if ((agent->getHAM(CreatureAttribute::HEALTH) < agent->getMaxHAM(CreatureAttribute::HEALTH) * checkVar)
 		|| (agent->getHAM(CreatureAttribute::ACTION) < agent->getMaxHAM(CreatureAttribute::ACTION) * checkVar)

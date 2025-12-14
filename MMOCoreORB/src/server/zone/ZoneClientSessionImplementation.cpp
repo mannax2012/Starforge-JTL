@@ -247,11 +247,27 @@ void ZoneClientSessionImplementation::error(const String& msg) {
 }
 
 String ZoneClientSessionImplementation::getAddress() const {
-	return session->getAddress();
+	return session->getFullIPAddress();
 }
 
 String ZoneClientSessionImplementation::getIPAddress() const {
 	return ipAddress.isEmpty() ? "0.0.0.0" : ipAddress;
+}
+
+void ZoneClientSessionImplementation::setIPAddress(const String& newIP) {
+	ipAddress = newIP;
+
+	// Also update the underlying session if available
+	if (session != nullptr) {
+		session->setIPAddress(newIP);
+	}
+}
+
+uint16 ZoneClientSessionImplementation::getPort() const {
+	if (session != nullptr) {
+		return session->getAddress().getPort();
+	}
+	return 0;
 }
 
 BaseClientProxy* ZoneClientSessionImplementation::getSession() {

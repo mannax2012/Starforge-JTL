@@ -30,6 +30,8 @@ class ShipUpdateTransformCallback : public MessageCallback {
 private:
 	const static bool errorLog = false;
 
+	const static int PRIORITY_MAX = 25;
+
 #ifdef SHIP_TRANSFORM_DEBUG
 	const static bool sendText = true;
 	const static bool sendPath = true;
@@ -151,7 +153,7 @@ public:
 
 		ShipObject* ship = rootParent->asShipObject();
 
-		if (ship == nullptr|| ship->isHyperspacing()) {
+		if (ship == nullptr) {
 			return updateError(pilot, "!ship", false);
 		}
 
@@ -301,12 +303,19 @@ public:
 		ship->setPosition(position.getX(), position.getZ(), position.getY());
 		ship->setDirection(direction);
 
-		bool lightUpdate = priority != 0x23;
+		bool lightUpdate = (ship->getMovementCounter() % PRIORITY_MAX) != 0;
 		ship->updateZone(lightUpdate, false);
+		ship->incrementMovementCounter();
 
 		if (reorthonormalize) {
 			auto data = new DataTransform(ship);
 			ship->sendMembersBaseMessage(data);
+		}
+
+		auto transform = ship->getShipTransform();
+
+		if (transform != nullptr) {
+			transform->setCurrentTransform(ship);
 		}
 	}
 

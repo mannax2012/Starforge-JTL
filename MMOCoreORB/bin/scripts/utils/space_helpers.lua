@@ -145,6 +145,15 @@ function SpaceHelpers:setSquadronType(pPlayer, squadron)
 	PlayerObject(pGhost):setSquadronType(squadron)
 end
 
+-- @param pPlayer pointer checks if the player has any type of pilot skills
+function SpaceHelpers:isPilot(pPlayer)
+	if (pPlayer == nil) then
+		return false
+	end
+
+	return (CreatureObject(pPlayer):isNeutralPilot() or CreatureObject(pPlayer):isRebelPilot() or CreatureObject(pPlayer):isImperialPilot())
+end
+
 -- @param pPlayer pointer checked if neutral pilot
 function SpaceHelpers:isNeutralPilot(pPlayer)
 	if (pPlayer == nil) then
@@ -337,6 +346,37 @@ function SpaceHelpers:getPlayerSpaceFactionString(pPlayer)
 	return factionString
 end
 
+-- @param pPlayer pointer to return faction string according to ship's current alignment
+function SpaceHelpers:getPlayerShipFactionString(pPlayer)
+	if (pPlayer == nil) then
+		return 0
+	end
+
+	local factionString = ""
+	local pShip = SceneObject(pPlayer):getRootParent()
+
+	if (pShip ~= nil and SceneObject(pShip):isShipObject()) then
+		factionString = ShipObject(pShip):getShipFactionString()
+	end
+
+	return factionString
+end
+
+-- @param pPlayer pointer to return faction hash according to ship's current alignment
+function SpaceHelpers:getPlayerShipFactionHash(pPlayer)
+	if (pPlayer == nil) then
+		return 0
+	end
+
+	local pShip = SceneObject(pPlayer):getRootParent()
+
+	if (pShip == nil or not SceneObject(pShip):isShipObject()) then
+		return 0
+	end
+
+	return ShipObject(pShip):getShipFactionHash()
+end
+
 -- @param pPlayer pointer to return faction hash by squadron type
 function SpaceHelpers:getPlayerSpaceFactionHash(pPlayer)
 	if (pPlayer == nil) then
@@ -367,15 +407,6 @@ function SpaceHelpers:getPlayerSpaceFactionHash(pPlayer)
 	return factionHash
 end
 
--- @param pPlayer pointer checks if the player has any type of pilot skills
-function SpaceHelpers:isPilot(pPlayer)
-	if (pPlayer == nil) then
-		return false
-	end
-
-	return (CreatureObject(pPlayer):isNeutralPilot() or CreatureObject(pPlayer):isRebelPilot() or CreatureObject(pPlayer):isImperialPilot())
-end
-
 -- @param pPlayer pointer checks if the player has space experience
 function SpaceHelpers:hasEarnedSpaceXP(pPlayer)
 	if (pPlayer == nil) then
@@ -402,6 +433,21 @@ function SpaceHelpers:hasCertifiedShip(pPlayer, skipYacht)
 	return CreatureObject(pPlayer):hasCertifiedShip(skipYacht)
 end
 
+-- @param pPlayer pointer to check if root parent is yacht
+function SpaceHelpers:isInYacht(pPlayer)
+	if (pPlayer == nil) then
+		return false
+	end
+
+	local pRootParent = SceneObject(pPlayer):getRootParent()
+
+	if (pRootParent == nil or SceneObject(pRootParent):getObjectName() == "player_sorosuub_space_yacht") then
+		return true
+	end
+
+	return false
+end
+
 -- @param pPlayer pointer surrenders the entire pilot profession and resets all of the quests
 function SpaceHelpers:surrenderPilot(pPlayer)
 	if (pPlayer == nil) then
@@ -421,7 +467,14 @@ function SpaceHelpers:surrenderPilot(pPlayer)
 		pilotProfession = "neutralPilot"
 
 		-- All the Space Quests need to be reset here
+		-- Tier 1
 		CorsecSquadronScreenplay:resetRheaQuests(pPlayer)
+		-- Tier 2
+		CorsecSquadronScreenplay:resetRikkhQuests(pPlayer)
+		-- Tier 3
+		CorsecSquadronScreenplay:resetRamnaQuests(pPlayer)
+		-- Tier 4
+		CorsecSquadronScreenplay:resetTuroldineQuests(pPlayer)
 
 	elseif (pilotSquadron == BLACK_EPSILON_SQUADRON or pilotSquadron == STORM_SQUADRON or pilotSquadron == INQUISITION_SQUADRON) then
 		pilotProfession = "imperialPilot"
@@ -632,6 +685,27 @@ function SpaceHelpers:hasPilotTierSkill(pPlayer, factionString, tierNumber)
 	end
 
 	return false
+end
+
+-- @param pPlayer pointer to check for skills
+-- @param factionString - neutral, rebel_navy, imperial_navy
+-- @param tierNumber
+function SpaceHelpers:getPilotTierSkillCount(pPlayer, factionString, tierNumber)
+	if (pPlayer == nil or factionString == "" or tierNumber < 1 or tierNumber > 5) then
+		return false
+	end
+
+	local skillsTable = {"_droid_0", "_procedures_0", "_starships_0", "_weapons_0"}
+	local tierString = tostring(tierNumber)
+	local count = 0
+
+	for i = 1, 4, 1 do
+		if (CreatureObject(pPlayer):hasSkill("pilot_" .. factionString .. skillsTable[i] .. tierString)) then
+			count = count + 1
+		end
+	end
+
+	return count
 end
 
 -- @param pPlayer pointer to check for skills
@@ -855,11 +929,14 @@ function SpaceHelpers:failSpaceQuest(pPlayer, questType, questName, notifyClient
 			SpaceHelpers:sendQuestUpdate(pPlayer, "@space/quest:patrol_abandoned") -- "You abandoned your patrol!"
 		elseif (questType == "destroy_surpriseattack") then
 			SpaceHelpers:sendQuestUpdate(pPlayer, "@space/quest:destroy_surprise_abandoned") -- "You ran away from the attack and abandoned your duty!"
-		elseif (questType == "escort_duty" or questType == "destroy_duty") then
-			SpaceHelpers:sendDutyUpdate(pPlayer, "@space/quest:mission_abandoned") -- "You abandoned your mission!"
+		elseif (questType == "escort_duty" or questType == "destroy_duty" or questType == "recovery_duty") then
+			SpaceHelpers:sendQuestUpdate(pPlayer, "@space/quest:destroy_abandoned") -- "You have ended your duty mission."
+		elseif (questType == "inspect") then
+			SpaceHelpers:sendQuestUpdate(pPlayer, "@space/quest:inspect_abandoned") -- "You abandoned your inspection mission!"
 		else
 			-- Failed Message
-			SpaceHelpers:sendQuestUpdate(pPlayer, "@quest/quests:task_failure")
+			--SpaceHelpers:sendQuestUpdate(pPlayer, "@quest/quests:task_failure")
+			SpaceHelpers:sendDutyUpdate(pPlayer, "@space/quest:mission_abandoned") -- "You abandoned your mission!"
 		end
 	end
 
@@ -867,7 +944,7 @@ function SpaceHelpers:failSpaceQuest(pPlayer, questType, questName, notifyClient
 	PlayerObject(pGhost):clearJournalQuest(questCRC, false)
 
 	-- Remove the Mission from players datapad
-	CreatureObject(pPlayer):abortQuestMission(questCRC)
+	CreatureObject(pPlayer):failQuestMission(questCRC)
 
 	if (notifyClient) then
 		if (string.find(questType, "duty")) then
@@ -1312,6 +1389,129 @@ function SpaceHelpers:delayedDestroyShipAgent(pShipAgent)
 	end
 
 	SceneObject(pShipAgent):destroyObjectFromWorld()
+end
+
+-- @param x, z, y - center coordinates
+-- @param minRange - min distance to find the location
+-- @param maxRange - max distance to find the location
+function SpaceHelpers:getRandomPositionInSphere(x, z, y, minRange, maxRange)
+	local bound = 7500
+	local minBound, maxBound = -bound, bound
+
+	-- compute shortest distance from center to the cube (0 if center is inside)
+	local function distanceToCubeMin(cx, cy, cz)
+		local d2 = 0
+
+		if cx < minBound then
+			d2 = d2 + (minBound - cx) * (minBound - cx)
+		elseif cx > maxBound then
+			d2 = d2 + (cx - maxBound) * (cx - maxBound)
+		end
+
+		if cy < minBound then
+			d2 = d2 + (minBound - cy) * (minBound - cy)
+		elseif cy > maxBound then
+			d2 = d2 + (cy - maxBound) * (cy - maxBound)
+		end
+
+		if cz < minBound then
+			d2 = d2 + (minBound - cz) * (minBound - cz)
+		elseif cz > maxBound then
+			d2 = d2 + (cz - maxBound) * (cz - maxBound)
+		end
+
+		return math.sqrt(d2)
+	end
+
+	-- Cannot find a point in the cube, bail early.
+	local dist_min = distanceToCubeMin(x, y, z)
+
+	if maxRange < dist_min then
+		Logger:log("SpaceHelpers:getRandomPositionInSphere -- Unable to find location within distance. X: " .. x .. " Z: " .. z .. " Y: " .. y .. " minRange: " .. minRange .. " maxRange: " .. maxRange, LT_ERROR)
+
+		return nil
+	end
+
+	-- safe radius sampler: prefer existing getRandomNumber if defined, otherwise sample uniform-in-volume
+	local function sampleRadius(minR, maxR)
+		if type(getRandomNumber) == "function" then
+			return getRandomNumber(minR, maxR)
+		else
+			-- uniform in spherical volume between minR and maxR
+			local minv = minR * minR * minR
+			local maxv = maxR * maxR * maxR
+			local u = math.random()
+			local r3 = u * (maxv - minv) + minv
+
+			return r3^(1/3)
+		end
+	end
+
+	local function insideCube(px, pz, py)
+		return px > minBound and px < maxBound and py > minBound and py < maxBound and pz > minBound and pz < maxBound
+	end
+
+	local maxAttempts = 100
+
+	for i = 1, maxAttempts do
+		local radius = sampleRadius(minRange, maxRange)
+		local theta = math.random() * (2 * math.pi)
+		local phi = math.acos(2 * math.random() - 1)
+
+		local dx = radius * math.sin(phi) * math.cos(theta)
+		local dy = radius * math.sin(phi) * math.sin(theta)
+		local dz = radius * math.cos(phi)
+
+		local px = x + dx
+		local py = y + dy
+		local pz = z + dz
+
+		if insideCube(px, pz, py) then
+			return { x = px, z = pz, y = py }
+		end
+	end
+
+	-- Closest point inside cube (clamped center). If that point lies within bounds, return it.
+	local function clamp(v, lo, hi)
+		if v < lo then
+			return lo
+		end
+
+		if v > hi then
+			return hi
+		end
+
+		return v
+	end
+
+	local cx = clamp(x, minBound, maxBound)
+	local cy = clamp(y, minBound, maxBound)
+	local cz = clamp(z, minBound, maxBound)
+	local dcx, dcy, dcz = cx - x, cy - y, cz - z
+	local dclosest = math.sqrt(dcx*dcx + dcy*dcy + dcz*dcz)
+
+	if dclosest >= minRange and dclosest <= maxRange then
+		return { x = cx, z = cz, y = cy }
+	end
+
+	Logger:log("SpaceHelpers:getRandomPositionInSphere -- Final: Unable to find location. X: " .. x .. " Z: " .. z .. " Y: " .. y .. " minRange: " .. minRange .. " maxRange: " .. maxRange, LT_ERROR)
+
+	return nil
+end
+
+-- @param pShip - pointer to player ship
+-- @param faction to declare overt
+function SpaceHelpers:declareOvert(pShip, faction)
+	if (pShip == nil or faction == nil) then
+		return
+	end
+
+	if (not ShipObject(pShip):isShipLaunched()) then
+		return
+	end
+
+	TangibleObject(pShip):setFaction(faction)
+	TangibleObject(pShip):setFactionStatus(OVERT)
 end
 
 return SpaceHelpers

@@ -291,6 +291,7 @@ void ObjectManager::registerObjectTypes() {
 	objectFactory.registerObject<DroidObject>(SceneObjectType::DROIDCREATURE);
 	objectFactory.registerObject<HelperDroidObject>(SceneObjectType::HELPERDROIDCREATURE);
 	objectFactory.registerObject<ResourceSpawn>(SceneObjectType::RESOURCESPAWN);
+	objectFactory.registerObject<SpawnEggObject>(SceneObjectType::CREATURESPAWNER);
 	objectFactory.registerObject<ResourceContainer>(SceneObjectType::RESOURCECONTAINER);
 	objectFactory.registerObject<ResourceContainer>(SceneObjectType::ENERGYGAS);
 	objectFactory.registerObject<ResourceContainer>(SceneObjectType::ENERGYLIQUID);
@@ -819,7 +820,7 @@ void ObjectManager::deSerializeObject(ManagedObject* object, ObjectInputStream* 
 			uint16 tableID = (uint16)(sceno->getObjectID() >> 48);
 			ObjectDatabaseManager::instance()->getDatabaseName(tableID, dbName);
 
-			error() << "could not deserialize scene object of type: " << sceno->getGameObjectType() << " from DB: " << dbName;
+			error() << "could not deserialize scene object of type: " << sceno->getGameObjectType() << " from DB: " << dbName << " Object: " << sceno->getObjectNameStringIdName();
 		} else {
 			error("could not deserialize managed object from DB");
 		}
@@ -1025,6 +1026,7 @@ void ObjectManager::onUpdateModifiedObjectsToDatabase(int flags) {
 	if (server != nullptr && server->getZoneServer() != nullptr) {
 		galaxyId = server->getZoneServer()->getGalaxyID();
 
+#ifndef WITH_SWGREALMS_API
 		//characters_dirty chars
 		try {
 			const static auto query = "SELECT * FROM characters_dirty WHERE galaxy_id = " + String::valueOf(galaxyId);
@@ -1033,10 +1035,20 @@ void ObjectManager::onUpdateModifiedObjectsToDatabase(int flags) {
 		} catch (const Exception& e) {
 			error(e.getMessage());
 		}
+#else // WITH_SWGREALMS_API
+		auto swgRealmsAPI = SWGRealmsAPI::instance();
+		if (swgRealmsAPI != nullptr) {
+			String errorMessage;
+			if (!swgRealmsAPI->beginCharactersCommitBlocking(galaxyId, errorMessage)) {
+				error("Failed to begin character commit: " + errorMessage);
+			}
+		}
+#endif // WITH_SWGREALMS_API
 	}
 }
 
 void ObjectManager::onCommitData() {
+#ifndef WITH_SWGREALMS_API
 	if (charactersSaved != nullptr) {
 		try {
 			StringBuffer query;
@@ -1074,6 +1086,15 @@ void ObjectManager::onCommitData() {
 			System::out << e.getMessage();
 		}
 	}
+#else // WITH_SWGREALMS_API
+	auto swgRealmsAPI = SWGRealmsAPI::instance();
+	if (swgRealmsAPI != nullptr && galaxyId != -1) {
+		String errorMessage;
+		if (!swgRealmsAPI->commitCharactersBlocking(galaxyId, errorMessage)) {
+			error("Failed to commit characters: " + errorMessage);
+		}
+	}
+#endif // WITH_SWGREALMS_API
 
 	//Spawn the delete characters task.
 	if (deleteCharactersTask != nullptr && !deleteCharactersTask->isScheduled()) {
@@ -1081,6 +1102,17 @@ void ObjectManager::onCommitData() {
 		int mins = ConfigManager::instance()->getPurgeDeletedCharacters();
 		deleteCharactersTask->schedule(mins * 60 * 1000);
 	}
+#if NDEBUG
+	// Enable rapid create/delete of characters for test harness
+	if (deleteCharactersTask != nullptr) {
+		info(true) << "NDEBUG: Forcing deleteCharactersTask->updateDeletedCharacters();";
+		deleteCharactersTask->updateDeletedCharacters();
+		info(true) << "NDEBUG: Forcing deleteCharactersTask->executeInThread();";
+		deleteCharactersTask->executeInThread();
+		info(true) << "NDEBUG: Forcing deleteCharactersTask->updateDeletedCharacters();";
+		deleteCharactersTask->updateDeletedCharacters();
+	}
+#endif
 }
 
 void ObjectManager::cancelDeleteCharactersTask() {

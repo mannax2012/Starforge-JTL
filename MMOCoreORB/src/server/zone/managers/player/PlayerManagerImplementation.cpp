@@ -9,6 +9,10 @@
 #include <utility>
 #include <mutex>
 
+#ifdef WITH_SWGREALMS_API
+#include "server/login/SWGRealmsAPI.h"
+#endif // WITH_SWGREALMS_API
+
 #include "server/zone/packets/charcreation/ClientCreateCharacterCallback.h"
 #include "server/zone/packets/charcreation/ClientCreateCharacterFailed.h"
 #include "server/zone/ZoneServer.h"
@@ -145,6 +149,7 @@ PlayerManagerImplementation::PlayerManagerImplementation(ZoneServer* zoneServer,
 	setGlobalLogging(true);
 	setLogging(false);
 
+#ifndef WITH_SWGREALMS_API
 	if (ServerCore::truncateDatabases()) {
 		try {
 			const static String query = "TRUNCATE TABLE characters";
@@ -156,6 +161,7 @@ PlayerManagerImplementation::PlayerManagerImplementation(ZoneServer* zoneServer,
 			error(e.getMessage());
 		}
 	}
+#endif // !WITH_SWGREALMS_API
 
 	loadNameMap();
 
@@ -444,6 +450,7 @@ void PlayerManagerImplementation::finalize() {
 void PlayerManagerImplementation::loadNameMap() {
 	info("loading character names");
 
+#ifndef WITH_SWGREALMS_API
 	try {
 		String query = "SELECT character_oid, firstname FROM characters where character_oid > 16777216 and galaxy_id = " + String::valueOf(server->getGalaxyID()) + " order by character_oid asc";
 
@@ -461,6 +468,15 @@ void PlayerManagerImplementation::loadNameMap() {
 	} catch (const Exception& e) {
 		fatal(e.getMessage());
 	}
+#else // WITH_SWGREALMS_API
+	auto swgRealmsAPI = SWGRealmsAPI::instance();
+	if (swgRealmsAPI != nullptr) {
+		String errorMessage;
+		if (!swgRealmsAPI->loadCharacterNamesBlocking(server->getGalaxyID(), *nameMap, errorMessage)) {
+			error("Failed to load character names via API: " + errorMessage);
+		}
+	}
+#endif // WITH_SWGREALMS_API
 
 	info(true) << "loaded " << nameMap->size() << " character names in memory";
 }
@@ -770,27 +786,6 @@ String PlayerManagerImplementation::getPlayerName(uint64 oid) {
 	return nameMap->get(oid);
 }
 
-bool PlayerManagerImplementation::checkExistentNameInDatabase(const String& name) {
-	if (name.isEmpty())
-		return false;
-
-	try {
-		String fname = name.toLowerCase();
-		Database::escapeString(fname);
-		String query = "SELECT * FROM characters WHERE lower(firstname) = \""
-				+ fname + "\"";
-
-		UniqueReference<ResultSet*> res(ServerDatabase::instance()->executeQuery(query));
-		bool nameExists = res->next();
-
-		return !nameExists;
-	} catch (DatabaseException& e) {
-		return false;
-	}
-
-	return false;
-}
-
 bool PlayerManagerImplementation::checkPlayerName(ClientCreateCharacterCallback* callback) {
 	auto client = callback->getClient();
 
@@ -932,6 +927,7 @@ String PlayerManagerImplementation::setFirstName(CreatureObject* creature, const
 	// Remove the old name from other people's friends lists
 	ghost->removeAllReverseFriends(oldFirstName);
 
+#ifndef WITH_SWGREALMS_API
 	// Update mysql characters table
 	String characterFirstName = creature->getFirstName();
 	Database::escapeString(characterFirstName);
@@ -953,6 +949,19 @@ String PlayerManagerImplementation::setFirstName(CreatureObject* creature, const
 			<< "' AND `galaxy_id` = '" << galaxyID << "'";
 
 	ServerDatabase::instance()->executeStatement(charQuery);
+#else // WITH_SWGREALMS_API
+	auto swgRealmsAPI = SWGRealmsAPI::instance();
+	String errorMessage;
+
+	if (!swgRealmsAPI->updateCharacterFirstNameBlocking(
+			creature->getObjectID(),
+			server->getGalaxyID(),
+			creature->getFirstName(),
+			errorMessage)) {
+		error("Failed to update character firstname: " + errorMessage);
+		return "API error: " + errorMessage;
+	}
+#endif // WITH_SWGREALMS_API
 
 	// Success, return empty string
 	return "";
@@ -1014,10 +1023,11 @@ String PlayerManagerImplementation::setLastName(CreatureObject* creature, const 
 		updatePermissionName(creature, ghost->getAdminLevel());
 
 	// Update mysql characters table
+	int galaxyID = server->getGalaxyID();
+
+#ifndef WITH_SWGREALMS_API
 	String characterLastName = creature->getLastName();
 	Database::escapeString(characterLastName);
-
-	int galaxyID = server->getGalaxyID();
 
 	StringBuffer charDirtyQuery;
 	charDirtyQuery
@@ -1034,6 +1044,19 @@ String PlayerManagerImplementation::setLastName(CreatureObject* creature, const 
 			<< "' AND `galaxy_id` = '" << galaxyID << "'";
 
 	ServerDatabase::instance()->executeStatement(charQuery);
+#else // WITH_SWGREALMS_API
+	auto swgRealmsAPI = SWGRealmsAPI::instance();
+	String errorMessage;
+
+	if (!swgRealmsAPI->updateCharacterSurNameBlocking(
+			creature->getObjectID(),
+			galaxyID,
+			creature->getLastName(),
+			errorMessage)) {
+		error("Failed to update character surname: " + errorMessage);
+		return "API error: " + errorMessage;
+	}
+#endif // WITH_SWGREALMS_API
 
 	// Success, return empty string
 	return "";
@@ -3918,6 +3941,12 @@ void PlayerManagerImplementation::updateSwimmingState(CreatureObject* player, fl
 		return;
 	}
 
+	CreatureObject* mount = nullptr;
+
+	if (parent != nullptr && parent->isMount()) {
+		mount = parent->asCreatureObject();
+	}
+
 	float landHeight = zone->getHeight(player->getPositionX(), player->getPositionY());
 	float waterHeight = landHeight;
 	bool waterIsDefined = terrainManager->getWaterHeight(player->getPositionX(), player->getPositionY(), waterHeight);
@@ -3942,13 +3971,26 @@ void PlayerManagerImplementation::updateSwimmingState(CreatureObject* player, fl
 			}
 		}
 
-		//Player is in the water.
-		player->setState(CreatureState::SWIMMING, true);
+		// Player is in the water.
+		player->setState(CreatureState::SWIMMING);
+
+		if (mount != nullptr) {
+			Locker clock(mount, player);
+
+			mount->setState(CreatureState::SWIMMING);
+		}
+
 		return;
 	}
 
-	//Terrain is above water level.
-	player->clearState(CreatureState::SWIMMING, true);
+	// Terrain is above water level.
+	player->clearState(CreatureState::SWIMMING);
+
+	if (mount != nullptr) {
+		Locker clock(mount, player);
+
+		mount->clearState(CreatureState::SWIMMING);
+	}
 }
 
 bool PlayerManagerImplementation::checkPlayerSpeedTest(CreatureObject* player, SceneObject* parent, float parsedSpeed, ValidatedPosition* lastValidPosition, const Vector3& lastValidatedWorldPosition, const Vector3& newWorldPosition, float errorMultiplier) {
@@ -3980,37 +4022,16 @@ bool PlayerManagerImplementation::checkPlayerSpeedTest(CreatureObject* player, S
 	}
 
 	float maxAllowedSpeed = allowedSpeedMod * allowedSpeedBase;
+	float maxSpeedVariable = (maxAllowedSpeed * errorMultiplier);
 
 #ifdef DEBUG_SPEED_HACK
-	player->info(true) << "checkPlayerSpeedTest -- parsedSpeed: " << parsedSpeed << " Error Multiplier: " << errorMultiplier << " Teleport position: " << lastValidVec.toString();
+	auto speedMsg = player->info(true);
+	speedMsg << "checkPlayerSpeedTest -- parsedSpeed: " << parsedSpeed << " Max Allowed Speed: " << maxSpeedVariable << " Error Multiplier: " << errorMultiplier << endl;
+	speedMsg << "checkPlayerSpeedTest -- Player Run Speed: " << allowedSpeedBase << " Player Run Modifier: " << allowedSpeedMod;
+	speedMsg.flush();
 #endif // DEBUG_SPEED_HACK
 
-	/*
-	// Z Coordinate Check
-	float oldValidZ = lastValidVec.getZ();
-	float newPosZ = newWorldPosition.getZ();
-
-	if (newPosZ > oldValidZ) {
-		float heightDist = fabs(newPosZ - oldValidZ);
-		float slopeMod = player->getSlopeModPercent();
-
-		if (slopeMod > 0.f) {
-			parsedSpeed += (parsedSpeed * (slopeMod / 100.f));
-		}
-
-		parsedSpeed += (heightDist * 0.75f); // Account for players moving quickly up and down steep slopes
-
-		if (heightDist > parsedSpeed) {
-			StringBuffer msg;
-			msg << "checkSpeedHackTests -- FAILED --  heightDist: " << heightDist << " speed: " << parsedSpeed << " Slope Mod Percentage: " << slopeMod;
-			player->info(msg.toString(), true);
-
-			return false;
-		}
-	}
-	*/
-
-	if (parsedSpeed > (maxAllowedSpeed * errorMultiplier)) {
+	if (parsedSpeed > maxSpeedVariable) {
 		// Outdoors get proper Z to try to prevent getting players stuck in terrain
 		if (lastValidParentParentID == 0) {
 			auto zone = player->getZone();
@@ -4029,36 +4050,6 @@ bool PlayerManagerImplementation::checkPlayerSpeedTest(CreatureObject* player, S
 			} else {
 				player->error() << "Possible Speed Hack Attempt - Player: " << player->getDisplayedName() << " ID: " << player->getObjectID() << " Speed Variable: " << parsedSpeed << " Max Allowed Speed: " << maxAllowedSpeed << " Error Multiplier: " << errorMultiplier << " Last Validated World Position: " << lastValidatedWorldPosition.toString() << " Last Valid Position:" << lastValidVec.toString() << " Last Valid Parent: " << lastValidParentParentID << " New World Position: " << newWorldPosition.toString();
 
-				/*
-				player->setRootedState(7 * 24 * 60 * 60);
-				player->setState(CreatureState::FROZEN, true);
-				player->setSpeedMultiplierBase(0.f, true);
-
-				player->sendSystemMessage("You have been frozen by the system. Please go to SWGEmu Support.");
-
-				Reference<CreatureObject*> playerRef = player;
-
-				Core::getTaskManager()->scheduleTask([playerRef, lastValidVec, lastValidParentParentID] () {
-					if (playerRef == nullptr) {
-						return;
-					}
-
-					auto zone = playerRef->getZone();
-
-					if (zone == nullptr) {
-						return;
-					}
-
-					Locker lock(playerRef);
-
-#ifdef DEBUG_SPEED_HACK
-					playerRef->info(true) << "switchZone for player -- Position: " << lastValidVec.toString() << " ID: " << lastValidParentParentID;
-#endif // DEBUG_SPEED_HACK
-
-					playerRef->switchZone(zone->getZoneName(), lastValidVec.getX(), lastValidVec.getZ(), lastValidVec.getY(), lastValidParentParentID);
-				}, "SpeedHackTransportLambda", 2000);
-				*/
-
 				return false;
 			}
 		}
@@ -4066,23 +4057,22 @@ bool PlayerManagerImplementation::checkPlayerSpeedTest(CreatureObject* player, S
 		if (changeBuffer->size() == 0) { // no speed changes
 #ifdef DEBUG_SPEED_HACK
 			auto msg = player->info(true);
-			msg << "checkPlayerSpeedTest -- FAILED -- changeBuffer - Max Allowed Speed: " << maxAllowedSpeed * errorMultiplier;
-			msg << " Parsed Speed: " << parsedSpeed;
+			msg << "checkPlayerSpeedTest -- FAILED -- Due to speed disparity and changeBuffer size of 0 - Parsed Speed: " << parsedSpeed << " Max Allowed Speed: " << maxSpeedVariable;
 			msg.flush();
 #endif // DEBUG_SPEED_HACK
 
 			return false;
 		}
 
-		SpeedModChange* firstChange = &changeBuffer->get(changeBuffer->size() - 1);
-		const Time* timeStamp = &firstChange->getTimeStamp();
+		SpeedModChange* latestChange = &changeBuffer->get(changeBuffer->size() - 1);
+		const Time* timeStamp = &latestChange->getTimeStamp();
+		int64 timestampDiff = timeStamp->miliDifference();
 
 		// we already should have lowered the speed, 2 seconds lag
-		if (timeStamp->miliDifference() > 2000) {
+		if (timestampDiff > 2000) {
 #ifdef DEBUG_SPEED_HACK
 			auto msg = player->info(true);
-			msg << endl << "checkPlayerSpeedTest -- FAILED -- Due to timeStamp diff: " << timeStamp->miliDifference() << " with Max Allowed Speed: " << maxAllowedSpeed * errorMultiplier;
-			msg << " Parsed Speed: " << parsedSpeed << endl;
+			msg << "checkPlayerSpeedTest -- FAILED -- Due to speed disparity and no timeStamp differential: " << timestampDiff << " Parsed Speed: " << parsedSpeed << " Max Allowed Speed: " << maxSpeedVariable;
 			msg.flush();
 #endif // DEBUG_SPEED_HACK
 
@@ -4103,8 +4093,9 @@ bool PlayerManagerImplementation::checkPlayerSpeedTest(CreatureObject* player, S
 				return true; // no hack detected
 			}
 
-			if (allowed > maxAllowedSpeed)
+			if (allowed > maxAllowedSpeed) {
 				maxAllowedSpeed = allowed;
+			}
 		}
 
 #ifdef DEBUG_SPEED_HACK
@@ -4175,7 +4166,6 @@ int PlayerManagerImplementation::checkSpeedHackTests(CreatureObject* player, Pla
 		player->info(true) << "checkSpeedHackTests -- Parent Transform with newWorldPosition: " << newWorldPosition.toString() << " Validated World Position: " << lastValidatedWorldPosition.toString() << " Distance Length = " << length;
 #endif // DEBUG_SPEED_HACK
 	} else {
-		// Hills cause issues
 		newWorldPosition.setZ(0);
 		lastValidatedWorldPosition.setZ(0.f);
 
@@ -4184,13 +4174,13 @@ int PlayerManagerImplementation::checkSpeedHackTests(CreatureObject* player, Pla
 #endif // DEBUG_SPEED_HACK
 	}
 
-	float dist = newWorldPosition.distanceTo(lastValidatedWorldPosition);
+	float movementDistance = newWorldPosition.distanceTo2d(lastValidatedWorldPosition);
 
-	if (dist > 1.f && !ghost->isPrivileged()) {
-		float speed = dist / deltaTime * 1000.f;
+	if (movementDistance > 1.f && !ghost->isPrivileged()) {
+		float speed = movementDistance / ((float)deltaTime / 1000.f);
 
 #ifdef DEBUG_SPEED_HACK
-		player->info(true) << "Next Position Distance: " << dist << " Speed: " << speed << " Delta Time: " << deltaTime;
+		player->info(true) << "checkSpeedHackTests -- Next Position Distance: " << movementDistance << " Speed: " << speed << " Delta Time: " << deltaTime;
 #endif // DEBUG_SPEED_HACK
 
 		ManagedReference<SceneObject*> parent = player->getParent().get();
@@ -4207,10 +4197,10 @@ int PlayerManagerImplementation::checkSpeedHackTests(CreatureObject* player, Pla
 		ghost->setOnLoadScreen(false);
 	}
 
-	ghost->incrementSessionMovement(dist);
+	ghost->incrementSessionMovement(movementDistance);
 
 #ifdef DEBUG_SPEED_HACK
-	player->info(true) << "checkSpeedHackTests -- PASSED -- Distance: " << dist;
+	player->info(true) << "checkSpeedHackTests -- PASSED -- Distance: " << movementDistance;
 #endif // DEBUG_SPEED_HACK
 
 	return Transform::FULL_VALIDATED;
@@ -4538,6 +4528,7 @@ String PlayerManagerImplementation::banAccount(PlayerObject* admin, Account* acc
 	String escapedReason = reason;
 	Database::escapeString(escapedReason);
 
+#ifndef WITH_SWGREALMS_API
 	try {
 		StringBuffer query;
 		query << "INSERT INTO account_bans values (NULL, " << account->getAccountID() << ", " << admin->getAccountID() << ", now(), " << (uint64)time(0) + seconds << ", '" << escapedReason << "');";
@@ -4548,10 +4539,28 @@ String PlayerManagerImplementation::banAccount(PlayerObject* admin, Account* acc
 	}
 
 	Locker locker(account);
-
 	account->setBanReason(reason);
 	account->setBanExpires(time(0) + seconds);
 	account->setBanAdmin(admin->getAccountID());
+#else // WITH_SWGREALMS_API
+	// SWGRealms API implementation
+	String errorMessage;
+	auto swgRealmsAPI = SWGRealmsAPI::instance();
+	uint64 expiresTimestamp = (uint64)time(0) + seconds;
+
+	if (swgRealmsAPI != nullptr && swgRealmsAPI->banAccountBlocking(
+			account->getAccountID(), admin->getAccountID(), expiresTimestamp, escapedReason, errorMessage)) {
+		// API ban succeeded - update local account object
+		Locker locker(account);
+		account->setBanReason(reason);
+		account->setBanExpires(expiresTimestamp);
+		account->setBanAdmin(admin->getAccountID());
+	} else {
+		error() << "SWGRealms API banAccountBlocking failed for accountID " << account->getAccountID()
+			<< ": " << errorMessage << " (fail-closed, NOT falling back to MySQL)";
+		return "Failed to ban account: " + errorMessage;
+	}
+#endif // WITH_SWGREALMS_API
 
 	StringBuffer banResult;
 
@@ -4603,6 +4612,7 @@ String PlayerManagerImplementation::unbanAccount(PlayerObject* admin, Account* a
 	String escapedReason = reason;
 	Database::escapeString(escapedReason);
 
+#ifndef WITH_SWGREALMS_API
 	try {
 		StringBuffer query;
 		query << "UPDATE account_bans SET expires = UNIX_TIMESTAMP(), reason = '" << escapedReason << "'  WHERE account_id = " << account->getAccountID() << " and expires > UNIX_TIMESTAMP();";
@@ -4617,8 +4627,29 @@ String PlayerManagerImplementation::unbanAccount(PlayerObject* admin, Account* a
 	account->setBanReason(reason);
 
 	return "Account Successfully Unbanned";
+#else // WITH_SWGREALMS_API
+	// SWGRealms API implementation
+	String errorMessage;
+	auto swgRealmsAPI = SWGRealmsAPI::instance();
+
+	if (swgRealmsAPI != nullptr && swgRealmsAPI->unbanAccountBlocking(
+			account->getAccountID(), escapedReason, errorMessage)) {
+		// API unban succeeded - update local account object
+		Locker locker(account);
+		account->setBanExpires(System::getMiliTime());
+		account->setBanReason(reason);
+
+		return "Account Successfully Unbanned";
+	}
+
+	// API failed
+	error() << "SWGRealms API unbanAccountBlocking failed for accountID " << account->getAccountID()
+		<< ": " << errorMessage << " (fail-closed, NOT falling back to MySQL)";
+	return "Failed to unban account: " + errorMessage;
+#endif // WITH_SWGREALMS_API
 }
 
+#ifndef WITH_SWGREALMS_API
 String PlayerManagerImplementation::banFromGalaxy(PlayerObject* admin, Account* account, const uint32 galaxy, uint32 seconds, const String& reason) {
 
 	if (admin == nullptr || !admin->isPrivileged())
@@ -4693,7 +4724,82 @@ String PlayerManagerImplementation::banFromGalaxy(PlayerObject* admin, Account* 
 
 	return "Successfully Banned from Galaxy";
 }
+#else // WITH_SWGREALMS_API
+String PlayerManagerImplementation::banFromGalaxy(PlayerObject* admin, Account* account, const uint32 galaxy, uint32 seconds, const String& reason) {
 
+	if (admin == nullptr || !admin->isPrivileged())
+		return "";
+
+	if (account == nullptr)
+		return "Account Not Found";
+
+	String escapedReason = reason;
+	Database::escapeString(escapedReason);
+
+	// Use SWGRealms API
+	String errorMessage;
+	auto swgRealmsAPI = SWGRealmsAPI::instance();
+	uint64 expiresTimestamp = (uint64)time(0) + seconds;
+
+	if (swgRealmsAPI != nullptr && swgRealmsAPI->banFromGalaxyBlocking(
+			account->getAccountID(), galaxy, admin->getAccountID(), expiresTimestamp, escapedReason, errorMessage)) {
+
+		// API ban succeeded - update local account object
+		Locker locker(account);
+
+		Time current;
+		Time expires;
+		expires.addMiliTime(seconds*10000);
+
+		Reference<GalaxyBanEntry*> ban = new GalaxyBanEntry();
+		ban->setAccountID(account->getAccountID());
+		ban->setBanAdmin(admin->getAccountID());
+		ban->setGalaxyID(galaxy);
+		ban->setCreationDate(current);
+		ban->setBanExpiration(expires);
+		ban->setBanReason(reason);
+
+		account->addGalaxyBan(ban, galaxy);
+
+		// Kick characters if on current galaxy
+		try {
+			if (server->getGalaxyID() == galaxy) {
+				Reference<const CharacterList*> characters = account->getCharacterList();
+
+				for (int i = 0; i < characters->size(); ++i) {
+					const CharacterListEntry* entry = &characters->get(i);
+					if (entry->getGalaxyID() == galaxy) {
+						ManagedReference<CreatureObject*> player = getPlayer(entry->getFirstName());
+						if (player != nullptr) {
+							clearOwnedStructuresPermissions(player);
+
+							if (player->isOnline()) {
+								player->sendMessage(new LogoutMessage());
+								ManagedReference<ZoneClientSession*> session = player->getClient();
+								if (session != nullptr)
+									session->disconnect(true);
+							}
+						}
+					}
+				}
+			} else {
+				return "Successfully Banned from Galaxy, but cannot kick characters because Galaxy is not your current galaxy.";
+			}
+		} catch(Exception& e) {
+			return "Successfully Banned from Galaxy, but error kicking characters. " + e.getMessage();
+		}
+
+		return "Successfully Banned from Galaxy";
+	}
+
+	// API failed
+	error() << "SWGRealms API banFromGalaxyBlocking failed for accountID " << account->getAccountID()
+			<< ", galaxy " << galaxy << ": " << errorMessage;
+	return "Failed to ban from galaxy: " + errorMessage;
+}
+#endif // WITH_SWGREALMS_API
+
+#ifndef WITH_SWGREALMS_API
 String PlayerManagerImplementation::unbanFromGalaxy(PlayerObject* admin, Account* account, const uint32 galaxy, const String& reason) {
 
 	if (admin == nullptr || !admin->isPrivileged())
@@ -4720,6 +4826,38 @@ String PlayerManagerImplementation::unbanFromGalaxy(PlayerObject* admin, Account
 
 	return "Successfully Unbanned from Galaxy";
 }
+#else // WITH_SWGREALMS_API
+String PlayerManagerImplementation::unbanFromGalaxy(PlayerObject* admin, Account* account, const uint32 galaxy, const String& reason) {
+
+	if (admin == nullptr || !admin->isPrivileged())
+		return "";
+
+	if (account == nullptr)
+		return "Account Not Found";
+
+	String escapedReason = reason;
+	Database::escapeString(escapedReason);
+
+	// Use SWGRealms API
+	String errorMessage;
+	auto swgRealmsAPI = SWGRealmsAPI::instance();
+
+	if (swgRealmsAPI != nullptr && swgRealmsAPI->unbanFromGalaxyBlocking(
+			account->getAccountID(), galaxy, escapedReason, errorMessage)) {
+
+		// API unban succeeded - update local account object
+		Locker locker(account);
+		account->removeGalaxyBan(galaxy);
+
+		return "Successfully Unbanned from Galaxy";
+	}
+
+	// API failed
+	error() << "SWGRealms API unbanFromGalaxyBlocking failed for accountID " << account->getAccountID()
+			<< ", galaxy " << galaxy << ": " << errorMessage;
+	return "Failed to unban from galaxy: " + errorMessage;
+}
+#endif // WITH_SWGREALMS_API
 
 String PlayerManagerImplementation::banCharacter(PlayerObject* admin, Account* account, const String& name, const uint32 galaxyID, uint32 seconds, const String& reason) {
 
@@ -4729,6 +4867,7 @@ String PlayerManagerImplementation::banCharacter(PlayerObject* admin, Account* a
 	if (account == nullptr)
 		return "Account Not Found";
 
+#ifndef WITH_SWGREALMS_API
 	String escapedReason = reason;
 	Database::escapeString(escapedReason);
 
@@ -4743,6 +4882,20 @@ String PlayerManagerImplementation::banCharacter(PlayerObject* admin, Account* a
 	} catch(Exception& e) {
 		return "Exception banning character: " + e.getMessage();
 	}
+#else // WITH_SWGREALMS_API
+	auto swgRealmsAPI = SWGRealmsAPI::instance();
+	if (swgRealmsAPI == nullptr) {
+		return "SWGRealms API not available";
+	}
+
+	uint64 expiresTimestamp = time(nullptr) + seconds;
+	String errorMessage;
+
+	if (!swgRealmsAPI->banCharacterBlocking(account->getAccountID(), galaxyID, name, admin->getAccountID(),
+	                                         expiresTimestamp, reason, errorMessage)) {
+		return "Exception banning character: " + errorMessage;
+	}
+#endif // WITH_SWGREALMS_API
 
 	Locker locker(account);
 
@@ -4796,6 +4949,7 @@ String PlayerManagerImplementation::unbanCharacter(PlayerObject* admin, Account*
 	if (account == nullptr)
 		return "Account Not Found";
 
+#ifndef WITH_SWGREALMS_API
 	String escapedReason = reason;
 	Database::escapeString(escapedReason);
 
@@ -4810,6 +4964,18 @@ String PlayerManagerImplementation::unbanCharacter(PlayerObject* admin, Account*
 	} catch(Exception& e) {
 		return "Exception banning character: " + e.getMessage();
 	}
+#else // WITH_SWGREALMS_API
+	auto swgRealmsAPI = SWGRealmsAPI::instance();
+	if (swgRealmsAPI == nullptr) {
+		return "SWGRealms API not available";
+	}
+
+	String errorMessage;
+
+	if (!swgRealmsAPI->unbanCharacterBlocking(account->getAccountID(), galaxyID, name, reason, errorMessage)) {
+		return "Exception unbanning character: " + errorMessage;
+	}
+#endif // WITH_SWGREALMS_API
 
 	Locker locker(account);
 	CharacterListEntry *entry = account->getCharacterBan(galaxyID, name);
@@ -5879,7 +6045,6 @@ void PlayerManagerImplementation::confirmVeteranReward(CreatureObject* player, i
 	} else {
 		generateVeteranReward(player);
 	}
-
 }
 
 void PlayerManagerImplementation::generateVeteranReward(CreatureObject* player) {
@@ -5958,7 +6123,12 @@ void PlayerManagerImplementation::generateVeteranReward(CreatureObject* player) 
 	// Record reward in all characters registered to the account
 	GalaxyAccountInfo* accountInfo = account->getGalaxyAccountInfo(player->getZoneServer()->getGalaxyName());
 
-	accountInfo->addChosenVeteranReward(rewardSession->getMilestone(), reward.getTemplateFile());
+	// sorosuub_space_yacht_deed
+	if (reward.isJtlReward()) {
+		accountInfo->addChosenVeteranReward(1, reward.getTemplateFile());
+	} else {
+		accountInfo->addChosenVeteranReward(rewardSession->getMilestone(), reward.getTemplateFile());
+	}
 
 	cancelVeteranRewardSession(player);
 
@@ -5983,6 +6153,7 @@ int PlayerManagerImplementation::getEligibleMilestone(PlayerObject *ghost, Accou
 	// Return the first milestone for which the player is eligible and has not already claimed
 	for (int i = 0; i < veteranRewardMilestones.size(); i++) {
 		milestone = veteranRewardMilestones.get(i);
+
 		if (accountAge >= milestone && ghost->getChosenVeteranReward(milestone).isEmpty()) {
 			return milestone;
 		}
@@ -6319,6 +6490,7 @@ void PlayerManagerImplementation::cleanupCharacters() {
 }
 
 bool PlayerManagerImplementation::shouldDeleteCharacter(uint64 characterID, int galaxyID) {
+#ifndef WITH_SWGREALMS_API
 	const String query = "SELECT * FROM characters WHERE character_oid = " + String::valueOf(characterID) + " AND galaxy_id = " + String::valueOf(galaxyID);
 
 	try {
@@ -6340,6 +6512,18 @@ bool PlayerManagerImplementation::shouldDeleteCharacter(uint64 characterID, int 
 		error() << "database error " << err.getMessage();
 		return false;
 	}
+#else // WITH_SWGREALMS_API
+	auto swgRealmsAPI = SWGRealmsAPI::instance();
+	if (swgRealmsAPI == nullptr) {
+		return false;  // Can't verify, don't delete
+	}
+
+	String errorMessage;
+	auto character = swgRealmsAPI->getCharacterBlocking(characterID, galaxyID, errorMessage);
+
+	// Return true (delete) if character not found (orphan in BerkeleyDB)
+	return character.is_null() || character.size() == 0;
+#endif // WITH_SWGREALMS_API
 }
 
 bool PlayerManagerImplementation::doBurstRun(CreatureObject* player, float hamModifier, float cooldownModifier) {

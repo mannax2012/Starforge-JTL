@@ -13,15 +13,14 @@ SpaceDestroyScreenplay = SpaceQuestLogic:new {
 
 	DEBUG_SPACE_DESTROY = false,
 
-	dutyMission = false,
-
 	sideQuest = false,
 	sideQuestType = "",
-	sideQuestStart = 0, -- Kill Number
+	sideQuestPatrolStart = 0,
 	sideQuestDelay = 0, -- Time in seconds to wait to trigger side quest
 
 	parentQuest = "",
-	parentQuestType = "", -- Quest type of parent quest, used for completing tasks
+	parentQuestType = "",
+	parentQuestName = "",
 
 	-- Screenplay Specific Variables
 	killsRequired = 0,
@@ -40,7 +39,7 @@ registerScreenPlay("SpaceDestroyScreenplay", false)
 
 function SpaceDestroyScreenplay:startQuest(pPlayer, pNpc)
 	if (pPlayer == nil) then
-		Logger:log("Quest: " .. self.questName .. " Type: " .. self.QuestType .. " -- Failed to startQuest due to pPlayer being nil.", LT_ERROR)
+		Logger:log("Quest: " .. self.questName .. " Type: " .. self.questType .. " -- Failed to startQuest due to pPlayer being nil.", LT_ERROR)
 		return
 	end
 
@@ -48,7 +47,11 @@ function SpaceDestroyScreenplay:startQuest(pPlayer, pNpc)
 		print(self.className .. ":startQuest called -- QuestType: " .. self.questType .. " Quest Name: " .. self.questName)
 	end
 
-	SpaceHelpers:activateSpaceQuest(pPlayer, pNpc, self.questType, self.questName, 1)
+	if (pNpc == "") then
+		pNpc = nil
+	end
+
+	SpaceHelpers:activateSpaceQuest(pPlayer, pNpc, self.questType, self.questName, false)
 
 	-- Create inital observer for player entering Zone
 	if (not hasObserver(ZONESWITCHED, self.className, "enteredZone", pPlayer)) then
@@ -77,6 +80,16 @@ function SpaceDestroyScreenplay:completeQuest(pPlayer, notifyClient)
 
 	-- Remove the zone entry observer
 	dropObserver(ZONESWITCHED, self.className, "enteredZone", pPlayer)
+
+	if (self.sideQuest and (self.sideQuestSplitType == self.SIDE_QUEST_SPLIT_TYPES.COMPLETION or self.sideQuestSplitType == self.SIDE_QUEST_SPLIT_TYPES.BIDIRECTIONAL)) then
+		local alertMessage = "@spacequest/" .. self.questType .. "/" .. self.questName .. ":split_quest_alert"
+
+		-- Split Quest Alert
+		createEvent(self.sideQuestDelay * 1000, "SpaceHelpers", "sendQuestAlert", pPlayer, alertMessage)
+
+		-- Trigger Sidequest
+		createEvent(self.sideQuestDelay * 1050, self.sideQuestType .. "_" .. self.sideQuestName, "startQuest", pPlayer, "")
+	end
 end
 
 function SpaceDestroyScreenplay:failQuest(pPlayer, notifyClient)
@@ -101,6 +114,9 @@ function SpaceDestroyScreenplay:failQuest(pPlayer, notifyClient)
 	-- Remove any patrol points
 	SpaceHelpers:clearQuestWaypoints(pPlayer, self.className)
 
+	-- Remove the kill data
+	deleteData(SceneObject(pPlayer):getObjectID() .. ":" .. self.className .. ":killCount")
+
 	-- Remove the zone entry observer
 	dropObserver(ZONESWITCHED, self.className, "enteredZone", pPlayer)
 
@@ -109,13 +125,49 @@ function SpaceDestroyScreenplay:failQuest(pPlayer, notifyClient)
 
 	-- Fail the parent quest
 	if (self.parentQuestType ~= "") then
-		createEvent(200, self.parentQuestType .. "_" .. self.questName, "failQuest", pPlayer, "false")
+		createEvent(200, self.parentQuestType .. "_" .. self.parentQuestName, "failQuest", pPlayer, "false")
 	end
 
 	-- Fail the side quest
-	if (self.sideQuest and SpaceHelpers:isSpaceQuestActive(pPlayer, self.sideQuestType, self.questName)) then
-		createEvent(200, self.sideQuestType .. "_" .. self.questName, "failQuest", pPlayer, "false")
+	if (self.sideQuest and SpaceHelpers:isSpaceQuestActive(pPlayer, self.sideQuestType, self.sideQuestName)) then
+		createEvent(200, self.sideQuestType .. "_" .. self.sideQuestName, "failQuest", pPlayer, "false")
 	end
+
+	if (self.sideQuest and (self.sideQuestSplitType == self.SIDE_QUEST_SPLIT_TYPES.FAILURE or self.sideQuestSplitType == self.SIDE_QUEST_SPLIT_TYPES.BIDIRECTIONAL)) then
+		local alertMessage = "@spacequest/" .. self.questType .. "/" .. self.questName .. ":split_quest_alert"
+
+		-- Split Quest Alert
+		createEvent(self.sideQuestDelay * 1000, "SpaceHelpers", "sendQuestAlert", pPlayer, alertMessage)
+
+		-- Trigger Sidequest
+		createEvent(self.sideQuestDelay * 1050, self.sideFailQuestType .. "_" .. self.sideFailQuestName, "startQuest", pPlayer, "")
+	end
+end
+
+function SpaceDestroyScreenplay:resetQuest(pPlayer)
+	if (pPlayer == nil) then
+		Logger:log(self.questName .. " Type: " .. self.questType .. " -- Failed to resetQuest due to pPlayer being nil.", LT_ERROR)
+		return
+	end
+
+	if (self.DEBUG_SPACE_DESTROY) then
+		print(self.className .. ":resetQuest called -- QuestType: " .. self.questType .. " Quest Name: " .. self.questName)
+	end
+
+	-- Set Quest failed
+	SpaceHelpers:failSpaceQuest(pPlayer, self.questType, self.questName, false)
+
+	-- Remove any patrol points
+	SpaceHelpers:clearQuestWaypoints(pPlayer, self.className)
+
+	-- Remove the kill data
+	deleteData(SceneObject(pPlayer):getObjectID() .. ":" .. self.className .. ":killCount")
+
+	-- Remove the zone entry observer
+	dropObserver(ZONESWITCHED, self.className, "enteredZone", pPlayer)
+
+	-- Remove Ship Destruction observer
+	dropObserver(DESTROYEDSHIP, self.className, "notifyDestroyedShip", pPlayer)
 end
 
 --[[
@@ -127,6 +179,10 @@ end
 function SpaceDestroyScreenplay:enteredZone(pPlayer, nill, zoneNameHash)
 	if (pPlayer == nil) then
 		return 0
+	end
+
+	if (not SpaceHelpers:isSpaceQuestActive(pPlayer, self.questType, self.questName)) then
+		return 1
 	end
 
 	local pGhost = CreatureObject(pPlayer):getPlayerObject()
@@ -153,49 +209,52 @@ function SpaceDestroyScreenplay:enteredZone(pPlayer, nill, zoneNameHash)
 		-- Complete the quest task 0
 		SpaceHelpers:completeSpaceQuestTask(pPlayer, self.questType, self.questName, 0, false)
 
-		-- Activate quest task 1
-		SpaceHelpers:activateSpaceQuestTask(pPlayer, self.questType, self.questName, 1, false)
-
 		-- Create Ship Destruction observer
-		createObserver(DESTROYEDSHIP, self.className, "notifyDestroyedShip", pPlayer, true)
+		if (not hasObserver(DESTROYEDSHIP, self.className, "notifyDestroyedShip", pPlayer)) then
+			createObserver(DESTROYEDSHIP, self.className, "notifyDestroyedShip", pPlayer, true)
+		end
 
 		-- Give Waypoints for Spawns
 		local waypointTable = self.shipLocations
-		local waypointIDs = {}
 
-		if (self.DEBUG_SPACE_DESTROY) then
-			print(self.className .. " -- Waypoint table size: " .. #waypointTable)
-		end
+		if (#waypointTable > 0) then
+			local waypointIDs = {}
 
-		for i = 1, #waypointTable, 1 do
-			local point = waypointTable[i]
+			if (self.DEBUG_SPACE_DESTROY) then
+				print(self.className .. " -- Waypoint table size: " .. #waypointTable)
+			end
 
-			local waypointID = PlayerObject(pGhost):addWaypoint(self.questZone, "@spacequest/destroy/" .. self.questName .. ":quest_destroy_t", "", point.x, point.z, point.y, WAYPOINT_SPACE, true, true, 0)
+			for i = 1, #waypointTable, 1 do
+				local point = waypointTable[i]
 
-			if (waypointID > 0) then
-				waypointIDs[#waypointIDs + 1] = tostring(waypointID)
+				local waypointID = PlayerObject(pGhost):addWaypoint(self.questZone, "@spacequest/destroy/" .. self.questName .. ":quest_destroy_t", "", point.x, point.z, point.y, WAYPOINT_SPACE, true, true, 0)
 
-				if (self.DEBUG_SPACE_DESTROY) then
-					print(self.className .. " -- Waypoint Added #" .. i .. " ID: " .. waypointID)
-				end
+				if (waypointID > 0) then
+					waypointIDs[#waypointIDs + 1] = tostring(waypointID)
 
-				local pWaypoint = getSceneObject(waypointID)
+					if (self.DEBUG_SPACE_DESTROY) then
+						print(self.className .. " -- Waypoint Added #" .. i .. " ID: " .. waypointID)
+					end
 
-				if (pWaypoint ~= nil) then
-					WaypointObject(pWaypoint):setQuestDetails("@spacequest/" .. self.questType .. "/" .. self.questName .. ":title_d")
+					local pWaypoint = getSceneObject(waypointID)
+
+					if (pWaypoint ~= nil) then
+						WaypointObject(pWaypoint):setQuestDetails("@spacequest/" .. self.questType .. "/" .. self.questName .. ":title_d")
+					end
 				end
 			end
+
+			writeStringVectorSharedMemory(playerID .. ":" .. self.className .. ":waypointVector", waypointIDs)
+
+			-- Quest update message
+			SpaceHelpers:sendQuestUpdate(pPlayer, #waypointTable .. " waypoint(s) to possible destroy target locations have been added to your datapad.") -- "destroy_target_waypoints"
 		end
-
-		writeStringVectorSharedMemory(playerID .. ":" .. self.className .. ":waypointVector", waypointIDs)
-
-		-- Quest update message
-		SpaceHelpers:sendQuestUpdate(pPlayer, #waypointTable .. " waypoint(s) to possible destroy target locations have been added to your datapad.") -- "destroy_target_waypoints"
 
 		-- Player effect for player
 		CreatureObject(pPlayer):playEffect("clienteffect/ui_quest_waypoint_target.cef", "")
-	elseif (not hasObserver(DESTROYEDSHIP, self.className, "notifyDestroyedShip", pPlayer)) then
-		self:failQuest(pPlayer, "true")
+	elseif (zoneNameHash ~= spaceQuestHash and SpaceHelpers:isSpaceQuestTaskComplete(pPlayer, self.questType, self.questName, 0) and SpaceHelpers:isSpaceQuestTaskActive(pPlayer, self.questType, self.questName, 1)) then
+		-- Fail the quest for the player
+		createEvent(2000, self.className, "failQuest", pPlayer, "true")
 	end
 
 	return 0
@@ -206,17 +265,12 @@ function SpaceDestroyScreenplay:notifyDestroyedShip(pPlayer, pShipAgent)
 		return 0
 	end
 
-	if (self.DEBUG_SPACE_DESTROY) then
-		print(self.className .. ":notifyDestroyedShip -- Called for Destructed ShipAgent Object: " .. ShipObject(pShipAgent):getShipName() .. " Destructor: " .. SceneObject(pPlayer):getDisplayedName())
-	end
-
 	if (pPlayer == nil or not SceneObject(pPlayer):isPlayerCreature()) then
 		return 1
 	end
 
-	-- Check is kill task is active
-	if (not SpaceHelpers:isSpaceQuestTaskActive(pPlayer, self.questType, self.questName, 1)) then
-		return 1
+	if (self.DEBUG_SPACE_DESTROY) then
+		print(self.className .. ":notifyDestroyedShip -- Called for Destructed ShipAgent Object: " .. ShipObject(pShipAgent):getShipName() .. " Destructor: " .. SceneObject(pPlayer):getDisplayedName())
 	end
 
 	local playerID = SceneObject(pPlayer):getObjectID()
@@ -265,6 +319,9 @@ function SpaceDestroyScreenplay:notifyDestroyedShip(pPlayer, pShipAgent)
 	end
 
 	if (killCount == 1) then
+		-- Activate quest task 1
+		SpaceHelpers:activateSpaceQuestTask(pPlayer, self.questType, self.questName, 1, false)
+
 		SpaceHelpers:sendQuestProgess(pPlayer, "@spacequest/" .. self.questType .. "/" .. self.questName .. ":title")
 	end
 

@@ -94,8 +94,9 @@ void SpaceZoneComponent::updateZone(SceneObject* sceneObject, bool lightUpdate, 
 	// Updates objects in range
 	try {
 		if (sceneObject->isShipObject()) {
+			float range = sceneObject->getInRangeDistance(lightUpdate);
 			spaceZone->update(sceneObject);
-			spaceZone->inRange(sceneObject, ZoneServer::SPACESTATIONRANGE);
+			spaceZone->inRange(sceneObject, range);
 
 			spaceZone->unlock();
 			zoneUnlocked = true;
