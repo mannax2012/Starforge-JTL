@@ -968,17 +968,19 @@ void ResourceSpawner::sendSampleResults(TransactionLog& trx, CreatureObject* pla
 		return;
 	}
 
-	// Lower skill levels mean you can't sample lower concetrations
-	int surveySkill = player->getSkillMod("surveying");
-
+	// Lower skill levels mean you can't sample lower concetrations (removed)
+	/*
 	if ((density * 100) < (32 - ((surveySkill / 20) * 6)) || density < .10) {
-		StringIdChatParameter message("survey", "density_below_threshold");
-		message.setTO(resname);
-		player->sendSystemMessage(message);
-		player->setPosture(CreaturePosture::UPRIGHT, true);
-		trx.abort() << message.toString();
-		return;
-	}
+	StringIdChatParameter message("survey", "density_below_threshold");
+	message.setTO(resname);
+	player->sendSystemMessage(message);
+	player->setPosture(CreaturePosture::UPRIGHT, true);
+	trx.abort() << message.toString();
+	return;
+	} 
+	*/
+
+	int surveySkill = player->getSkillMod("surveying");
 
 	Coordinate* richSampleLocation = session->getRichSampleLocation();
 
