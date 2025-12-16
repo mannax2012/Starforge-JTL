@@ -1026,20 +1026,14 @@ void ResourceSpawner::sendSampleResults(TransactionLog& trx, CreatureObject* pla
 		xpcap = 50;
 	}
 
-	/*
+	
 	if (unitsExtracted < 2) {
 		// Send message to player about trace amounts
 		StringIdChatParameter message("survey", "trace_amount");
 		message.setTO(resname);
 		message.setDI(unitsExtracted);
 		player->sendSystemMessage(message);
-		trx.abort() << message.toString();
-		return;
-	}
-	*/
-
-	if (unitsExtracted < 1){
-		unitsExtracted = 1;
+		unitsExtracted = System::random(2);
 	}
 
 	// Send message to player about unit extraction
