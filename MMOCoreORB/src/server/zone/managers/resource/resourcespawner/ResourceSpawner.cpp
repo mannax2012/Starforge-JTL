@@ -1029,11 +1029,11 @@ void ResourceSpawner::sendSampleResults(TransactionLog& trx, CreatureObject* pla
 	
 	if (unitsExtracted < 2) {
 		// Send message to player about trace amounts
+		unitsExtracted = System::random(2) + 1;
 		StringIdChatParameter message("survey", "trace_amount");
 		message.setTO(resname);
 		message.setDI(unitsExtracted);
 		player->sendSystemMessage(message);
-		unitsExtracted = System::random(2);
 	}
 
 	// Send message to player about unit extraction
