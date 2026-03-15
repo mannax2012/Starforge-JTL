@@ -2318,7 +2318,7 @@ float CombatManager::getDefenderToughnessModifier(CreatureObject* defender, int 
 	int jediToughness = defender->getSkillMod("jedi_toughness");
 	if (damType != SharedWeaponObjectTemplate::LIGHTSABER && jediToughness > 0){
 		int maxReduction = 71;
-		int curvePlacement = 2.5;
+		double curvePlacement = 2.5;
 		float growthRate = -0.085;
 	    float growthCurve = 2.5;
 	damage *= 1 - (.01f * (maxReduction / (pow(1 + curvePlacement * exp(growthRate * jediToughness), growthCurve))));
