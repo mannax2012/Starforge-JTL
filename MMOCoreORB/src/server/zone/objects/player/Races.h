@@ -107,7 +107,7 @@ const static char* Gender[] = {
 	"female", 	// wookiee female
 	"female", 	// sullustan female
 	"female", 	// ithorian female
-    "female" 	// chiss female
+    "female", 	// chiss female
 	"male", 	// nautolan male
 	"male", 	// devaronian male
 	"male", 	// gran male
