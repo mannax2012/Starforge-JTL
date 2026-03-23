@@ -719,7 +719,7 @@ namespace conf {
 
 			if (configVersion.get() > cachedVersion) {
 				Locker guard(&mutex);
-				cachedEnableSessionId = getBool("Core3.Login.EnableSessionId", false);
+				cachedEnableSessionId = getBool("Core3.Login.EnableSessionId", true);
 				cachedVersion = configVersion.get();
 			}
 
