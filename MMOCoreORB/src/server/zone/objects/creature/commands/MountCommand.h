@@ -162,7 +162,7 @@ public:
 		if(vehicle->getSpeedMultiplierMod() != 0){
 			newSpeed *= vehicle->getSpeedMultiplierMod();
 		}else{
-			creature->sendSystemMessage("Debug - vehicle->getSpeedMultiplierMod(): " + String::valueOf(vehicle->getSpeedMultiplierMod()));
+			//creature->sendSystemMessage("Debug - vehicle->getSpeedMultiplierMod(): " + String::valueOf(vehicle->getSpeedMultiplierMod()));
 		}
 
 
@@ -181,7 +181,7 @@ public:
 		creature->setTurnScale(newTurn, true);
 		creature->setAccelerationMultiplierMod(newAccel, true);
 		creature->addMountedCombatSlow();
-		creature->sendSystemMessage("Debug - Speed: " + String::valueOf(creature->getRunSpeed()));
+		//creature->sendSystemMessage("Debug - Speed: " + String::valueOf(creature->getRunSpeed()));
 		
 		return SUCCESS;
 	}
