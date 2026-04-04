@@ -33,6 +33,7 @@
 #include "server/zone/objects/installation/TurretObject.h"
 
 #define COMBAT_SPAM_RANGE 85 // Range at which players will see Combat Log Info
+#define COMBAT_SPAM_RANGE 85 // Range at which players will see Combat Log Info
 
 /*
 * Notes:
@@ -1620,6 +1621,8 @@ int CombatManager::applyDamage(TangibleObject* attacker, WeaponObject* weapon, C
 	int totalDamage = (int)(healthDamage + actionDamage + mindDamage);
 	defender->notifyObservers(ObserverEventType::DAMAGERECEIVED, attacker, totalDamage);
 
+	tryStarforgeFocusProc(defender, totalDamage);
+
 	if (attacker->isPlayerCreature()) {
 		showHitLocationFlyText(attacker->asCreatureObject(), defender, hitLocation);
 	}
@@ -1689,7 +1692,7 @@ int CombatManager::applyDamage(CreatureObject* attacker, WeaponObject* weapon, T
 	}
 
 	defender->inflictDamage(attacker, 0, damage, true, xpType, true, true);
-
+	//tryStarforgeFocusProc(defender, damage);
 	defender->notifyObservers(ObserverEventType::DAMAGERECEIVED, attacker, damage);
 
 	return damage;
@@ -3594,6 +3597,44 @@ void CombatManager::checkForTefs(CreatureObject* attacker, CreatureObject* defen
 	}
 }
 
+void CombatManager::tryStarforgeFocusProc(CreatureObject* defender, int totalDamage) const {
+	static constexpr int STARFORGE_FOCUS_PROC_CHANCE = 20;
+	static constexpr int STARFORGE_FOCUS_HEAL_AMOUNT = 200;
+
+	if (defender == nullptr || totalDamage <= 0)
+		return;
+
+	//defender->sendSystemMessage("Trying to fire off Starforge Focus Heal.");
+
+	if (!defender->hasBuff(BuffCRC::STARFORGE_FOCUS)) {
+		//defender->sendSystemMessage("Starforge Focus buff check failed.");
+		return;
+	}
+
+	if (defender->isDead() || defender->isIncapacitated()) {
+		//defender->sendSystemMessage("It thinks you're dead or incapacitated.");
+		return;
+	}
+
+	int roll = System::random(99);
+
+	if (roll < STARFORGE_FOCUS_PROC_CHANCE) {
+		defender->healDamage(defender, CreatureAttribute::HEALTH, STARFORGE_FOCUS_HEAL_AMOUNT, true);
+		defender->showFlyText("starforge_n", "starforge_focus_flytext", 0, 255, 0);
+		//defender->sendSystemMessage("Your intense focus let you shrug off part of the damage and recover some health.");
+		CombatSpam* spam = new CombatSpam(
+				defender,
+				nullptr,
+				defender,
+				nullptr,
+				STARFORGE_FOCUS_HEAL_AMOUNT,
+				"starforge_n",
+				"starforge_focus_combattext",
+				1
+			);
+			defender->sendMessage(spam);
+	}
+}
 void CombatManager::initializeDefaultAttacks() {
 	defaultRangedAttacks.add(STRING_HASHCODE("fire_1_single_light"));
 	defaultRangedAttacks.add(STRING_HASHCODE("fire_1_single_medium"));

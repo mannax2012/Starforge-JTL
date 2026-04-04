@@ -28,6 +28,10 @@ void PerformanceBuffImplementation::activate(bool applyModifiers) {
 		int willStrength = round(strength * (float)creature.get()->getBaseHAM(CreatureAttribute::STAMINA));
 		setAttributeModifier(CreatureAttribute::STAMINA, willStrength);
 		creature.get()->sendSystemMessage("Your Stamina has been enhanced by listening a musician's performance.");
+	} 
+	else if(type == PerformanceBuffType::STARFORGE_FOCUS) {
+		setSkillModifier("xp_increase", 20);
+		creature.get()->sendSystemMessage("You feel intensely focused after the performance.");
 	}
 
 	BuffImplementation::activate(true);

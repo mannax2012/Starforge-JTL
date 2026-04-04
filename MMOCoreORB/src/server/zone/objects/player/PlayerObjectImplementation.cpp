@@ -2707,7 +2707,7 @@ void PlayerObjectImplementation::doForceRegen() {
 	if (creature == nullptr || creature->isIncapacitated() || creature->isDead())
 		return;
 
-	const static uint32 tick = 15;
+	const static uint32 tick = creature->getSkillMod("jedi_force_power_regen");
 
 	uint32 modifier = 1;
 
@@ -2715,10 +2715,11 @@ void PlayerObjectImplementation::doForceRegen() {
 		Reference<ForceMeditateTask*> medTask = creature->getPendingTask("forcemeditate").castTo<ForceMeditateTask*>();
 
 		if (medTask != nullptr)
-			modifier = 5;
+			modifier = 2;
 	}
 
 	uint32 forceTick = tick * modifier;
+	
 
 	if (forceTick > getForcePowerMax() - getForcePower()){   // If the player's Force Power is going to regen again and it's close to max,
 		setForcePower(getForcePowerMax());             // Set it to max, so it doesn't go over max.

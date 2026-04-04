@@ -898,15 +898,17 @@ void EntertainingSessionImplementation::activateEntertainerBuff(CreatureObject* 
 			return;
 
 		ManagedReference<PerformanceBuff*> oldBuff = nullptr;
+
 		if (entertainer->hasSkill("social_musician_master") && entertainer->hasSkill("social_dancer_master"))
 		{
 
 		uint32 mindBuffCRC = STRING_HASHCODE("medical_enhance_action");
-		uint32 focusBuffCRC = STRING_HASHCODE("enhance_music_focus");
+		//uint32 focusBuffCRC = STRING_HASHCODE("enhance_music_focus");
 		uint32 willBuffCRC = STRING_HASHCODE("medical_enhance_stamina");
+		uint32 sfFocusBuffCRC = STRING_HASHCODE("starforge_focus");
 
 
-		oldBuff = cast<PerformanceBuff*>(creature->getBuff(mindBuffCRC));
+		oldBuff = cast<PerformanceBuff*>(creature->getBuff(willBuffCRC));
 
 		if (oldBuff != nullptr && oldBuff->getBuffStrength() > buffStrength)
 			return;
@@ -915,36 +917,39 @@ void EntertainingSessionImplementation::activateEntertainerBuff(CreatureObject* 
 			return;
 
 		ManagedReference<PerformanceBuff*> mindBuff = new PerformanceBuff(creature, mindBuffCRC, buffStrength, buffDuration * 105, PerformanceBuffType::DANCE_MIND);							
-		ManagedReference<PerformanceBuff*> focusBuff = new PerformanceBuff(creature, focusBuffCRC, buffStrength, buffDuration * 105, PerformanceBuffType::MUSIC_FOCUS);
+		//ManagedReference<PerformanceBuff*> focusBuff = new PerformanceBuff(creature, focusBuffCRC, buffStrength, buffDuration * 105, PerformanceBuffType::MUSIC_FOCUS);
 		ManagedReference<PerformanceBuff*> willBuff = new PerformanceBuff(creature, willBuffCRC, buffStrength, buffDuration * 105, PerformanceBuffType::MUSIC_WILLPOWER);
+		ManagedReference<PerformanceBuff*> starforgeFocus = new PerformanceBuff(creature, sfFocusBuffCRC, buffStrength, buffDuration * 105, PerformanceBuffType::STARFORGE_FOCUS);
+
 
 		ManagedReference<PerformanceBuff*> EntmindBuff = new PerformanceBuff(entertainer, mindBuffCRC, buffStrength, buffDuration * 105, PerformanceBuffType::DANCE_MIND);							
-		ManagedReference<PerformanceBuff*> EntfocusBuff = new PerformanceBuff(entertainer, focusBuffCRC, buffStrength, buffDuration * 105, PerformanceBuffType::MUSIC_FOCUS);
+		//ManagedReference<PerformanceBuff*> EntfocusBuff = new PerformanceBuff(entertainer, focusBuffCRC, buffStrength, buffDuration * 105, PerformanceBuffType::MUSIC_FOCUS);
 		ManagedReference<PerformanceBuff*> EntwillBuff = new PerformanceBuff(entertainer, willBuffCRC, buffStrength, buffDuration * 105, PerformanceBuffType::MUSIC_WILLPOWER);
+		ManagedReference<PerformanceBuff*> EntstarforgeFocus = new PerformanceBuff(entertainer, sfFocusBuffCRC, buffStrength, buffDuration * 105, PerformanceBuffType::STARFORGE_FOCUS);
 
 
 		Locker locker(mindBuff);
 		creature->addBuff(mindBuff);
 		locker.release();
 
-		Locker locker2(focusBuff);
-		creature->addBuff(focusBuff);
+		Locker locker2(willBuff);
+		creature->addBuff(willBuff);
 		locker.release();
 
-		Locker locker3(willBuff);
-		creature->addBuff(willBuff);
+		Locker locker3(starforgeFocus);
+		creature->addBuff(starforgeFocus);
 		locker.release();
 
 		Locker locker4(EntmindBuff);
 		entertainer->addBuff(EntmindBuff);
 		locker.release();
 
-		Locker locker5(EntfocusBuff);
-		entertainer->addBuff(EntfocusBuff);
+		Locker locker5(EntwillBuff);
+		entertainer->addBuff(EntwillBuff);
 		locker.release();
 
-		Locker locker6(EntwillBuff);
-		entertainer->addBuff(EntwillBuff);
+		Locker locker6(EntstarforgeFocus);
+		entertainer->addBuff(EntstarforgeFocus);
 	
 		}else{
 		switch (performanceType) {
@@ -952,9 +957,12 @@ void EntertainingSessionImplementation::activateEntertainerBuff(CreatureObject* 
 		{
 			uint32 focusBuffCRC = STRING_HASHCODE("medical_enhance_action");
 			uint32 willBuffCRC = STRING_HASHCODE("medical_enhance_stamina");
-			oldBuff = cast<PerformanceBuff*>(creature->getBuff(focusBuffCRC));
+
+			oldBuff = cast<PerformanceBuff*>(creature->getBuff(willBuffCRC));
+
 			if (oldBuff != nullptr && oldBuff->getBuffStrength() > buffStrength)
 				return;
+
 			ManagedReference<PerformanceBuff*> focusBuff = new PerformanceBuff(creature, focusBuffCRC, buffStrength, buffDuration * 105, PerformanceBuffType::MUSIC_FOCUS);
 			ManagedReference<PerformanceBuff*> willBuff = new PerformanceBuff(creature, willBuffCRC, buffStrength, buffDuration * 105, PerformanceBuffType::MUSIC_WILLPOWER);
 						
@@ -980,18 +988,33 @@ void EntertainingSessionImplementation::activateEntertainerBuff(CreatureObject* 
 		case PerformanceType::DANCE:
 		{
 			uint32 mindBuffCRC = STRING_HASHCODE("medical_enhance_action");
-			oldBuff = cast<PerformanceBuff*>(creature->getBuff(mindBuffCRC));
+			uint32 willBuffCRC = STRING_HASHCODE("medical_enhance_stamina");
+			uint32 sfFocusBuffCRC = BuffCRC::STARFORGE_FOCUS;
+
+			oldBuff = cast<PerformanceBuff*>(creature->getBuff(willBuffCRC));
+
 			if (oldBuff != nullptr && oldBuff->getBuffStrength() > buffStrength)
 				return;
+
 			ManagedReference<PerformanceBuff*> mindBuff = new PerformanceBuff(creature, mindBuffCRC, buffStrength, buffDuration * 105, PerformanceBuffType::DANCE_MIND);
+			ManagedReference<PerformanceBuff*> willBuff = new PerformanceBuff(creature, willBuffCRC, buffStrength, buffDuration * 105, PerformanceBuffType::MUSIC_WILLPOWER);
 			ManagedReference<PerformanceBuff*> EntmindBuff = new PerformanceBuff(entertainer, mindBuffCRC, buffStrength, buffDuration * 105, PerformanceBuffType::DANCE_MIND);	
+			ManagedReference<PerformanceBuff*> EntwillBuff = new PerformanceBuff(entertainer, willBuffCRC, buffStrength, buffDuration * 105, PerformanceBuffType::MUSIC_WILLPOWER);
 
 			Locker locker(mindBuff);
 			creature->addBuff(mindBuff);
 			locker.release();
+			
+			Locker locker2(willBuff);
+			creature->addBuff(willBuff);
+			locker.release();
 
-			Locker locker2(EntmindBuff);
+			Locker locker3(EntmindBuff);
 			entertainer->addBuff(EntmindBuff);
+			locker.release();
+
+			Locker locker4(EntwillBuff);
+			entertainer->addBuff(EntwillBuff);
 			break;
 		}
 		}
