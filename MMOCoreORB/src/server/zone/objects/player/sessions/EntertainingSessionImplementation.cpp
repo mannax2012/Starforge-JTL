@@ -927,7 +927,6 @@ void EntertainingSessionImplementation::activateEntertainerBuff(CreatureObject* 
 		ManagedReference<PerformanceBuff*> EntwillBuff = new PerformanceBuff(entertainer, willBuffCRC, buffStrength, buffDuration * 105, PerformanceBuffType::MUSIC_WILLPOWER);
 		ManagedReference<PerformanceBuff*> EntstarforgeFocus = new PerformanceBuff(entertainer, sfFocusBuffCRC, buffStrength, buffDuration * 105, PerformanceBuffType::STARFORGE_FOCUS);
 
-
 		Locker locker(mindBuff);
 		creature->addBuff(mindBuff);
 		locker.release();

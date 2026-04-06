@@ -3604,7 +3604,21 @@ void CombatManager::tryStarforgeFocusProc(CreatureObject* defender, int totalDam
 	if (defender == nullptr || totalDamage <= 0)
 		return;
 
+	//uint32 sfFocusBuffCRC = BuffCRC::STARFORGE_FOCUS;
+	//uint32 sfFocusStringCRC = STRING_HASHCODE("starforge_focus");
 	//defender->sendSystemMessage("Trying to fire off Starforge Focus Heal.");
+	//char msg[256];
+	//	snprintf(
+	//		msg,
+	//		sizeof(msg),
+	//		"enum=0x%08X string=0x%08X hasEnum=%s hasString=%s",
+	//		(unsigned int)sfFocusBuffCRC,
+	//		(unsigned int)sfFocusStringCRC,
+	//		defender->hasBuff(sfFocusBuffCRC) ? "yes" : "no",
+	//		defender->hasBuff(sfFocusStringCRC) ? "yes" : "no"
+	//	);
+
+	//defender->sendSystemMessage(msg);
 
 	if (!defender->hasBuff(BuffCRC::STARFORGE_FOCUS)) {
 		//defender->sendSystemMessage("Starforge Focus buff check failed.");
