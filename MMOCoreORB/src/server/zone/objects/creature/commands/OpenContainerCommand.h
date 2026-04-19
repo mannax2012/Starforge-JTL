@@ -115,6 +115,11 @@ public:
 				}
 			}
 
+			if (craftingStation && creature->getActiveSession(SessionFacadeType::CRAFTING) != nullptr) {
+				objectToOpen->sendContainerObjectsTo(creature, true);
+				return SUCCESS;
+			}
+
 			objectToOpen->openContainerTo(creature);
 
 			objectToOpen->notifyObservers(ObserverEventType::OPENCONTAINER, creature);

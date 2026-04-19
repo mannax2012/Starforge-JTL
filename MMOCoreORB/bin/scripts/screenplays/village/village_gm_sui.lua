@@ -19,7 +19,7 @@ function VillageGmSui:showMainPage(pPlayer)
 
 	local curPhase = VillageJediManagerTownship:getCurrentPhase()
 	local phaseID = VillageJediManagerTownship:getCurrentPhaseID()
-	local nextPhaseChange = VillageJediManagerTownship.getNextPhaseChangeTime()
+	local nextPhaseChange = VillageJediManagerTownship:getNextPhaseChangeTime()
 	local phaseTimeLeft = self:getPhaseDuration()
 
 	local suiPrompt = " \\#pcontrast1 " .. "Current Phase:" .. " \\#pcontrast2 " .. curPhase .. " (id " .. phaseID .. ")\n" .. " \\#pcontrast1 " .. "Current Server Time:" .. " \\#pcontrast2 " .. os.date("%c") .. "\n"

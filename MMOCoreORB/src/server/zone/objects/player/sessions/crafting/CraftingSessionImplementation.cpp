@@ -488,11 +488,21 @@ void CraftingSessionImplementation::sendIngredientForUIListen() {
 	ManagedReference<CraftingTool*> craftingTool = this->craftingTool.get();
 	ManagedReference<CreatureObject*> crafter = this->crafter.get();
 	ManagedReference<PlayerObject*> crafterGhost = this->crafterGhost.get();
+	ManagedReference<CraftingStation*> craftingStation = this->craftingStation.get();
 	ManagedReference<ManufactureSchematic*> manufactureSchematic = this->manufactureSchematic.get();
 	ManagedReference<TangibleObject*> prototype = this->prototype.get();
 
 	if (crafter == nullptr || craftingTool == nullptr || manufactureSchematic == nullptr || prototype == nullptr) {
 		return;
+	}
+
+	if (craftingStation != nullptr) {
+		ManagedReference<SceneObject*> ingredientHopper = craftingStation->getSlottedObject("ingredient_hopper");
+
+		if (ingredientHopper != nullptr) {
+			Locker hopperLocker(ingredientHopper, crafter);
+			ingredientHopper->sendTo(crafter, true, true);
+		}
 	}
 
 	uint8 allowFactory = 1;
@@ -1020,6 +1030,7 @@ void CraftingSessionImplementation::experiment(int rowsAttempted, const String& 
 	ManagedReference<CraftingTool*> craftingTool = this->craftingTool.get();
 	ManagedReference<CreatureObject*> crafter = this->crafter.get();
 	ManagedReference<PlayerObject*> crafterGhost = this->crafterGhost.get();
+	ManagedReference<CraftingStation*> craftingStation = this->craftingStation.get();
 	ManagedReference<ManufactureSchematic*> manufactureSchematic = this->manufactureSchematic.get();
 	ManagedReference<TangibleObject*> prototype = this->prototype.get();
 	ManagedReference<CraftingManager*> craftingManager = this->craftingManager.get();
@@ -1092,8 +1103,17 @@ void CraftingSessionImplementation::experiment(int rowsAttempted, const String& 
 		failure = craftingManager->calculateExperimentationFailureRate(crafter, manufactureSchematic, pointsAttempted);
 
 		if (experimentationPointsUsed <= experimentationPointsTotal) {
+			float experimentationChanceModifier = failure;
+
+			if (craftingStation != nullptr) {
+				float stationEffectiveness = craftingStation->getEffectiveness();
+
+				if (stationEffectiveness > 0)
+					experimentationChanceModifier += stationEffectiveness * 0.1f;
+			}
+
 			// Set the experimentation result ie:  Amazing Success
-			experimentationResult = craftingManager->calculateExperimentationSuccess(crafter, manufactureSchematic->getDraftSchematic(), failure);
+			experimentationResult = craftingManager->calculateExperimentationSuccess(crafter, manufactureSchematic->getDraftSchematic(), experimentationChanceModifier);
 
 			if (experimentationResult != CraftingManager::AMAZINGSUCCESS && craftingTool->getForceCriticalExperiment() > 0) {
 				// We are going to mutute the tool, lock it
