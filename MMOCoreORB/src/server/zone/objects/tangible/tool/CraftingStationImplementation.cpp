@@ -143,7 +143,7 @@ void CraftingStationImplementation::sendInputHopper(CreatureObject* player) {
 		return;
 	}
 
-	player->executeObjectControllerAction(STRING_HASHCODE("opencontainer"), ingredientHopper->getObjectID(), "");
+	ingredientHopper->openContainerTo(player);
 }
 
 SceneObject* CraftingStationImplementation::findCraftingTool(CreatureObject* player) {

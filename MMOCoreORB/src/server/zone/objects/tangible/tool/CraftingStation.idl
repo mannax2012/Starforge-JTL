@@ -97,6 +97,11 @@ class CraftingStation extends ToolTangibleObject {
 	}
 
 	@dirty
+	public float getEffectiveness() {
+		return effectiveness;
+	}
+
+	@dirty
 	public void setDroidParent(CreatureObject parentCreO) {
 		droidParent = parentCreO;
 	}
