@@ -9,3 +9,6 @@ includeFile("../custom_scripts/mobile/world_boss/tusken_king_boss.lua")
 includeFile("../custom_scripts/mobile/world_boss/tusken_king_guard.lua")
 includeFile("../custom_scripts/mobile/world_boss/rakata_disciple.lua")
 includeFile("../custom_scripts/mobile/world_boss/nightsister_ascendant.lua")
+
+-- Exar Kun heroic encounter
+includeFile("../custom_scripts/mobile/exar_kun/serverobjects.lua")

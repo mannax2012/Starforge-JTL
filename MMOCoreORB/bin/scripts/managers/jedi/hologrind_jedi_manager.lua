@@ -180,6 +180,10 @@ function HologrindJediManager:onPlayerLoggedIn(pCreatureObject)
 		return
 	end
 
+	if exarKun ~= nil and exarKun.onPlayerLoggedIn ~= nil then
+		exarKun:onPlayerLoggedIn(pCreatureObject)
+	end
+
 	self:checkIfProgressedToJedi(pCreatureObject)
 	self:registerObservers(pCreatureObject)
 end

@@ -39,7 +39,9 @@ end
 -- Default handling of the onPlayerLoggedIn event.
 -- @param pCreatureObject pointer to the creature object for the player that logged in.
 function JediManager:onPlayerLoggedIn(pCreatureObject)
-	-- Default behaviour for the onPlayerLoggedIn event, do nothing.
+	if exarKun ~= nil and exarKun.onPlayerLoggedIn ~= nil then
+		exarKun:onPlayerLoggedIn(pCreatureObject)
+	end
 end
 
 -- Default handling of the onPlayerLoggedOut event.
@@ -86,4 +88,3 @@ function JediManager:onFSTreeCompleted(pCreatureObject, branch)
 end
 
 return JediManager
-
