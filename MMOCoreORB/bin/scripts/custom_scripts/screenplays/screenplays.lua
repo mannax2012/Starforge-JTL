@@ -7,6 +7,7 @@ includeFile("../custom_scripts/screenplays/vendor/vendor_weapon_lightsaber.lua")
 includeFile("../custom_scripts/screenplays/vendor/vendor_backpacks.lua")
 includeFile("../custom_scripts/screenplays/vendor/vendor_structures.lua")
 includeFile("../custom_scripts/screenplays/vendor/vendor_vehicles.lua")
+includeFile("../custom_scripts/screenplays/vendor/vendor_resource_deeds.lua")
 includeFile("../custom_scripts/screenplays/vendor/starforge_vendor_conv_handler.lua")
 
 --World Boss Tools
