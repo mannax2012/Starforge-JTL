@@ -7,6 +7,7 @@ package server.zone.objects.tangible.deed;
 import server.zone.objects.creature.CreatureObject;
 import server.zone.objects.tangible.deed.Deed;
 import server.zone.packets.object.ObjectMenuResponse;
+include server.zone.packets.scene.AttributeListMessage;
 
 @json
 class ResourceDeed extends Deed {
@@ -16,6 +17,10 @@ class ResourceDeed extends Deed {
 	}
 
 	public native void initializeTransientMembers();
+
+	@local
+	@dirty
+	public native void fillAttributeList(AttributeListMessage alm, CreatureObject object);
 
 	/**
 	 * Fills the radial options, needs to be overriden

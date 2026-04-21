@@ -55,6 +55,7 @@ function VendorConvoHandler:runScreenHandlers(pConvTemplate, pPlayer, pNpc, sele
 		clonedScreen:setCustomDialogText(self.saleDialog)
 		clonedScreen:addOption(self.buyArmor, "buy_armor")
 		clonedScreen:addOption(self.buyWeapons, "buy_weapons")
+		clonedScreen:addOption(self.buyResources, "buy_resources")
 		clonedScreen:addOption(self.buyBackpacks, "buy_backpacks")
 		clonedScreen:addOption(self.buyStructures, "buy_structures")
 		clonedScreen:addOption(self.buyVehicles, "buy_vehicles")
@@ -120,6 +121,16 @@ function VendorConvoHandler:runScreenHandlers(pConvTemplate, pPlayer, pNpc, sele
 		self.weaponsSabersLogic:openSUILightsaberGenFour(pPlayer)
 	end
 
+	if (screenID == "buy_resources") then
+		clonedScreen:setCustomDialogText(self.buyResourcesDialog)
+		clonedScreen:addOption(self.saleOption_resource_deeds, "start_sale_resource_deeds")
+	end
+
+	if (screenID == "start_sale_resource_deeds") then
+		clonedScreen:setCustomDialogText(self.openSUItext)
+		self.resourceDeedsLogic:openSUIResourceDeeds(pPlayer)
+	end
+
 	if (screenID == "buy_vehicles") then
 		clonedScreen:setCustomDialogText(self.openSUItext)
 		self.vehiclesLogic:openSUIVehicles(pPlayer)
@@ -160,6 +171,7 @@ StarforgeVendorConvoHandler = VendorConvoHandler:new {
 	backpacksLogic = BackpacksVendorLogic,
 	structuresLogic = StructuresVendorLogic,
 	vehiclesLogic = VehiclesVendorLogic,
+	resourceDeedsLogic = ResourceDeedsVendorLogic,
 	--Vendor Greeting
 	initialDialog = "Ya-hoo, name is Busten Cyder, I travel da world sellen items per Starforge Currency. Do you want to be buyin something?",
 	--Player selection to start buying, vendor spatial.
@@ -170,8 +182,10 @@ StarforgeVendorConvoHandler = VendorConvoHandler:new {
 	buyBackpacks = "I need more backpack space, do you have any thing new in stock?",
 	buyStructures = "Can I take a look at what structures you have available?",
 	buyVehicles = "I need a new vehicle, my old one doesnt have flames on the side.",
+	buyResources = "I need resource deeds for crafting.",
 	buyArmorAWDialog = "This is what I have available for Armorweaving.",
 	buyArmorASDialog = "This is what I have available for Armorsmithing.",
+	buyResourcesDialog = "I keep a small and medium resource deed in stock. The large one is too valuable for this shop.",
 	saleOption_buy_armor_as = "I am interested in Armorsmithing Schematics",
 	saleOption_buy_armor_aw =  "I am interested in Armorweaving Schematics",
     saleOption_segment_aw = "Armorweaving Segment Schematics",
@@ -181,6 +195,7 @@ StarforgeVendorConvoHandler = VendorConvoHandler:new {
 	saleOption_weapon_lightsaber_gen3 = "Show me what you have for Generation Three Lightsabers.",
 	saleOption_weapon_lightsaber_gen4 = "Show me what you have for Generation Four Lightsabers.",
 	saleOption_schematic_as = "Armorsmithing Schematics",
+	saleOption_resource_deeds = "Show me your resource deeds.",
 	openSUItext = "Take your time and stay close.",
 	saleDialog = "Okay, here's what I have for sale.",
 	--Player selection to get vendor information, vendor dialog.

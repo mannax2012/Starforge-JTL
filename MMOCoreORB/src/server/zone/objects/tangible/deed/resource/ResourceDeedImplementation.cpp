@@ -11,6 +11,32 @@
 #include "server/zone/objects/player/sui/callbacks/ResourceDeedSuiCallback.h"
 
 #include "server/zone/packets/object/ObjectMenuResponse.h"
+#include "server/zone/packets/scene/AttributeListMessage.h"
+
+namespace {
+int getResourceDeedQuantity(SharedObjectTemplate* templateObject) {
+	if (templateObject == nullptr) {
+		return ResourceManager::RESOURCE_DEED_QUANTITY;
+	}
+
+	const String& templateName = templateObject->getTemplateFileName();
+	const String& fullTemplateName = templateObject->getFullTemplateString();
+
+	if (templateName == "resource_small" || fullTemplateName == "object/tangible/veteran_reward/resource_small.iff") {
+		return 10000;
+	}
+
+	if (templateName == "resource_medium" || fullTemplateName == "object/tangible/veteran_reward/resource_medium.iff") {
+		return 50000;
+	}
+
+	if (templateName == "resource_large" || fullTemplateName == "object/tangible/veteran_reward/resource_large.iff") {
+		return 250000;
+	}
+
+	return ResourceManager::RESOURCE_DEED_QUANTITY;
+}
+}
 
 void ResourceDeedImplementation::initializeTransientMembers() {
 	DeedImplementation::initializeTransientMembers();
@@ -22,6 +48,12 @@ void ResourceDeedImplementation::fillObjectMenuResponse(ObjectMenuResponse* menu
 	DeedImplementation::fillObjectMenuResponse(menuResponse, player);
 
 	menuResponse->addRadialMenuItem(20, 3, "@ui_radial:item_use"); //use
+}
+
+void ResourceDeedImplementation::fillAttributeList(AttributeListMessage* alm, CreatureObject* object) {
+	DeedImplementation::fillAttributeList(alm, object);
+
+	alm->insertAttribute("deed_value", getResourceDeedQuantity(getObjectTemplate()));
 }
 
 int ResourceDeedImplementation::handleObjectMenuSelect(CreatureObject* player, byte selectedID) {

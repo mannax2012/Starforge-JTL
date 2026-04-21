@@ -1,6 +1,8 @@
 --Custom
 includeFile("groups/custom/starforge_vendor_token.lua")
 includeFile("groups/custom/heavy_starforge_vendor_token.lua")
+includeFile("groups/custom/resource_deed_loot.lua")
+includeFile("groups/custom/resource_deed_boss.lua")
 includeFile("groups/custom/rakata_skull_totem.lua")
 includeFile("groups/custom/acid_vibro_unit.lua")
 includeFile("groups/custom/unstable_crystal_pack.lua")

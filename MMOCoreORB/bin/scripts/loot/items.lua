@@ -12,6 +12,9 @@ JUNKCORSEC = 256
 --custom
 includeFile("items/custom/starforge_token.lua")
 includeFile("items/custom/heavy_starforge_token.lua")
+includeFile("items/custom/resource_deed_small.lua")
+includeFile("items/custom/resource_deed_medium.lua")
+includeFile("items/custom/resource_deed_large.lua")
 includeFile("items/custom/rakata_skull.lua")
 includeFile("items/custom/krayt_bone_shards_rare.lua")
 includeFile("items/custom/reinforcement_core_tusken.lua")

@@ -137,7 +137,13 @@ exar_kun = Creature:new {
         {group = "jedi_house_deeds", chance = 5000000},       
       },
       lootChance = 1000000,
-    },       
+    },
+    {
+      groups = {
+        {group = "resource_deed_boss", chance = 10000000},
+      },
+      lootChance = 1000000,
+    },
   },
 	-- Primary and secondary weapon should be different types (rifle/carbine, carbine/pistol, rifle/unarmed, etc)
   -- Unarmed should be put on secondary unless the mobile doesn't use weapons, in which case "unarmed" should be put primary and "none" as secondary
