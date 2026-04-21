@@ -32,7 +32,7 @@ public:
 		return ForcePowersQueueCommand::getAnimation(attacker, defender, weapon, hitLocation, damage);
 	}
 
-	int doQueueCommand(CreatureObject* creature, const uint64& target, const UnicodeString& arguments) const {
+	int doQueueCommand(CreatureObject* creature, const uint64& target, const UnicodeString& arguments) const override {
 		if (!checkStateMask(creature))
 			return INVALIDSTATE;
 
