@@ -41,13 +41,15 @@
 --which carries forward this exception.
 --true = 1, false = 0
 
-AvoidIncapacitationCommand = {
-        name = "avoidincapacitation",
-        forceCost = 750,
-        duration = 30,
-        cooldown = 120000,
-        --animationCRC = hashCode()
-        clientEffect = "clienteffect/pl_force_avoid_incap_self.cef",
+ForceChainHeal1Command = {
+	name = "forcechainheal1",
+	healAmount = 300,
+	forceCost = 25,
+	forceCostMultiplier = 0.05,
+	defaultTime = 1,
+	attributesToHeal = HEALTH_ATTRIBUTE,
+	range = 32,
+	chainToAmount = 4,
 }
 
-AddCommand(AvoidIncapacitationCommand)
+AddCommand(ForceChainHeal1Command)

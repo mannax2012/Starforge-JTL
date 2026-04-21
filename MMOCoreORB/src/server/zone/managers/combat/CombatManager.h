@@ -225,6 +225,7 @@ protected:
 	float calculateDamage(CreatureObject* attacker, WeaponObject* weapon, CreatureObject* defender, const CreatureAttackData& data) const;
 	float calculateDamage(TangibleObject* attacker, WeaponObject* weapon, CreatureObject* defender, const CreatureAttackData& data) const;
 	float calculateDamage(CreatureObject* attacker, WeaponObject* weapon, TangibleObject* defender, const CreatureAttackData& data) const;
+	float applyAvoidIncapacitationReduction(CreatureObject* defender, float damage) const;
 	int calculateDamageRange(TangibleObject* attacker, CreatureObject* defender, WeaponObject* weapon) const;
 	float applyDamageModifiers(CreatureObject* attacker, WeaponObject* weapon, float damage, const CreatureAttackData& data) const;
 	bool isWearingArmor(CreatureObject* creo) const;

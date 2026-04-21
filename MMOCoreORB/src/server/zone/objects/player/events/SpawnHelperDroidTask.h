@@ -66,10 +66,6 @@ public:
 					ManagedReference<HelperDroidObject*> helperDroidObject = dynamic_cast<HelperDroidObject*>(controlDevice->getControlledObject());
 
 					if (helperDroidObject != nullptr) {
-						Locker lock(controlDevice);
-						Locker clock(helperDroidObject, playerCreo);
-
-						controlDevice->callObject(playerCreo);
 						return;
 					}
 				}

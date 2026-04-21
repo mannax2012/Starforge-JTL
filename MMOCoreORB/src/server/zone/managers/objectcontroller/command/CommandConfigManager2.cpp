@@ -249,6 +249,8 @@
 #include "server/zone/objects/creature/commands/ForceKnockdown1Command.h"
 #include "server/zone/objects/creature/commands/ForceKnockdown2Command.h"
 #include "server/zone/objects/creature/commands/ForceKnockdown3Command.h"
+#include "server/zone/objects/creature/commands/ForceChainHeal1Command.h"
+#include "server/zone/objects/creature/commands/ForceChainLightning1Command.h"
 #include "server/zone/objects/creature/commands/ForceLightningCone1Command.h"
 #include "server/zone/objects/creature/commands/ForceLightningCone2Command.h"
 #include "server/zone/objects/creature/commands/ForceLightningSingle1Command.h"
@@ -651,7 +653,9 @@ void CommandConfigManager::registerCommands2() {
 	commandFactory.registerCommand<ForceKnockdown1Command>(String("forceKnockdown1").toLowerCase());
 	commandFactory.registerCommand<ForceKnockdown2Command>(String("forceKnockdown2").toLowerCase());
 	commandFactory.registerCommand<ForceKnockdown3Command>(String("forceKnockdown3").toLowerCase());
-	commandFactory.registerCommand<ForceLightningCone1Command>(String("forceLightningCone1").toLowerCase());
+	commandFactory.registerCommand<ForceChainHeal1Command>(String("forceChainHeal1").toLowerCase());
+	commandFactory.registerCommand<ForceChainLightning1Command>(String("forceChainLightning1").toLowerCase());
+		commandFactory.registerCommand<ForceLightningCone1Command>(String("forceLightningCone1").toLowerCase());
 	commandFactory.registerCommand<ForceLightningCone2Command>(String("forceLightningCone2").toLowerCase());
 	commandFactory.registerCommand<ForceLightningSingle1Command>(String("forceLightningSingle1").toLowerCase());
 	commandFactory.registerCommand<ForceLightningSingle2Command>(String("forceLightningSingle2").toLowerCase());

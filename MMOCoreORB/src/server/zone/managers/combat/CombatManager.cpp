@@ -1192,6 +1192,8 @@ float CombatManager::calculateDamage(CreatureObject* attacker, WeaponObject* wea
 	if (attacker->isPlayerCreature() && defender->isPlayerCreature() && !data.isForceAttack())
 		damage *= 0.25;
 
+	damage = applyAvoidIncapacitationReduction(defender, damage);
+
 	if (damage < 1)
 		damage = 1;
 
@@ -1273,7 +1275,21 @@ float CombatManager::calculateDamage(TangibleObject* attacker, WeaponObject* wea
 	// Toughness reduction
 	damage = getDefenderToughnessModifier(defender, weapon->getAttackType(), weapon->getDamageType(), damage);
 
+	damage = applyAvoidIncapacitationReduction(defender, damage);
+
 	return damage;
+}
+
+float CombatManager::applyAvoidIncapacitationReduction(CreatureObject* defender, float damage) const {
+	if (defender == nullptr || damage <= 0 || !defender->hasBuff(BuffCRC::JEDI_AVOID_INCAPACITATION))
+		return damage;
+
+	int reduction = Math::clamp(0, defender->getSkillMod("avoid_incapacitation"), 100);
+
+	if (reduction <= 0)
+		return damage;
+
+	return damage * (1.f - (reduction / 100.f));
 }
 
 int CombatManager::calculateDamageRange(TangibleObject* attacker, CreatureObject* defender, WeaponObject* weapon) const {

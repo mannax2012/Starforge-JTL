@@ -43,13 +43,13 @@
 
 ForceChainLightning1Command = {
 	name = "forcechainlightning1",
-	minDamage = 1600,
-	maxDamage = 2200,
+	minDamage = 600,
+	maxDamage = 1200,
 	speed = 3.0,
 	forceCost = 150,
 	visMod = 25,	
 	splashDamage = false,
-	areaAction = true,
+	areaAction = false,
 	areaRange = 16,
 	accuracySkillMod = "forcelightning_accuracy",
 
@@ -65,8 +65,23 @@ ForceChainLightning1Command = {
 		)
 	},
 
-	animation = "force_lightning_1_particle_level_3",
-	animType = GENERATE_INTENSITY,
+	dotEffects = {
+		DotEffect(
+			ONFIRE,
+			{ "resistance_fire", "fire_resist" },
+			HEALTH,
+			false,
+			0,
+			35,
+			75,
+			30,
+			100,
+			100
+		)
+	},
+
+	animation = "force_chain_lightning1",
+	animType = GENERATE_NONE,
 
 	combatSpam = "forceChainLightning1",
 

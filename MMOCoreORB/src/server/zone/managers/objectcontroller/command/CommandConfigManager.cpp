@@ -366,6 +366,14 @@ void CommandConfigManager::registerSpecialCommands(CommandList* sCommands) {
 	createCommand(String("creatureRangedAttack").toLowerCase())->setCommandGroup(0xe1c9a54a);
 	createCommand(String("defaultDroidAttack").toLowerCase())->setCommandGroup(0xe1c9a54a);
 
+	QueueCommand* forceChainHeal = createCommand(String("forceChainHeal1").toLowerCase());
+
+	if (forceChainHeal != nullptr) {
+		forceChainHeal->setAddToCombatQueue(true);
+		forceChainHeal->setCommandGroup(0xa7d8a613);
+		forceChainHeal->setMaxRange(32);
+	}
+
 	// Space Special Commands
 	createCommand(String("comm").toLowerCase())->setCommandGroup(0xD8D3D9F2);
 
@@ -806,6 +814,8 @@ void CommandConfigManager::parseVariableData(String varName, LuaObject &command,
 				healCommand->setSpeed(Lua::getUnsignedIntParameter(L));
 			else if (varName == "allowedTarget")
 				healCommand->setAllowedTarget(Lua::getUnsignedIntParameter(L));
+			else if (varName == "chainToAmount")
+				healCommand->setChainToAmount(Lua::getUnsignedIntParameter(L));
 			else {
 				Logger::console.error("unknown variable " + varName + " in force healing command " + slashCommand->getQueueCommandName());
 				command.pop();
