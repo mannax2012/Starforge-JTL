@@ -1077,9 +1077,6 @@ int CreatureObjectImplementation::inflictDamage(TangibleObject* attacker, int da
 	if (!destroy && newValue <= 0)
 		newValue = 1;
 
-	if (getSkillMod("avoid_incapacitation") > 0 && newValue <= 0)
-		newValue = 1;
-
 	if (damageType % 3 != 0 && newValue < 0) // secondaries never should go negative
 		newValue = 0;
 

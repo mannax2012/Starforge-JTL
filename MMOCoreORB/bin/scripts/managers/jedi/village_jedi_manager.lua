@@ -53,6 +53,10 @@ function VillageJediManager:onPlayerLoggedIn(pPlayer)
 		return
 	end
 
+	if exarKun ~= nil and exarKun.onPlayerLoggedIn ~= nil then
+		exarKun:onPlayerLoggedIn(pPlayer)
+	end
+
 	Glowing:onPlayerLoggedIn(pPlayer)
 
 	if (VillageJediManagerCommon.isVillageEligible(pPlayer) and not CreatureObject(pPlayer):hasSkill("force_title_jedi_novice")) then

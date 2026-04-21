@@ -173,6 +173,10 @@ public:
 		allowedTarget = t;
 	}
 
+	void setChainToAmount(unsigned int amount) {
+		chainToAmount = amount;
+	}
+
 };
 
 #endif /* FORCEHEALQUEUECOMMAND_H_ */

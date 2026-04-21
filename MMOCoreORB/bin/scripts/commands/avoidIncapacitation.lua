@@ -45,9 +45,9 @@ AvoidIncapacitationCommand = {
         name = "avoidincapacitation",
         forceCost = 750,
         duration = 30,
+        cooldown = 120000,
         --animationCRC = hashCode()
         clientEffect = "clienteffect/pl_force_avoid_incap_self.cef",
 }
 
 AddCommand(AvoidIncapacitationCommand)
-

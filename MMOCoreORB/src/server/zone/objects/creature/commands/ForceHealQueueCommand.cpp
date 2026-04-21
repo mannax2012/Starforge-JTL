@@ -85,7 +85,6 @@ int ForceHealQueueCommand::runCommand(CreatureObject* creature, CreatureObject* 
 		}
 	}
 
-	if (chainToAmount <= 0){
 	// HAM Attribute Healing
 	for (int i = 0; i < 3; i++) {
 		// Attrib Values: Health = 1, Action = 2, Mind = 4
@@ -115,7 +114,7 @@ int ForceHealQueueCommand::runCommand(CreatureObject* creature, CreatureObject* 
 			}
 		}
 	}
-	}
+
 	// Battle fatigue
 	if (totalCost < currentForce && healBattleFatigue != 0) {
 		int battleFatigue = targetCreature->getShockWounds();
