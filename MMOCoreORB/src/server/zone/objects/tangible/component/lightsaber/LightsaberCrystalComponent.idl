@@ -32,6 +32,7 @@ class LightsaberCrystalComponent extends Component {
 	protected int sacMind;
 	protected int woundChance;
 	protected int itemLevel;
+	protected int lootRollTier;
 	protected float floatForceCost;
 
 	protected unsigned long ownerID;
@@ -53,6 +54,7 @@ class LightsaberCrystalComponent extends Component {
 		color = 0;
 		quality = 0;
 		itemLevel = 0;
+		lootRollTier = 0;
 		floatForceCost = 0.0;
 
 		ownerID = 0;
@@ -170,6 +172,15 @@ class LightsaberCrystalComponent extends Component {
 		itemLevel = value;
 	}
 
+	@read
+	public int getLootRollTier() {
+		return lootRollTier;
+	}
+
+	public void setLootRollTier(int value) {
+		lootRollTier = value;
+	}
+
 	public void setMinimumDamage(int value) {
 		minimumDamage = value;
 	}
@@ -207,4 +218,3 @@ class LightsaberCrystalComponent extends Component {
 		return true;
 	}
 }
-

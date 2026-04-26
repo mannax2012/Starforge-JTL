@@ -18,6 +18,60 @@
 #include "server/zone/managers/loot/LootManager.h"
 #include "server/zone/ZoneServer.h"
 
+namespace {
+	constexpr int JEDI_CRYSTAL_EXCEPTIONAL_DAMAGE_BONUS = 10;
+	constexpr int JEDI_CRYSTAL_LEGENDARY_DAMAGE_BONUS = 20;
+	constexpr int JEDI_CRYSTAL_EXCEPTIONAL_MIN_DAMAGE_BONUS = 5;
+	constexpr int JEDI_CRYSTAL_LEGENDARY_MIN_DAMAGE_BONUS = 10;
+	constexpr int JEDI_CRYSTAL_EXCEPTIONAL_HP_BONUS = 800;
+	constexpr int JEDI_CRYSTAL_LEGENDARY_HP_BONUS = 1600;
+	constexpr int JEDI_CRYSTAL_DAMAGE_CAP = 70;
+	constexpr int JEDI_CRYSTAL_MAX_HP_CAP = 3000;
+
+	enum CrystalRollTier {
+		CRYSTAL_ROLL_NORMAL = 0,
+		CRYSTAL_ROLL_EXCEPTIONAL = 1,
+		CRYSTAL_ROLL_LEGENDARY = 2
+	};
+
+	int getCrystalRollTier(int storedTier, const String& customName) {
+		if (storedTier >= CRYSTAL_ROLL_LEGENDARY)
+			return CRYSTAL_ROLL_LEGENDARY;
+
+		if (storedTier >= CRYSTAL_ROLL_EXCEPTIONAL)
+			return CRYSTAL_ROLL_EXCEPTIONAL;
+
+		if (customName.contains("(Legendary)"))
+			return CRYSTAL_ROLL_LEGENDARY;
+
+		if (customName.contains("(Exceptional)"))
+			return CRYSTAL_ROLL_EXCEPTIONAL;
+
+		return CRYSTAL_ROLL_NORMAL;
+	}
+
+	void adjustCrystalHitpointRange(int tier, int& minStat, int& maxStat) {
+		if (tier == CRYSTAL_ROLL_LEGENDARY) {
+			maxStat = Math::min(maxStat + JEDI_CRYSTAL_LEGENDARY_HP_BONUS, JEDI_CRYSTAL_MAX_HP_CAP);
+		} else if (tier == CRYSTAL_ROLL_EXCEPTIONAL) {
+			maxStat = Math::min(maxStat + JEDI_CRYSTAL_EXCEPTIONAL_HP_BONUS, JEDI_CRYSTAL_MAX_HP_CAP);
+		}
+	}
+
+	void adjustCrystalDamageRange(int tier, int& minStat, int& maxStat) {
+		if (tier == CRYSTAL_ROLL_LEGENDARY) {
+			minStat = Math::min(minStat + JEDI_CRYSTAL_LEGENDARY_MIN_DAMAGE_BONUS, JEDI_CRYSTAL_DAMAGE_CAP);
+			maxStat = Math::min(maxStat + JEDI_CRYSTAL_LEGENDARY_DAMAGE_BONUS, JEDI_CRYSTAL_DAMAGE_CAP);
+		} else if (tier == CRYSTAL_ROLL_EXCEPTIONAL) {
+			minStat = Math::min(minStat + JEDI_CRYSTAL_EXCEPTIONAL_MIN_DAMAGE_BONUS, JEDI_CRYSTAL_DAMAGE_CAP);
+			maxStat = Math::min(maxStat + JEDI_CRYSTAL_EXCEPTIONAL_DAMAGE_BONUS, JEDI_CRYSTAL_DAMAGE_CAP);
+		}
+
+		if (minStat > maxStat)
+			minStat = maxStat;
+	}
+}
+
 void LightsaberCrystalComponentImplementation::initializeTransientMembers() {
 	ComponentImplementation::initializeTransientMembers();
 
@@ -74,12 +128,17 @@ void LightsaberCrystalComponentImplementation::generateCrystalStats() {
 
 	int minStat = crystalData->getMinHitpoints();
 	int maxStat = crystalData->getMaxHitpoints();
+	int crystalRollTier = getCrystalRollTier(getLootRollTier(), getCustomObjectName().toString());
+
+	adjustCrystalHitpointRange(crystalRollTier, minStat, maxStat);
 
 	setMaxCondition(getRandomizedStat(minStat, maxStat, itemLevel));
 
 	if (color == 31) {
 		int minStat = crystalData->getMinDamage();
 		int maxStat = crystalData->getMaxDamage();
+
+		adjustCrystalDamageRange(crystalRollTier, minStat, maxStat);
 
 		damage = getRandomizedStat(minStat, maxStat, itemLevel);
 
@@ -132,6 +191,9 @@ void LightsaberCrystalComponentImplementation::validateCrystalStats() {
 
 	int minStat = crystalData->getMinHitpoints();
 	int maxStat = crystalData->getMaxHitpoints();
+	int crystalRollTier = getCrystalRollTier(getLootRollTier(), getCustomObjectName().toString());
+
+	adjustCrystalHitpointRange(crystalRollTier, minStat, maxStat);
 
 	if (getMaxCondition() > maxStat || getMaxCondition() < minStat)
 		setMaxCondition(getRandomizedStat(minStat, maxStat, itemLevel));
@@ -139,6 +201,8 @@ void LightsaberCrystalComponentImplementation::validateCrystalStats() {
 	if (color == 31) {
 		minStat = crystalData->getMinDamage();
 		maxStat = crystalData->getMaxDamage();
+
+		adjustCrystalDamageRange(crystalRollTier, minStat, maxStat);
 
 		if (damage > maxStat || damage < minStat)
 			damage = getRandomizedStat(minStat, maxStat, itemLevel);
@@ -464,6 +528,11 @@ void LightsaberCrystalComponentImplementation::updateCraftingValues(CraftingValu
 	if (values->hasExperimentalAttribute("creatureLevel")) {
 		int level = values->getCurrentValue("creatureLevel");
 		setItemLevel(level);
+	}
+
+	if (values->hasExperimentalAttribute("lootRollTier")) {
+		int tier = values->getCurrentValue("lootRollTier");
+		setLootRollTier(tier);
 	}
 
 	generateCrystalStats();
