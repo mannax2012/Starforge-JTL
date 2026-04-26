@@ -28,6 +28,109 @@
 
 #include "server/zone/Zone.h"
 #include "server/zone/objects/scene/SceneObjectType.h"
+#include "system/lang.h"
+#include "system/util/HashTable.h"
+
+namespace {
+	enum SliceTypeSelection : byte {
+		SLICE_SELECTION_PRIMARY = 0,
+		SLICE_SELECTION_SECONDARY = 1,
+		SLICE_SELECTION_TERTIARY = 2,
+		SLICE_SELECTION_UNSET = 0xFF
+	};
+
+	class SliceSelectionMap : public HashTable<uint64, byte> {
+		int hash(uint64 const& key) {
+			return Long::hashCode((long long) key);
+		}
+
+	public:
+		SliceSelectionMap() : HashTable<uint64, byte>(32) {
+			setNullValue(SLICE_SELECTION_UNSET);
+		}
+	};
+
+	Mutex sliceSelectionMutex;
+	SliceSelectionMap sliceSelections;
+
+	inline uint64 getSliceSelectionKey(SlicingSessionImplementation* session) {
+		return reinterpret_cast<uint64>(session);
+	}
+
+	byte getSliceSelection(SlicingSessionImplementation* session) {
+		Locker locker(&sliceSelectionMutex);
+		return sliceSelections.get(getSliceSelectionKey(session));
+	}
+
+	void setSliceSelection(SlicingSessionImplementation* session, byte selection) {
+		Locker locker(&sliceSelectionMutex);
+		sliceSelections.put(getSliceSelectionKey(session), selection);
+	}
+
+	void clearSliceSelection(SlicingSessionImplementation* session) {
+		Locker locker(&sliceSelectionMutex);
+		sliceSelections.remove(getSliceSelectionKey(session));
+	}
+
+	bool needsSliceTypeSelection(TangibleObject* tangibleObject) {
+		return tangibleObject != nullptr && (tangibleObject->isWeaponObject() || tangibleObject->isArmorObject());
+	}
+
+	String getSliceSelectionPrompt(TangibleObject* tangibleObject) {
+		if (tangibleObject != nullptr && tangibleObject->isWeaponObject())
+			return "Select the weapon slice to attempt.";
+
+		return "Select the armor slice to attempt.";
+	}
+
+	String getPrimarySliceSelectionLabel(TangibleObject* tangibleObject) {
+		if (tangibleObject != nullptr && tangibleObject->isWeaponObject())
+			return "Increase damage";
+
+		return "Improve resistance";
+	}
+
+	String getSecondarySliceSelectionLabel(TangibleObject* tangibleObject) {
+		if (tangibleObject != nullptr && tangibleObject->isWeaponObject())
+			return "Improve speed";
+
+		return "Increase condition";
+	}
+
+	String getTertiarySliceSelectionLabel(TangibleObject* tangibleObject) {
+		if (tangibleObject != nullptr && tangibleObject->isWeaponObject())
+			return "Increase condition";
+
+		return "";
+	}
+
+	bool isValidSliceSelection(TangibleObject* tangibleObject, byte selection) {
+		if (tangibleObject == nullptr)
+			return false;
+
+		if (tangibleObject->isWeaponObject())
+			return selection <= SLICE_SELECTION_TERTIARY;
+
+		if (tangibleObject->isArmorObject())
+			return selection <= SLICE_SELECTION_SECONDARY;
+
+		return false;
+	}
+
+	void applyConditionSlice(TangibleObject* tangibleObject, uint8 percent) {
+		int oldMaxCondition = tangibleObject->getMaxCondition();
+		float oldConditionDamage = tangibleObject->getConditionDamage();
+		int newMaxCondition = oldMaxCondition + Math::max(1, (oldMaxCondition * percent) / 100);
+
+		tangibleObject->setMaxCondition(newMaxCondition);
+
+		if (oldMaxCondition > 0 && oldConditionDamage > 0) {
+			float conditionRatio = oldConditionDamage / oldMaxCondition;
+			float scaledConditionDamage = Math::max(oldConditionDamage, conditionRatio * newMaxCondition);
+			tangibleObject->setConditionDamage(scaledConditionDamage);
+		}
+	}
+}
 
 int SlicingSessionImplementation::initializeSession() {
 	firstCable = System::random(1);
@@ -43,6 +146,7 @@ int SlicingSessionImplementation::initializeSession() {
 
 	baseSlice = false;
 	keypadSlice = false;
+	clearSliceSelection(this);
 
 	return 0;
 }
@@ -103,9 +207,20 @@ void SlicingSessionImplementation::initalizeSlicingMenu(CreatureObject* pl, Tang
 	slicingSuiBox->setPromptTitle("@slicing/slicing:title");
 	slicingSuiBox->setUsingObject(tangibleObject);
 	slicingSuiBox->setCancelButton(true, "@cancel");
-	generateSliceMenu(slicingSuiBox);
 
-	player->getPlayerObject()->addSuiBox(slicingSuiBox);
+	if (needsSliceTypeSelection(tangibleObject)) {
+		slicingSuiBox->setPromptText(getSliceSelectionPrompt(tangibleObject));
+		slicingSuiBox->addMenuItem(getPrimarySliceSelectionLabel(tangibleObject), SLICE_SELECTION_PRIMARY);
+		slicingSuiBox->addMenuItem(getSecondarySliceSelectionLabel(tangibleObject), SLICE_SELECTION_SECONDARY);
+
+		if (tangibleObject->isWeaponObject())
+			slicingSuiBox->addMenuItem(getTertiarySliceSelectionLabel(tangibleObject), SLICE_SELECTION_TERTIARY);
+
+		player->getPlayerObject()->addSuiBox(slicingSuiBox);
+		player->sendMessage(slicingSuiBox->generateMessage());
+	} else {
+		generateSliceMenu(slicingSuiBox);
+	}
 
 	player->addActiveSession(SessionFacadeType::SLICING, _this.getReferenceUnsafeStaticCast());
 	tangibleObject->addActiveSession(SessionFacadeType::SLICING, _this.getReferenceUnsafeStaticCast());
@@ -170,6 +285,17 @@ void SlicingSessionImplementation::handleMenuSelect(CreatureObject* pl, byte men
 			player->sendSystemMessage("The object must be in your inventory in order to perform the slice.");
 			return;
 		}
+	}
+
+	if (needsSliceTypeSelection(tangibleObject) && getSliceSelection(this) == SLICE_SELECTION_UNSET) {
+		if (!isValidSliceSelection(tangibleObject, menuID)) {
+			cancelSession();
+			return;
+		}
+
+		setSliceSelection(this, menuID);
+		generateSliceMenu(suiBox);
+		return;
 	}
 
 	uint8 progress = getProgress();
@@ -533,14 +659,37 @@ void SlicingSessionImplementation::handleWeaponSlice() {
 	}
 
 	uint8 percentage = System::random(max - min) + min;
+	uint8 sliceType = getSliceSelection(this);
 
-	switch(System::random(1)) {
+	if (sliceType == SLICE_SELECTION_UNSET)
+		sliceType = System::random(2);
+
+	switch (sliceType) {
 	case 0:
 		handleSliceDamage(percentage);
 		break;
 	case 1:
 		handleSliceSpeed(percentage);
 		break;
+	case 2: {
+		WeaponObject* weap = cast<WeaponObject*>(tangibleObject.get());
+
+		if (weap == nullptr)
+			return;
+
+		Locker locker(weap);
+
+		if (weap->hasPowerup())
+			this->detachPowerUp(player, weap);
+
+		applyConditionSlice(weap, percentage);
+		weap->setSliced(true);
+
+		StringBuffer message;
+		message << "Weapon condition increased by " << percentage << "%.";
+		player->sendSystemMessage(message.toString());
+		break;
+	}
 	}
 }
 
@@ -618,10 +767,13 @@ void SlicingSessionImplementation::handleArmorSlice() {
 	if (tangibleObject == nullptr || player == nullptr)
 		return;
 
-	uint8 sliceType = System::random(1);
+	uint8 sliceType = getSliceSelection(this);
 	int sliceSkill = getSlicingSkill(player);
 	uint8 min = 0;
 	uint8 max = 0;
+
+	if (sliceType == SLICE_SELECTION_UNSET)
+		sliceType = System::random(1);
 
 	switch (sliceSkill) {
 	case 5:
@@ -661,14 +813,12 @@ void SlicingSessionImplementation::handleSliceEncumbrance(uint8 percent) {
 
 	Locker locker(armor);
 
-	armor->setEncumbranceSlice(percent / 100.f);
+	applyConditionSlice(armor, percent);
 	armor->setSliced(true);
 
-	StringIdChatParameter params;
-	params.setDI(percent);
-	params.setStringId("@slicing/slicing:enc_mod");
-
-	player->sendSystemMessage(params);
+	StringBuffer message;
+	message << "Armor condition increased by " << percent << "%.";
+	player->sendSystemMessage(message.toString());
 }
 
 void SlicingSessionImplementation::handleSliceEffectiveness(uint8 percent) {
@@ -818,6 +968,7 @@ void SlicingSessionImplementation::handleSliceFailed() {
 int SlicingSessionImplementation::cancelSession() {
 	ManagedReference<CreatureObject*> player = this->player.get();
 	ManagedReference<TangibleObject*> tangibleObject = this->tangibleObject.get();
+	clearSliceSelection(this);
 	if (player != nullptr) {
 		player->dropActiveSession(SessionFacadeType::SLICING);
 		player->getPlayerObject()->removeSuiBoxType(SuiWindowType::SLICING_MENU);
