@@ -16,7 +16,7 @@ mission_direction_choice = ScreenPlay:new {
 	numberOfActs = 1,
 
 	directions = {
-		{dirDesc = "Reset Direction", dirSelect = 0},
+		{dirDesc = "Random", dirSelect = 0},
 		{dirDesc = "North", dirSelect = 360},
 		{dirDesc = "North West", dirSelect = 45},
 		{dirDesc = "West", dirSelect = 90}, 
@@ -54,7 +54,7 @@ function mission_direction_choice:showLevels(pPlayer)
 
 	sui.setTitle("Mission Direction Selection")
 
-	local promptText = "Use this menu to select the direction in which you would like to take missions.  After you have chosen, use the mission terminal to get a selection of missions (if any exist) in that direction.  \n\nIf no missions are offered to you, it is because terrain is unsuitable for missions in that direction from your current location.  You will need to choose another direction.\n\nWhen you want to go back to the 'normal' offering of missions, just choose Reset Direction."
+	local promptText = "Use this menu to select the direction in which you would like to take missions. After you have chosen, use the mission terminal to get a selection of missions in that direction.\n\nIf terrain is unsuitable for missions in that direction from your current location, the terminal will reset your choice to Random and ask you to choose another direction.\n\nChoose Random any time you want the normal mission offering again."
 
 	sui.setPrompt(promptText)
 
@@ -86,9 +86,9 @@ function  mission_direction_choice:dirSelection(pPlayer, pSui, eventIndex, args)
 	writeScreenPlayData(pPlayer, "mission_direction_choice", "directionChoice", selectedDir) 
 
 	if (selectedDir == 0) then
-		CreatureObject(pPlayer):sendSystemMessage("Mission direction has been reset to normal randomization.")
+		CreatureObject(pPlayer):sendSystemMessage("Mission direction has been set to random.")
 	else	
-		CreatureObject(pPlayer):sendSystemMessage("You have selected to take mission in the " .. selectedDirDesc .. " direction. This choice will remain active until you choose to change or reset it.")
+		CreatureObject(pPlayer):sendSystemMessage("You have selected to take mission in the " .. selectedDirDesc .. " direction. This choice will remain active until you choose to change it or set it back to random.")
 	end
 
 end

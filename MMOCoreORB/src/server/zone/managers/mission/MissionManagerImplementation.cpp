@@ -36,6 +36,18 @@
 #include "server/zone/managers/visibility/VisibilityManager.h"
 #include "server/zone/objects/building/BuildingObject.h"
 
+namespace {
+bool hasDirectionalMissionSelection(PlayerObject* ghost) {
+	if (ghost == nullptr) {
+		return false;
+	}
+
+	String dir = ghost->getScreenPlayData("mission_direction_choice", "directionChoice");
+
+	return !dir.isEmpty() && Float::valueOf(dir) > 0;
+}
+}
+
 void MissionManagerImplementation::loadLuaSettings() {
 	try {
 		Lua* lua = new Lua();
@@ -553,6 +565,8 @@ void MissionManagerImplementation::populateMissionList(MissionTerminal* missionT
 	Locker crossLocker(missionTerminal, player);
 
 	bool slicer = missionTerminal->isSlicer(player);
+	PlayerObject* ghost = player->getPlayerObject();
+	bool hadDirectionalSelection = hasDirectionalMissionSelection(ghost);
 
 	if (missionTerminal->isGeneralTerminal()) {
 		randomizeGeneralTerminalMissions(player, counter, slicer);
@@ -570,6 +584,16 @@ void MissionManagerImplementation::populateMissionList(MissionTerminal* missionT
 		randomizeFactionTerminalMissions(player, counter, slicer, Factions::FACTIONREBEL);
 	}
 
+	if (hadDirectionalSelection && !hasDirectionalMissionSelection(ghost)) {
+		if (missionTerminal->isGeneralTerminal()) {
+			randomizeGeneralTerminalMissions(player, counter + 1, slicer);
+		} else if (missionTerminal->isImperialTerminal()) {
+			randomizeFactionTerminalMissions(player, counter + 1, slicer, Factions::FACTIONIMPERIAL);
+		} else if (missionTerminal->isRebelTerminal()) {
+			randomizeFactionTerminalMissions(player, counter + 1, slicer, Factions::FACTIONREBEL);
+		}
+	}
+
 	// Remove the Slicer from the List. They have received their one time mission reward increase.
 	if (slicer)
 		missionTerminal->removeSlicer(player);
@@ -579,6 +603,9 @@ void MissionManagerImplementation::populateMissionList(MissionTerminal* missionT
 void MissionManagerImplementation::randomizeGeneralTerminalMissions(CreatureObject* player, int counter, bool slicer) {
 	SceneObject* missionBag = player->getSlottedObject("mission_bag");
 	int bagSize = missionBag->getContainerObjectsSize();
+	PlayerObject* ghost = player->getPlayerObject();
+	bool usedDirectionalSelection = hasDirectionalMissionSelection(ghost);
+	int generatedDestroyMissions = 0;
 
 	for (int i = 0; i < bagSize; ++i) {
 		Reference<MissionObject*> mission = missionBag->getContainerObject(i).castTo<MissionObject*>( );
@@ -590,6 +617,10 @@ void MissionManagerImplementation::randomizeGeneralTerminalMissions(CreatureObje
 
 		if (i < 6) {
 			randomizeGenericDestroyMission(player, mission, Factions::FACTIONNEUTRAL);
+
+			if (mission->getTypeCRC() == MissionTypes::DESTROY) {
+				++generatedDestroyMissions;
+			}
 		} else if (i < 12) {
 			randomizeGenericDeliverMission(player, mission, Factions::FACTIONNEUTRAL);
 		}
@@ -602,6 +633,11 @@ void MissionManagerImplementation::randomizeGeneralTerminalMissions(CreatureObje
 		mission->setRewardCredits(mission->getRewardCredits() * cityBonus);
 
 		mission->setRefreshCounter(counter, true);
+	}
+
+	if (usedDirectionalSelection && generatedDestroyMissions == 0 && ghost != nullptr) {
+		ghost->setScreenPlayData("mission_direction_choice", "directionChoice", "0");
+		player->sendSystemMessage("No missions found in that direction. Mission direction has been reset to random.");
 	}
 }
 
@@ -720,6 +756,9 @@ void MissionManagerImplementation::randomizeBountyTerminalMissions(CreatureObjec
 void MissionManagerImplementation::randomizeFactionTerminalMissions(CreatureObject* player, int counter, bool slicer, const uint32 faction) {
 	SceneObject* missionBag = player->getSlottedObject("mission_bag");
 	int bagSize = missionBag->getContainerObjectsSize();
+	PlayerObject* ghost = player->getPlayerObject();
+	bool usedDirectionalSelection = hasDirectionalMissionSelection(ghost);
+	int generatedDestroyMissions = 0;
 
 	int numberOfCraftingMissions = 0;
 	int numberOfReconMissions = 0;
@@ -736,6 +775,10 @@ void MissionManagerImplementation::randomizeFactionTerminalMissions(CreatureObje
 
 		if (i < 6) {
 			randomizeGenericDestroyMission(player, mission, faction);
+
+			if (mission->getTypeCRC() == MissionTypes::DESTROY) {
+				++generatedDestroyMissions;
+			}
 		} else if (i < 12) {
 			randomizeGenericDeliverMission(player, mission, faction);
 		} else {
@@ -762,6 +805,11 @@ void MissionManagerImplementation::randomizeFactionTerminalMissions(CreatureObje
 		mission->setRewardCredits(mission->getRewardCredits() * cityBonus);
 
 		mission->setRefreshCounter(counter, true);
+	}
+
+	if (usedDirectionalSelection && generatedDestroyMissions == 0 && ghost != nullptr) {
+		ghost->setScreenPlayData("mission_direction_choice", "directionChoice", "0");
+		player->sendSystemMessage("No missions found in that direction. Mission direction has been reset to random.");
 	}
 }
 
