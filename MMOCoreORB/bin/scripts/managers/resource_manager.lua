@@ -111,7 +111,7 @@ minimumpoolexcludes = jtlresources
   -- The random pool spawns a total number of resources equal to the size
 randompoolincludes = { {"metal", 32}, {"ore", 13}, {"fuel_petrochem_solid", 6}, {"radioactive", 4}, {"gemstone", 12}, {"gas", 16}, {"water", 2}, {"fuel_petrochem_liquid", 7}, {"petrochem_inert", 8} }
 randompoolexcludes = jtlresources..",iron,fiberplast"
-randompoolsize = 27
+randompoolsize = 30
 
   -- The fixed pool is a table of resources and occurrences. A resource will always be in spawn a number of times equal to it's occurrence. The function call inserts each JTL resource into the table with an occurrence of 1.
 fixedpoolincludes = InsertJtlIntoTable(jtlresources, { {"iron", 14} })
@@ -120,4 +120,3 @@ fixedpoolexcludes = ""
   -- The native pool will have one of each of the items listed in the includes spawned on each planet at all times, but planet restricted.
 nativepoolincludes = "milk_domesticated,milk_wild,meat_domesticated,meat_wild,meat_herbivore,meat_carnivore,meat_reptilian,meat_avian,meat_egg,meat_insect,seafood_fish,seafood_crustacean,seafood_mollusk,bone_mammal,bone_avian,bone_horn,hide_wooly,hide_bristley,hide_leathery,hide_scaley,corn_domesticated,corn_wild,rice_domesticated,rice_wild,oats_domesticated,oats_wild,wheat_domesticated,wheat_wild,vegetable_greens,vegetable_beans,vegetable_tubers,vegetable_fungi,fruit_fruits,fruit_berries,fruit_flowers,wood_deciduous,softwood_conifer,softwood_evergreen,energy_renewable_unlimited_solar,energy_renewable_unlimited_wind,fiberplast,water_vapor"
 nativepoolexcludes = ""
-
