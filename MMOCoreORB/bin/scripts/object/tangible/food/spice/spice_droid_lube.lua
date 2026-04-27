@@ -59,7 +59,7 @@ object_tangible_food_spice_spice_droid_lube = object_tangible_food_spice_shared_
 	quantityMin = 0,
 	quantityMax = 0,
 
-	modifiers = { "health" , 250, "strength" , 250, "constitution", 250 },
+	modifiers = { "health" , 350, "strength" , 150, "constitution", 250 },
 
 	buffName = "droid_lube",
 	buffCRC = 0,
