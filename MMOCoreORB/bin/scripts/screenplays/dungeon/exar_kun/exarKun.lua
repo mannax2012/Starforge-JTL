@@ -3,7 +3,8 @@ local ObjectManager = require("managers.object.object_manager")
 exarKun = ScreenPlay:new {
 	numberOfActs = 1,
 	screenplayName = "exarKun",
-	instanceZone = "tutorial",
+	instanceZone = "exarkuntomb",
+	fallbackInstanceZone = "tutorial",
 	returnZone = "yavin4",
 	maxGroupSize = 10,
 	durationSeconds = 2 * 60 * 60,
@@ -13,6 +14,9 @@ exarKun = ScreenPlay:new {
 	instanceTerrainMaxCoordinate = 8192,
 	instanceMinCoordinate = 6000,
 	instanceMaxCoordinate = 7800,
+	instancePlacementClearRadius = 250,
+	instancePlacementGridSize = 250,
+	instancePlacementAttempts = 40,
 	entryCell = "r1",
 	entryX = -11.8,
 	entryZ = 0.2,
@@ -31,14 +35,52 @@ registerScreenPlay("exarKun", true)
 function exarKun:start()
 end
 
+function exarKun:getAvailableInstanceZone()
+	if isZoneEnabled(self.instanceZone) then
+		return self.instanceZone
+	end
+
+	if self.fallbackInstanceZone ~= nil and self.fallbackInstanceZone ~= "" and isZoneEnabled(self.fallbackInstanceZone) then
+		return self.fallbackInstanceZone
+	end
+
+	return ""
+end
+
+function exarKun:getInstanceZoneForInstance(instanceID)
+	if instanceID ~= nil and instanceID ~= 0 then
+		local zoneName = readStringData(self:getKey(instanceID, "zone"))
+
+		if zoneName ~= nil and zoneName ~= "" then
+			return zoneName
+		end
+	end
+
+	return self:getAvailableInstanceZone()
+end
+
+function exarKun:isManagedInstanceZone(zoneName)
+	if zoneName == nil or zoneName == "" then
+		return false
+	end
+
+	return zoneName == self.instanceZone or zoneName == self.fallbackInstanceZone
+end
+
 function exarKun:activate(pPlayer)
 	if pPlayer == nil then
 		return false
 	end
 
-	if not isZoneEnabled("yavin4") or not isZoneEnabled(self.instanceZone) then
+	local instanceZone = self:getAvailableInstanceZone()
+
+	if not isZoneEnabled("yavin4") or instanceZone == "" then
 		CreatureObject(pPlayer):sendSystemMessage("The Exar Kun's Tomb [Instance] is currently unavailable.")
 		return false
+	end
+
+	if instanceZone ~= self.instanceZone then
+		CreatureObject(pPlayer):sendSystemMessage("Preferred instance zone '" .. self.instanceZone .. "' is unavailable. Using tutorial fallback.")
 	end
 
 	if CreatureObject(pPlayer):isRidingMount() then
@@ -72,7 +114,7 @@ function exarKun:activate(pPlayer)
 		return true
 	end
 
-	local pBuilding = self:createInstanceBuilding(pPlayer)
+	local pBuilding = self:createInstanceBuilding(instanceZone)
 
 	if pBuilding == nil then
 		CreatureObject(pPlayer):sendSystemMessage("Unable to create the Exar Kun's Tomb [Instance]. Please try again later.")
@@ -80,11 +122,13 @@ function exarKun:activate(pPlayer)
 	end
 
 	local instanceID = SceneObject(pBuilding):getObjectID()
+	self:reserveInstancePlacement(instanceID, instanceZone, SceneObject(pBuilding):getWorldPositionX(), SceneObject(pBuilding):getWorldPositionY())
 
 	writeData(self:getKey(instanceID, "active"), 1)
 	writeData(self:getKey(instanceID, "leaderID"), SceneObject(pPlayer):getObjectID())
 	writeData(self:getKey(instanceID, "groupID"), groupID)
 	writeData(self:getKey(instanceID, "startTime"), os.time())
+	writeStringData(self:getKey(instanceID, "zone"), instanceZone)
 	writeData(self:getGroupKey(groupID), instanceID)
 
 	createObserver(EXITEDBUILDING, "exarKun", "onExitedInstance", pBuilding)
@@ -99,10 +143,93 @@ function exarKun:activate(pPlayer)
 	return true
 end
 
-function exarKun:createInstanceBuilding(pPlayer)
-	local x = getRandomNumber(self.instanceMinCoordinate, self.instanceMaxCoordinate)
-	local y = getRandomNumber(self.instanceMinCoordinate, self.instanceMaxCoordinate)
-	local pBuilding = spawnSceneObject(self.instanceZone, self.buildingTemplate, x, 0, y, 0, 0)
+function exarKun:getPlacementGridCoordinate(value)
+	return math.floor(value / self.instancePlacementGridSize)
+end
+
+function exarKun:getPlacementReservationKey(instanceZone, gridX, gridY)
+	return self.screenplayName .. ":placement:" .. instanceZone .. ":" .. gridX .. ":" .. gridY
+end
+
+function exarKun:isPlacementAvailable(instanceZone, x, y)
+	local gridX = self:getPlacementGridCoordinate(x)
+	local gridY = self:getPlacementGridCoordinate(y)
+	local cellRadius = math.ceil(self.instancePlacementClearRadius / self.instancePlacementGridSize)
+	local minDistanceSquared = self.instancePlacementClearRadius * self.instancePlacementClearRadius
+
+	for checkX = gridX - cellRadius, gridX + cellRadius, 1 do
+		for checkY = gridY - cellRadius, gridY + cellRadius, 1 do
+			local reservationKey = self:getPlacementReservationKey(instanceZone, checkX, checkY)
+			local reservedInstanceID = readData(reservationKey)
+
+			if reservedInstanceID ~= 0 then
+				if getSceneObject(reservedInstanceID) == nil or readData(self:getKey(reservedInstanceID, "active")) ~= 1 then
+					deleteData(reservationKey)
+				else
+					local reservedX = readData(self:getKey(reservedInstanceID, "spawnX"))
+					local reservedY = readData(self:getKey(reservedInstanceID, "spawnY"))
+					local deltaX = x - reservedX
+					local deltaY = y - reservedY
+
+					if (deltaX * deltaX) + (deltaY * deltaY) < minDistanceSquared then
+						return false
+					end
+				end
+			end
+		end
+	end
+
+	return true
+end
+
+function exarKun:findAvailableInstanceLocation(instanceZone)
+	for attempt = 1, self.instancePlacementAttempts, 1 do
+		local x = getRandomNumber(self.instanceMinCoordinate, self.instanceMaxCoordinate)
+		local y = getRandomNumber(self.instanceMinCoordinate, self.instanceMaxCoordinate)
+
+		if self:isPlacementAvailable(instanceZone, x, y) then
+			return x, y
+		end
+	end
+
+	return nil, nil
+end
+
+function exarKun:reserveInstancePlacement(instanceID, instanceZone, x, y)
+	local gridX = self:getPlacementGridCoordinate(x)
+	local gridY = self:getPlacementGridCoordinate(y)
+
+	writeData(self:getKey(instanceID, "spawnX"), x)
+	writeData(self:getKey(instanceID, "spawnY"), y)
+	writeData(self:getKey(instanceID, "spawnGridX"), gridX)
+	writeData(self:getKey(instanceID, "spawnGridY"), gridY)
+	writeData(self:getPlacementReservationKey(instanceZone, gridX, gridY), instanceID)
+end
+
+function exarKun:releaseInstancePlacement(instanceID)
+	local instanceZone = readStringData(self:getKey(instanceID, "zone"))
+	local gridX = readData(self:getKey(instanceID, "spawnGridX"))
+	local gridY = readData(self:getKey(instanceID, "spawnGridY"))
+
+	if instanceZone ~= nil and instanceZone ~= "" then
+		deleteData(self:getPlacementReservationKey(instanceZone, gridX, gridY))
+	end
+
+	deleteData(self:getKey(instanceID, "spawnX"))
+	deleteData(self:getKey(instanceID, "spawnY"))
+	deleteData(self:getKey(instanceID, "spawnGridX"))
+	deleteData(self:getKey(instanceID, "spawnGridY"))
+end
+
+function exarKun:createInstanceBuilding(instanceZone)
+	local x, y = self:findAvailableInstanceLocation(instanceZone)
+
+	if x == nil or y == nil then
+		printLuaError("exarKun: unable to find an open instance location in zone " .. instanceZone)
+		return nil
+	end
+
+	local pBuilding = spawnSceneObject(instanceZone, self.buildingTemplate, x, 0, y, 0, 0)
 
 	if pBuilding == nil then
 		return nil
@@ -247,8 +374,9 @@ end
 
 function exarKun:transportPlayerToInstance(pPlayer, instanceID)
 	local cellID = self:getCellID(instanceID, self.entryCell)
+	local instanceZone = self:getInstanceZoneForInstance(instanceID)
 
-	if cellID == 0 then
+	if cellID == 0 or instanceZone == "" then
 		CreatureObject(pPlayer):sendSystemMessage("Unable to find the Exar Kun's Tomb [Instance] entry cell.")
 		return false
 	end
@@ -258,7 +386,7 @@ function exarKun:transportPlayerToInstance(pPlayer, instanceID)
 	deleteData(SceneObject(pPlayer):getObjectID() .. ":exarKunPendingInstance")
 	dropObserver(LOGGEDIN, "exarKun", "onPlayerLoggedIn", pPlayer)
 	createObserver(LOGGEDIN, "exarKun", "onPlayerLoggedIn", pPlayer, 1)
-	SceneObject(pPlayer):switchZone(self.instanceZone, self.entryX, self.entryZ, self.entryY, cellID)
+	SceneObject(pPlayer):switchZone(instanceZone, self.entryX, self.entryZ, self.entryY, cellID)
 	return true
 end
 
@@ -287,7 +415,7 @@ function exarKun:recoverPlayerAfterLogin(pPlayer)
 		return
 	end
 
-	if SceneObject(pPlayer):getZoneName() ~= self.instanceZone then
+	if not self:isManagedInstanceZone(SceneObject(pPlayer):getZoneName()) then
 		return
 	end
 
@@ -313,7 +441,47 @@ function exarKun:spawnInitialEncounter(instanceID)
 	self:spawnBoss(instanceID, 1)
 end
 
-function exarKun:spawnBoss(instanceID, bossNumber)
+function exarKun:getEncounterTarget(pPreferredTarget, pAnchor)
+	if pPreferredTarget ~= nil and SceneObject(pPreferredTarget):isPlayerCreature() then
+		return pPreferredTarget
+	end
+
+	if pAnchor ~= nil then
+		local targetID = CreatureObject(pAnchor):getTargetID()
+
+		if targetID ~= 0 then
+			local pTarget = getSceneObject(targetID)
+
+			if pTarget ~= nil then
+				return pTarget
+			end
+		end
+	end
+
+	return nil
+end
+
+function exarKun:activateEncounterAdd(pMobile, pPreferredTarget, pAnchor)
+	if pMobile == nil then
+		return
+	end
+
+	local pTarget = self:getEncounterTarget(pPreferredTarget, pAnchor)
+
+	if pTarget ~= nil then
+		CreatureObject(pMobile):engageCombat(pTarget)
+		return
+	end
+
+	if pAnchor ~= nil and SceneObject(pMobile):isAiAgent() then
+		AiAgent(pMobile):addObjectFlag(AI_FOLLOW)
+		AiAgent(pMobile):setFollowObject(pAnchor)
+		AiAgent(pMobile):setMovementState(AI_FOLLOWING)
+		AiAgent(pMobile):setAITemplate()
+	end
+end
+
+function exarKun:spawnBoss(instanceID, bossNumber, pTarget)
 	local bossData = exarKunBossSpawns[bossNumber]
 
 	if bossData == nil then
@@ -321,12 +489,13 @@ function exarKun:spawnBoss(instanceID, bossNumber)
 	end
 
 	if bossNumber == 4 then
-		self:spawnWave(instanceID, exarKunBossFourGuards)
+		self:spawnWave(instanceID, exarKunBossFourGuards, pTarget)
 	end
 
 	local pBoss = self:spawnFromData(instanceID, bossData)
 
 	if pBoss ~= nil then
+		self:activateEncounterAdd(pBoss, pTarget, nil)
 		writeData(SceneObject(pBoss):getObjectID() .. ":exarKunBossNumber", bossNumber)
 		writeData(self:getKey(instanceID, "boss" .. bossNumber .. "State"), 0)
 		createObserver(OBJECTDESTRUCTION, "exarKun", "bossKilled", pBoss)
@@ -395,7 +564,7 @@ function exarKun:bossDamaged(pBoss, pPlayer)
 		end
 
 		if nextPhase.spawns ~= nil then
-			self:spawnWave(instanceID, nextPhase.spawns, pPlayer)
+			self:spawnWave(instanceID, nextPhase.spawns, pPlayer, pBoss)
 		end
 
 		writeData(stateKey, state + 1)
@@ -427,22 +596,19 @@ function exarKun:bossKilled(pBoss, pPlayer)
 		end
 
 		self:sendInstanceMessage(instanceID, "A guardian of Exar Kun has fallen. The path forward opens.")
-		self:spawnBoss(instanceID, bossNumber + 1)
+		self:spawnBoss(instanceID, bossNumber + 1, pPlayer)
 	end
 
 	return 0
 end
 
-function exarKun:spawnWave(instanceID, spawnData, pTarget)
+function exarKun:spawnWave(instanceID, spawnData, pTarget, pAnchor)
 	for i = 1, #spawnData, 1 do
 		local pMobile = self:spawnFromData(instanceID, spawnData[i])
 
 		if pMobile ~= nil then
 			CreatureObject(pMobile):playEffect("clienteffect/pl_force_regain_consciousness_self.cef", "")
-
-			if pTarget ~= nil then
-				CreatureObject(pMobile):engageCombat(pTarget)
-			end
+			self:activateEncounterAdd(pMobile, pTarget, pAnchor)
 		end
 	end
 end
@@ -453,24 +619,26 @@ end
 
 function exarKun:spawnInstanceSceneObject(instanceID, template, x, z, y, heading, cellName)
 	local cellID = self:getCellID(instanceID, cellName)
+	local instanceZone = self:getInstanceZoneForInstance(instanceID)
 
-	if cellID == 0 then
+	if cellID == 0 or instanceZone == "" then
 		printLuaError("exarKun: unable to find cell " .. cellName .. " for scene object in instance " .. instanceID)
 		return nil
 	end
 
-	return spawnSceneObject(self.instanceZone, template, x, z, y, cellID, math.rad(heading))
+	return spawnSceneObject(instanceZone, template, x, z, y, cellID, math.rad(heading))
 end
 
 function exarKun:spawnInstanceMobile(instanceID, template, x, z, y, heading, cellName)
 	local cellID = self:getCellID(instanceID, cellName)
+	local instanceZone = self:getInstanceZoneForInstance(instanceID)
 
-	if cellID == 0 then
+	if cellID == 0 or instanceZone == "" then
 		printLuaError("exarKun: unable to find cell " .. cellName .. " for instance " .. instanceID)
 		return nil
 	end
 
-	local pMobile = spawnMobile(self.instanceZone, template, 0, x, z, y, heading, cellID)
+	local pMobile = spawnMobile(instanceZone, template, 0, x, z, y, heading, cellID)
 
 	if pMobile ~= nil then
 		writeData(SceneObject(pMobile):getObjectID() .. ":exarKunInstance", instanceID)
@@ -809,6 +977,8 @@ function exarKun:cleanupInstanceData(instanceID)
 		deleteData(exitTerminalID .. ":exarKunInstance")
 	end
 
+	self:releaseInstancePlacement(instanceID)
+
 	deleteData(self:getKey(instanceID, "active"))
 	deleteData(self:getKey(instanceID, "leaderID"))
 	deleteData(self:getGroupKey(readData(self:getKey(instanceID, "groupID"))))
@@ -816,6 +986,7 @@ function exarKun:cleanupInstanceData(instanceID)
 	deleteData(self:getKey(instanceID, "startTime"))
 	deleteData(self:getKey(instanceID, "exitTerminalID"))
 	deleteData(self:getKey(instanceID, "barricadeSpawnState"))
+	deleteStringData(self:getKey(instanceID, "zone"))
 
 	for i = 1, 5, 1 do
 		deleteData(self:getKey(instanceID, "boss" .. i .. "State"))

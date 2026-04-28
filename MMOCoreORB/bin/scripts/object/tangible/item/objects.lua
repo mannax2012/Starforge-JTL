@@ -40,6 +40,11 @@
 --this exception also makes it possible to release a modified version
 --which carries forward this exception.
 
+object_tangible_item_shared_axkva_min_entrance = SharedTangibleObjectTemplate:new {
+	clientTemplateFileName = "object/tangible/item/shared_axkva_min_entrance.iff"}
+ObjectTemplates:addClientTemplate(object_tangible_item_shared_axkva_min_entrance, 
+"object/tangible/item/shared_axkva_min_entrance.iff")
+
 object_tangible_item_shared_yavin4_exar_kun_entry = SharedTangibleObjectTemplate:new {
 	clientTemplateFileName = "object/tangible/item/shared_yavin4_exar_kun_entry.iff"}
 ObjectTemplates:addClientTemplate(object_tangible_item_shared_yavin4_exar_kun_entry, 

@@ -42,6 +42,14 @@ tutorial = {
 	jtlLaunchPoint = {"space_dathomir", -6900, 2750, -4000},
 }
 
+axkvaminprison = {
+	jtlLaunchPoint = {"space_dathomir", -6900, 2750, -4000},
+}
+
+exarkuntomb = {
+	jtlLaunchPoint = {"space_yavin4", -5600, -5200, -5200},
+}
+
 dungeon1 = {
 }
 
