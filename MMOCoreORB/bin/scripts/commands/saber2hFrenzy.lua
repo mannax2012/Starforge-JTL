@@ -48,7 +48,7 @@ Saber2hFrenzyCommand = {
 	accuracyBonus = 50,
 	speedMultiplier = 3.5,
 	healthCostMultiplier = 0,
-	actionCostMultiplier = 0,
+	actionCostMultiplier = 2.5,
 	mindCostMultiplier = 0,
 	areaAction = true,
 	areaRange = 16,
@@ -98,4 +98,3 @@ Saber2hFrenzyCommand = {
 }
 
 AddCommand(Saber2hFrenzyCommand)
-

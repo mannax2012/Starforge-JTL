@@ -48,7 +48,7 @@ Saber1hHeadHit2Command = {
 	accuracyBonus = 50,
 	speedMultiplier = 1.75,
 	healthCostMultiplier = 0,
-	actionCostMultiplier = 0,
+	actionCostMultiplier = 1.75,
 	mindCostMultiplier = 0,
 	forceCostMultiplier = 1.5,
 	visMod = 25,
@@ -66,4 +66,3 @@ Saber1hHeadHit2Command = {
 }
 
 AddCommand(Saber1hHeadHit2Command)
-

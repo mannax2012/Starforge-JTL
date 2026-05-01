@@ -48,7 +48,7 @@ SaberThrow3Command = {
 	accuracyBonus = 50,
 	speedMultiplier = 4.5,
 	healthCostMultiplier = 0,
-	actionCostMultiplier = 0,
+	actionCostMultiplier = 1.0,
 	mindCostMultiplier = 0,
 	coneAngle = 30,
 	coneAction = true,
@@ -79,4 +79,3 @@ SaberThrow3Command = {
 }
 
 AddCommand(SaberThrow3Command)
-

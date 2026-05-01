@@ -48,7 +48,7 @@ Saber1hComboHit1Command = {
 	accuracyBonus = 50,
 	speedMultiplier = 1.25,
 	healthCostMultiplier = 0,
-	actionCostMultiplier = 0,
+	actionCostMultiplier = 2.0,
 	mindCostMultiplier = 0,
 	forceCostMultiplier = 1.25,
 	visMod = 25,
@@ -66,4 +66,3 @@ Saber1hComboHit1Command = {
 }
 
 AddCommand(Saber1hComboHit1Command)
-

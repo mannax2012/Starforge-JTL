@@ -48,7 +48,7 @@ SaberSlash2Command = {
 	accuracyBonus = 50,
 	speedMultiplier = 2.0,
 	healthCostMultiplier = 0,
-	actionCostMultiplier = 0,
+	actionCostMultiplier = 1.0,
 	mindCostMultiplier = 0,
 	forceCostMultiplier = 2.0,
 	visMod = 25,
@@ -116,4 +116,3 @@ SaberSlash2Command = {
 }
 
 AddCommand(SaberSlash2Command)
-

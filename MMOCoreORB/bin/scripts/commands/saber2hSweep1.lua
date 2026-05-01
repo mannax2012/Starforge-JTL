@@ -48,7 +48,7 @@ Saber2hSweep1Command = {
 	accuracyBonus = 50,
 	speedMultiplier = 1.25,
 	healthCostMultiplier = 0,
-	actionCostMultiplier = 0,
+	actionCostMultiplier = 1.5,
 	mindCostMultiplier = 0,
 	forceCostMultiplier = 1.25,
 	visMod = 25,
@@ -77,4 +77,3 @@ Saber2hSweep1Command = {
 }
 
 AddCommand(Saber2hSweep1Command)
-

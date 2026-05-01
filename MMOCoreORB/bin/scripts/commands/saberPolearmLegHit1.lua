@@ -48,7 +48,7 @@ SaberPolearmLegHit1Command = {
 	accuracyBonus = 50,
 	speedMultiplier = 1.5,
 	healthCostMultiplier = 0,
-	actionCostMultiplier = 0,
+	actionCostMultiplier = 1.5,
 	mindCostMultiplier = 0,
 	forceCostMultiplier = 1.25,
 	visMod = 25,
@@ -66,4 +66,3 @@ SaberPolearmLegHit1Command = {
 }
 
 AddCommand(SaberPolearmLegHit1Command)
-

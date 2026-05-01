@@ -48,7 +48,7 @@ SaberPolearmDervishCommand = {
 	accuracyBonus = 50,
 	speedMultiplier = 3.0,
 	healthCostMultiplier = 0,
-	actionCostMultiplier = 0,
+	actionCostMultiplier = 1.5,
 	mindCostMultiplier = 0,
 	areaAction = true,
 	areaRange = 16,
@@ -98,4 +98,3 @@ SaberPolearmDervishCommand = {
 }
 
 AddCommand(SaberPolearmDervishCommand)
-

@@ -48,7 +48,7 @@ SaberThrow2Command = {
 	accuracyBonus = 50,
 	speedMultiplier = 3.0,
 	healthCostMultiplier = 0,
-	actionCostMultiplier = 0,
+	actionCostMultiplier = 1.0,
 	mindCostMultiplier = 0,
 	forceCostMultiplier = 2.0,
 	visMod = 25,
@@ -77,4 +77,3 @@ SaberThrow2Command = {
 }
 
 AddCommand(SaberThrow2Command)
-
