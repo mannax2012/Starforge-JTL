@@ -99,6 +99,46 @@ function ig88FactoryArena:isManagedInstanceZone(zoneName)
 	return zoneName == self.instanceZone or zoneName == self.fallbackInstanceZone
 end
 
+function ig88FactoryArena:sendStartSui(pPlayer)
+	if pPlayer == nil then
+		return
+	end
+
+	local sui = SuiMessageBox.new("ig88FactoryArena", "startSuiCallback")
+	sui.setTitle("IG-88 Factory Arena [Instance]")
+	sui.setPrompt("You are about to start an IG-88 Factory Arena [Instance]. This will create a new instance for your group and send travel invitations to the other group members. Continue?")
+	sui.setOkButtonText("Start")
+	sui.setCancelButtonText("Cancel")
+
+	local pageId = sui.sendTo(pPlayer)
+	createEvent(30 * 1000, "ig88FactoryArena", "closeStartSui", pPlayer, pageId)
+end
+
+function ig88FactoryArena:startSuiCallback(pPlayer, pSui, eventIndex, args, ...)
+	if pPlayer == nil then
+		return
+	end
+
+	if eventIndex == 1 then
+		CreatureObject(pPlayer):sendSystemMessage("You decide not to start the IG-88 Factory Arena [Instance].")
+		return
+	end
+
+	createEvent(1, "ig88FactoryArena", "activate", pPlayer, "")
+end
+
+function ig88FactoryArena:closeStartSui(pPlayer, pageId)
+	if pPlayer == nil then
+		return
+	end
+
+	local pGhost = CreatureObject(pPlayer):getPlayerObject()
+
+	if pGhost ~= nil then
+		PlayerObject(pGhost):removeSuiBox(pageId)
+	end
+end
+
 function ig88FactoryArena:activate(pPlayer)
 	if pPlayer == nil then
 		return false
@@ -358,7 +398,7 @@ function ig88FactoryArena:inviteGroupMembers(pLeader, instanceID)
 	for i = 0, groupSize - 1, 1 do
 		local pMember = CreatureObject(pLeader):getGroupMember(i)
 
-		if pMember ~= nil and pMember ~= pLeader and not SceneObject(pMember):isAiAgent() and CreatureObject(pLeader):isInRangeWithObject(pMember, 50) then
+		if pMember ~= nil and pMember ~= pLeader and not SceneObject(pMember):isAiAgent() then
 			self:sendAuthorizationSui(pMember, pLeader, instanceID)
 		end
 	end
@@ -989,6 +1029,10 @@ function ig88FactoryArena:applyRadiusDamage(pSource, radius, minDamage, maxDamag
 	end
 
 	local playerTable = SceneObject(pSource):getPlayersInRange(radius)
+
+	if playerTable == nil then
+		return
+	end
 
 	for i = 1, #playerTable, 1 do
 		local pPlayer = playerTable[i]

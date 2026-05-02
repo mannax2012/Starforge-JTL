@@ -72,6 +72,8 @@
 #include "server/zone/objects/tangible/components/HeroRingAttributeListComponent.h"
 #include "server/zone/objects/tangible/components/HeroRingDataComponent.h"
 #include "server/zone/objects/tangible/components/JediRobeAttributeListComponent.h"
+#include "server/zone/objects/tangible/components/CooldownBuffObjectAttributeListComponent.h"
+#include "server/zone/objects/tangible/components/CooldownBuffObjectMenuComponent.h"
 #include "server/zone/objects/tangible/components/SkillBuffObjectAttributeListComponent.h"
 #include "server/zone/objects/tangible/components/SkillBuffObjectMenuComponent.h"
 #include "server/zone/objects/tangible/deed/components/PlaceStructureComponent.h"
@@ -223,6 +225,8 @@ ComponentManager::ComponentManager() {
 
 	components.put("JediRobeAttributeListComponent", new JediRobeAttributeListComponent());
 
+	components.put("CooldownBuffObjectAttributeListComponent", new CooldownBuffObjectAttributeListComponent());
+	components.put("CooldownBuffObjectMenuComponent", new CooldownBuffObjectMenuComponent());
 	components.put("SkillBuffObjectAttributeListComponent", new SkillBuffObjectAttributeListComponent());
 	components.put("SkillBuffObjectMenuComponent", new SkillBuffObjectMenuComponent());
 

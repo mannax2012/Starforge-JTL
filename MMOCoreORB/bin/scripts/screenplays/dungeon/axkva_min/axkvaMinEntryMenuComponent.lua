@@ -30,7 +30,7 @@ function axkvaMinEntryMenuComponent:handleObjectMenuSelect(pSceneObject, pPlayer
 		return 0
 	end
 
-	createEvent(1000, "axkvaMin", "activate", pPlayer, "")
+	createEvent(1, "axkvaMin", "sendStartSui", pPlayer, "")
 	return 0
 end
 

@@ -126,13 +126,97 @@ function CorellianCorvette:activate(pPlayer, faction, questType)
 
 		for i = 0, groupSize - 1, 1 do
 			local pMember = CreatureObject(pPlayer):getGroupMember(i)
-			if pMember ~= nil and pMember ~= pPlayer and CreatureObject(pPlayer):isInRangeWithObject(pMember, 50) and not SceneObject(pMember):isAiAgent() then
+			if pMember ~= nil and pMember ~= pPlayer and not SceneObject(pMember):isAiAgent() then
 				self:sendAuthorizationSui(pMember, pPlayer, pCorvette)
 			end
 		end
 	end
 
 	return true
+end
+
+function CorellianCorvette:sendStartSui(pPlayer, faction, questType, pTicket)
+	if (pPlayer == nil or faction == nil or faction == "" or questType == nil or questType == "") then
+		return false
+	end
+
+	local playerID = SceneObject(pPlayer):getObjectID()
+	writeStringData(playerID .. ":corvettePendingStartFaction", faction)
+	writeStringData(playerID .. ":corvettePendingStartQuestType", questType)
+
+	if (pTicket ~= nil) then
+		writeData(playerID .. ":corvettePendingStartTicket", SceneObject(pTicket):getObjectID())
+	else
+		deleteData(playerID .. ":corvettePendingStartTicket")
+	end
+
+	local sui = SuiMessageBox.new("CorellianCorvette", "startSuiCallback")
+	local corvetteName = getStringId("@dungeon/space_dungeon:corvette_" .. faction)
+	sui.setTitle("Corellian Corvette")
+	sui.setPrompt("You are about to start travel to " .. corvetteName .. ". This will begin the instance for your group, consume your authorization ticket, and send travel invitations to the other group members. Continue?")
+	sui.setOkButtonText("Start")
+	sui.setCancelButtonText("Cancel")
+
+	local pageId = sui.sendTo(pPlayer)
+	createEvent(30 * 1000, "CorellianCorvette", "closeStartSui", pPlayer, pageId)
+	return true
+end
+
+function CorellianCorvette:startSuiCallback(pPlayer, pSui, eventIndex, args)
+	if (pPlayer == nil) then
+		return
+	end
+
+	local playerID = SceneObject(pPlayer):getObjectID()
+	local faction = readStringData(playerID .. ":corvettePendingStartFaction")
+	local questType = readStringData(playerID .. ":corvettePendingStartQuestType")
+	local ticketID = readData(playerID .. ":corvettePendingStartTicket")
+
+	deleteStringData(playerID .. ":corvettePendingStartFaction")
+	deleteStringData(playerID .. ":corvettePendingStartQuestType")
+	deleteData(playerID .. ":corvettePendingStartTicket")
+
+	if (eventIndex == 1) then
+		CreatureObject(pPlayer):sendSystemMessage("You decide not to start the Corellian Corvette instance.")
+		return
+	end
+
+	if (faction == nil or faction == "" or questType == nil or questType == "") then
+		CreatureObject(pPlayer):sendSystemMessage("@dungeon/space_dungeon:illegal_ticket")
+		return
+	end
+
+	local pTicket = getSceneObject(ticketID)
+
+	if (pTicket == nil) then
+		CreatureObject(pPlayer):sendSystemMessage("@dungeon/space_dungeon:no_ticket")
+		return
+	end
+
+	local result = self:activate(pPlayer, faction, questType)
+
+	if (result) then
+		dropObserver(OBJECTREMOVEDFROMZONE, "CorvetteTicketGiverLogic", "notifyTicketDestroyed", pTicket)
+		SceneObject(pTicket):destroyObjectFromWorld()
+		SceneObject(pTicket):destroyObjectFromDatabase()
+	end
+end
+
+function CorellianCorvette:closeStartSui(pPlayer, pageId)
+	if (pPlayer == nil) then
+		return
+	end
+
+	local playerID = SceneObject(pPlayer):getObjectID()
+	local pGhost = CreatureObject(pPlayer):getPlayerObject()
+
+	if (pGhost ~= nil) then
+		PlayerObject(pGhost):removeSuiBox(pageId)
+	end
+
+	deleteStringData(playerID .. ":corvettePendingStartFaction")
+	deleteStringData(playerID .. ":corvettePendingStartQuestType")
+	deleteData(playerID .. ":corvettePendingStartTicket")
 end
 
 function CorellianCorvette:getFactionCRC(faction)

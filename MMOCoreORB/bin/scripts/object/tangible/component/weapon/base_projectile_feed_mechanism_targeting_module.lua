@@ -41,11 +41,8 @@
 --this exception also makes it possible to release a modified version 
 
 
+object_tangible_component_weapon_base_projectile_feed_mechanism_targeting_module = object_tangible_component_weapon_shared_base_projectile_feed_mechanism_targeting_module:new {
 
---Children folder includes
-includeFile("tangible/loot/dungeon/corellian_corvette/serverobjects.lua")
-includeFile("tangible/loot/dungeon/death_watch_bunker/serverobjects.lua")
-includeFile("tangible/loot/dungeon/geonosian_mad_bunker/serverobjects.lua")
+}
 
--- Server Objects
-includeFile("tangible/loot/dungeon/ig88_buff_head.lua")
+ObjectTemplates:addTemplate(object_tangible_component_weapon_base_projectile_feed_mechanism_targeting_module, "object/tangible/component/weapon/base_projectile_feed_mechanism_targeting_module.iff")

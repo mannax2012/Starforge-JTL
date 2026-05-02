@@ -67,6 +67,46 @@ function exarKun:isManagedInstanceZone(zoneName)
 	return zoneName == self.instanceZone or zoneName == self.fallbackInstanceZone
 end
 
+function exarKun:sendStartSui(pPlayer)
+	if pPlayer == nil then
+		return
+	end
+
+	local sui = SuiMessageBox.new("exarKun", "startSuiCallback")
+	sui.setTitle("Exar Kun's Tomb [Instance]")
+	sui.setPrompt("You are about to start an Exar Kun's Tomb [Instance]. This will create a new instance for your group and send travel invitations to the other group members. Continue?")
+	sui.setOkButtonText("Start")
+	sui.setCancelButtonText("Cancel")
+
+	local pageId = sui.sendTo(pPlayer)
+	createEvent(30 * 1000, "exarKun", "closeStartSui", pPlayer, pageId)
+end
+
+function exarKun:startSuiCallback(pPlayer, pSui, eventIndex, args, ...)
+	if pPlayer == nil then
+		return
+	end
+
+	if eventIndex == 1 then
+		CreatureObject(pPlayer):sendSystemMessage("You decide not to start Exar Kun's Tomb [Instance].")
+		return
+	end
+
+	createEvent(1, "exarKun", "activate", pPlayer, "")
+end
+
+function exarKun:closeStartSui(pPlayer, pageId)
+	if pPlayer == nil then
+		return
+	end
+
+	local pGhost = CreatureObject(pPlayer):getPlayerObject()
+
+	if pGhost ~= nil then
+		PlayerObject(pGhost):removeSuiBox(pageId)
+	end
+end
+
 function exarKun:activate(pPlayer)
 	if pPlayer == nil then
 		return false
@@ -260,7 +300,7 @@ function exarKun:inviteGroupMembers(pLeader, instanceID)
 	for i = 0, groupSize - 1, 1 do
 		local pMember = CreatureObject(pLeader):getGroupMember(i)
 
-		if pMember ~= nil and pMember ~= pLeader and not SceneObject(pMember):isAiAgent() and CreatureObject(pLeader):isInRangeWithObject(pMember, 50) then
+		if pMember ~= nil and pMember ~= pLeader and not SceneObject(pMember):isAiAgent() then
 			self:sendAuthorizationSui(pMember, pLeader, instanceID)
 		end
 	end

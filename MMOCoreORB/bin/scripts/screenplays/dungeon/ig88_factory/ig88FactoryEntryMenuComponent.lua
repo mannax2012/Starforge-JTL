@@ -28,7 +28,7 @@ function ig88FactoryEntryMenuComponent:handleObjectMenuSelect(pSceneObject, pPla
 		return 0
 	end
 
-	createEvent(1000, "ig88FactoryArena", "activate", pPlayer, "")
+	createEvent(1, "ig88FactoryArena", "sendStartSui", pPlayer, "")
 	return 0
 end
 

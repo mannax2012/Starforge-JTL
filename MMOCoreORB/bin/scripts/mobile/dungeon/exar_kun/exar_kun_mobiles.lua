@@ -1,12 +1,13 @@
 local exarKunStandardLoot = {
 	{
 		groups = {
-			{ group = "power_crystals", chance = 2500000 },
-			{ group = "color_crystals", chance = 2000000 },
-			{ group = "clothing_attachments", chance = 1750000 },
-			{ group = "armor_attachments", chance = 1750000 },
-			{ group = "dark_jedi_common", chance = 1000000 },
+			{ group = "power_crystals", chance = 1500000 },
+			{ group = "color_crystals", chance = 1500000 },
+			{ group = "clothing_attachments", chance = 1500000 },
+			{ group = "armor_attachments", chance = 1500000 },
+			{ group = "dark_jedi_common", chance = 1500000 },
 			{ group = "unstable_crystal_pack", chance = 1000000 },
+			{group = "blood_of_the_devout", chance = 1500000},
 		},
 		lootChance = 4200000,
 	},
@@ -18,7 +19,8 @@ local exarKunBonusLoot = {
 			{group = "resource_deed_boss", 		chance = 1500000},
 			{group = "lewt_chest_common",  		chance = 2000000},
 			{group = "lewt_chest_rare",    		chance = 1500000},
-			{group = "all_saber_schematics",    chance = 5000000},
+			{group = "all_saber_schematics",    chance = 3000000},
+			{group = "blood_of_the_devout", chance = 3000000},
 		},
 		lootChance = 300000,
 	},
@@ -28,7 +30,7 @@ local exarKunBossLoot = {
 	{
 		groups = {
 			{ group = "power_crystals", chance = 2000000 },
-			{ group = "holocron_dark", chance = 1500000 },
+			{ group = "blood_of_the_devout", chance = 1500000 },
 			{ group = "clothing_attachments", chance = 2000000 },
 			{ group = "armor_attachments", chance = 2000000 },
 			{ group = "dark_jedi_common", chance = 1500000 },
@@ -58,15 +60,18 @@ local exarKunFinalBossLoot = {
 		},
 		lootChance = 10000000,
 	},
-			groups = {
+	{
+		groups = {
 			{group = "unstable_crystal_pack", chance = 2500000},
-			{group = "resource_deed_boss", chance = 2500000},
+			{group = "resource_deed_boss", chance = 1500000},
 			{group = "clothing_attachments", chance = 1000000},
 			{group = "armor_attachments", chance = 1000000},
 			{group = "acid_vibro_unit", chance = 1000000},
-			{group = "lewt_chest_rare", chance = 1500000},
+			{group = "blood_of_the_devout", chance = 2000000},
+			{group = "lewt_chest_rare", chance = 1000000},
 		},
 		lootChance = 10000000,
+	},
 }
 
 exar_kun_cultist = Creature:new {
@@ -397,7 +402,8 @@ exar_kun = Creature:new {
 		exarKunBossLoot[1],
 		exarKunBonusLoot[1],
 		exarKunFinalBossLoot[1],
-				},
+		exarKunFinalBossLoot[2],
+	},
 	primaryWeapon = "dark_jedi_weapons_gen4",
 	secondaryWeapon = "force_sword_ranged",
 	conversationTemplate = "",

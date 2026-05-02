@@ -15,9 +15,9 @@ end
 
 function ig88FactoryEntryWay:spawnSceneObjects()
 	local x = 426.5
-	local y = 5151.5
-	local z = getWorldFloor(x, y, "lok")
-	local pTerminal = spawnSceneObject("lok", "object/tangible/dungeon/keypad_terminal.iff", x, 12.0, y, 0, math.rad(0))
+	local y = 5151.7
+	local z = getWorldFloor(x, y, "lok") + 1
+	local pTerminal = spawnSceneObject("lok", "object/tangible/dungeon/keypad_terminal.iff", x, z, y, 0, math.rad(180))
 
 	if pTerminal ~= nil then
 		SceneObject(pTerminal):setCustomObjectName("Nym's Factory Compound [Instance]")

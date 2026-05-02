@@ -40,6 +40,12 @@
 --this exception also makes it possible to release a modified version
 --which carries forward this exception.
 
+object_tangible_component_weapon_shared_base_projectile_feed_mechanism_targeting_module = SharedTangibleObjectTemplate:new {
+clientTemplateFileName = "object/tangible/component/weapon/shared_base_projectile_feed_mechanism_targeting_module.iff"}
+ObjectTemplates:addClientTemplate(object_tangible_component_weapon_shared_base_projectile_feed_mechanism_targeting_module, 
+"object/tangible/component/weapon/shared_base_projectile_feed_mechanism_targeting_module.iff")
+
+
 
 object_tangible_component_weapon_shared_acklay_bone_reinforcement_core = SharedTangibleObjectTemplate:new {
 	clientTemplateFileName = "object/tangible/component/weapon/shared_acklay_bone_reinforcement_core.iff"

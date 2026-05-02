@@ -41,11 +41,16 @@
 --this exception also makes it possible to release a modified version 
 
 
+object_tangible_loot_dungeon_ig88_buff_head = object_tangible_loot_dungeon_shared_ig88_buff_head:new {
+	templateType = SKILLBUFF,
+	objectMenuComponent = "CooldownBuffObjectMenuComponent",
+	attributeListComponent = "CooldownBuffObjectAttributeListComponent",
 
---Children folder includes
-includeFile("tangible/loot/dungeon/corellian_corvette/serverobjects.lua")
-includeFile("tangible/loot/dungeon/death_watch_bunker/serverobjects.lua")
-includeFile("tangible/loot/dungeon/geonosian_mad_bunker/serverobjects.lua")
+	duration = 10800,
+	reuseTime = 7200000,
+	modifiers = { "health", 2000 },
+	buffName = "ig88_buff_head_health",
+	buffCRC = 0
+}
 
--- Server Objects
-includeFile("tangible/loot/dungeon/ig88_buff_head.lua")
+ObjectTemplates:addTemplate(object_tangible_loot_dungeon_ig88_buff_head, "object/tangible/loot/dungeon/ig88_buff_head.iff")

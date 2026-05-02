@@ -1,7 +1,66 @@
+local ig88FactoryStandardLoot = {
+	{
+		groups = {
+			{ group = "weapons_all", chance = 2000000 },
+			{ group = "junk", chance = 3000000 },
+			{ group = "clothing_attachments", chance = 1500000 },
+			{ group = "armor_attachments", chance = 1500000 },
+			{ group = "droid_servo_motor", chance = 1000000 },
+			{ group = "fragmented_targeting_computer", chance = 1000000 },
+		},
+		lootChance = 4200000,
+	},
+}
+
+local ig88FactoryBonusLoot = {
+	{
+		groups = {
+			{group = "resource_deed_boss", 		chance = 1500000},
+			{group = "lewt_chest_common",  		chance = 2000000},
+			{group = "lewt_chest_rare",    		chance = 1500000},
+			{group = "droid_servo_motor",    	chance = 2500000},
+			{ group = "fragmented_targeting_computer", chance = 2500000 },		
+		},
+		lootChance = 300000,
+	},
+}
+
+local ig88FactoryBossLoot = {
+	{
+		groups = {
+			{ group = "power_crystals", chance = 2000000 },
+			{ group = "weapons_all", chance = 2000000 },
+			{ group = "clothing_attachments", chance = 1500000 },
+			{ group = "armor_attachments", chance = 1500000 },
+			{ group = "droid_servo_motor", chance = 1500000 },
+			{ group = "fragmented_targeting_computer", chance = 1500000 },
+		},
+		lootChance = 10000000,
+	},
+	{
+		groups = {
+			{ group = "weapons_all", chance = 2000000 },
+			{ group = "clothing_attachments", chance = 1500000 },
+			{ group = "armor_attachments", chance = 1500000 },
+			{ group = "droid_servo_motor", chance = 2000000 },
+			{ group = "resource_deed_boss", chance = 1000000 },
+			{ group = "lewt_chest_common", chance = 1000000 },
+			{ group = "fragmented_targeting_computer", chance = 200000 },
+		},
+		lootChance = 10000000,
+	},
+	{
+		groups = {
+			{group = "ig88_buff_head", chance = 10000000},
+		},
+		lootChance = 10000000,
+	},
+}
+
 ig88_factory_mouse_droid = Creature:new {
-	objectName = "@mob/creature_names:mouse_droid",
-	socialGroup = "dungeon_creature",
-	faction = "",
+	customName = "@mob/creature_names:mouse_droid",
+	socialGroup = "ig88factory",
+	faction = "ig88factory",
 	mobType = MOB_DROID,
 	level = 10,
 	chanceHit = 0.3,
@@ -38,9 +97,9 @@ ig88_factory_mouse_droid = Creature:new {
 CreatureTemplates:addCreatureTemplate(ig88_factory_mouse_droid, "ig88_factory_mouse_droid")
 
 ig88_factory_bomb_droid = Creature:new {
-	objectName = "Bomb Mouse Droid",
-	socialGroup = "dungeon_creature",
-	faction = "",
+	customName = "Bomb Mouse Droid",
+	socialGroup = "ig88factory",
+	faction = "ig88factory",
 	mobType = MOB_DROID,
 	level = 120,
 	chanceHit = 1.5,
@@ -61,7 +120,7 @@ ig88_factory_bomb_droid = Creature:new {
 	tamingChance = 0,
 	ferocity = 0,
 	pvpBitmask = AGGRESSIVE + ATTACKABLE + ENEMY,
-	creatureBitmask = NONE,
+	creatureBitmask = PACK,
 	optionsBitmask = AIENABLED,
 	diet = NONE,
 
@@ -77,11 +136,11 @@ ig88_factory_bomb_droid = Creature:new {
 CreatureTemplates:addCreatureTemplate(ig88_factory_bomb_droid, "ig88_factory_bomb_droid")
 
 ig88_factory_battle_droid = Creature:new {
-	objectName = "Factory Battle Droid",
-	socialGroup = "dungeon_creature",
-	faction = "",
+	customName = "Factory Battle Droid",
+	socialGroup = "ig88factory",
+	faction = "ig88factory",
 	mobType = MOB_ANDROID,
-	level = 130,
+	level = 230,
 	chanceHit = 4.0,
 	damageMin = 850,
 	damageMax = 1350,
@@ -100,7 +159,7 @@ ig88_factory_battle_droid = Creature:new {
 	tamingChance = 0,
 	ferocity = 0,
 	pvpBitmask = AGGRESSIVE + ATTACKABLE + ENEMY,
-	creatureBitmask = KILLER + NOINTIMIDATE,
+	creatureBitmask = PACK + KILLER + NOINTIMIDATE,
 	optionsBitmask = AIENABLED,
 	diet = NONE,
 	scale = 1.15,
@@ -110,7 +169,9 @@ ig88_factory_battle_droid = Creature:new {
 		"object/mobile/death_watch_battle_droid_02.iff",
 		"object/mobile/death_watch_battle_droid_03.iff"
 	},
-	lootGroups = {},
+		lootGroups = {
+		ig88FactoryStandardLoot[1],		
+	},
 	primaryWeapon = "battle_droid_weapons",
 	secondaryWeapon = "unarmed",
 	conversationTemplate = "",
@@ -121,11 +182,11 @@ ig88_factory_battle_droid = Creature:new {
 CreatureTemplates:addCreatureTemplate(ig88_factory_battle_droid, "ig88_factory_battle_droid")
 
 ig88_factory_droideka = Creature:new {
-	objectName = "Factory Droideka",
-	socialGroup = "dungeon_creature",
-	faction = "",
+	customName = "Factory Droideka",
+	socialGroup = "ig88factory",
+	faction = "ig88factory",
 	mobType = MOB_DROID,
-	level = 160,
+	level = 260,
 	chanceHit = 10.0,
 	damageMin = 1350,
 	damageMax = 1900,
@@ -144,12 +205,14 @@ ig88_factory_droideka = Creature:new {
 	tamingChance = 0,
 	ferocity = 0,
 	pvpBitmask = AGGRESSIVE + ATTACKABLE + ENEMY,
-	creatureBitmask = KILLER + NOINTIMIDATE,
+	creatureBitmask = PACK + KILLER + NOINTIMIDATE,
 	optionsBitmask = AIENABLED,
 	diet = NONE,
 
 	templates = {"object/mobile/droideka.iff"},
-	lootGroups = {},
+		lootGroups = {
+		ig88FactoryStandardLoot[1],	
+	},
 	defaultAttack = "attack",
 	defaultWeapon = "object/weapon/ranged/droid/droid_droideka_ranged.iff"
 }
@@ -157,11 +220,11 @@ ig88_factory_droideka = Creature:new {
 CreatureTemplates:addCreatureTemplate(ig88_factory_droideka, "ig88_factory_droideka")
 
 ig88_factory_flame_droid = Creature:new {
-	objectName = "Heavy Flamethrower Battle Droid",
-	socialGroup = "dungeon_creature",
-	faction = "",
+	customName = "Heavy Flamethrower Battle Droid",
+	socialGroup = "ig88factory",
+	faction = "ig88factory",
 	mobType = MOB_DROID,
-	level = 185,
+	level = 335,
 	chanceHit = 14.0,
 	damageMin = 1700,
 	damageMax = 2600,
@@ -180,7 +243,7 @@ ig88_factory_flame_droid = Creature:new {
 	tamingChance = 0,
 	ferocity = 0,
 	pvpBitmask = AGGRESSIVE + ATTACKABLE + ENEMY,
-	creatureBitmask = KILLER + NOINTIMIDATE,
+	creatureBitmask = PACK + KILLER + NOINTIMIDATE,
 	optionsBitmask = AIENABLED,
 	diet = NONE,
 	scale = 1.7,
@@ -190,7 +253,11 @@ ig88_factory_flame_droid = Creature:new {
 		"object/mobile/death_watch_s_battle_droid_02.iff",
 		"object/mobile/death_watch_s_battle_droid_03.iff"
 	},
-	lootGroups = {},
+	lootGroups = {
+		ig88FactoryStandardLoot[1],
+		ig88FactoryBossLoot[2],
+		ig88FactoryBonusLoot[1],			
+	},
 	primaryWeapon = "commando_ranged",
 	secondaryWeapon = "battle_droid_weapons",
 	conversationTemplate = "",
@@ -201,11 +268,11 @@ ig88_factory_flame_droid = Creature:new {
 CreatureTemplates:addCreatureTemplate(ig88_factory_flame_droid, "ig88_factory_flame_droid")
 
 ig88_factory_ig88 = Creature:new {
-	objectName = "@mob/creature_names:ig_88",
-	socialGroup = "mercenary",
-	faction = "",
+	customName = "@mob/creature_names:ig_88",
+	socialGroup = "ig88factory",
+	faction = "ig88factory",
 	mobType = MOB_DROID,
-	level = 220,
+	level = 420,
 	chanceHit = 18.0,
 	damageMin = 2200,
 	damageMax = 3400,
@@ -224,13 +291,17 @@ ig88_factory_ig88 = Creature:new {
 	tamingChance = 0,
 	ferocity = 0,
 	pvpBitmask = AGGRESSIVE + ATTACKABLE + ENEMY,
-	creatureBitmask = KILLER + NOINTIMIDATE,
+	creatureBitmask = PACK + KILLER + NOINTIMIDATE,
 	optionsBitmask = AIENABLED,
 	diet = NONE,
 	scale = 1.35,
 
 	templates = {"object/mobile/ig_88.iff"},
-	lootGroups = {},
+	lootGroups = {
+		ig88FactoryStandardLoot[1],
+		ig88FactoryBossLoot[3],
+		ig88FactoryBonusLoot[1],			
+	},
 	primaryWeapon = "general_carbine",
 	secondaryWeapon = "general_pistol",
 	conversationTemplate = "",
