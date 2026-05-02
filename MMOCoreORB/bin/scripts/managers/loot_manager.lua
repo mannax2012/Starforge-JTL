@@ -45,7 +45,7 @@ levelChance = 100
 
 --Chance dividend for attribute bonus modifiers
 baseChance = 100
-yellowChance = 1000
+yellowChance = 1500
 exceptionalChance = 100000
 legendaryChance = 1000000
 

@@ -6,7 +6,7 @@ krayt_dragon_tissue_rotten = {
 	customObjectName = "Tusken King's Favorite Snack",
 	directObjectTemplate = "object/tangible/component/weapon/blaster_power_handler_enhancement_krayt.iff",
 	craftingValues = {
-		{"maxdamage",60,160,0},
+		{"maxdamage",60,120,0},
 		{"attackspeed",-0.3,-0.6,2},
 		{"useCount",2,21,0},
 	},
