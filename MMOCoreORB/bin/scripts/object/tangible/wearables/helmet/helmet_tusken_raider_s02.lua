@@ -59,7 +59,7 @@ object_tangible_wearables_helmet_helmet_tusken_raider_s02 = object_tangible_wear
 				"object/creature/player/ishi_tib_male.iff",
 				"object/creature/player/moncal_male.iff",
 				"object/creature/player/moncal_female.iff",
-				"object/creature/player/nautuolan_male.iff",
+				"object/creature/player/nautolan_male.iff",
 				"object/creature/player/nightsister_female.iff",
 				"object/creature/player/nikto_male.iff",
 				"object/creature/player/quarren_male.iff",

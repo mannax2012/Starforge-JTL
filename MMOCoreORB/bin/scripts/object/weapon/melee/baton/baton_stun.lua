@@ -75,7 +75,7 @@ object_weapon_melee_baton_baton_stun = object_weapon_melee_baton_shared_baton_st
 				"object/creature/player/gotal_male.iff",
 				"object/creature/player/gran_male.iff",
 				"object/creature/player/ishi_tib_male.iff",
-				"object/creature/player/nautuolan_male.iff",
+				"object/creature/player/nautolan_male.iff",
 				"object/creature/player/nightsister_female.iff",
 				"object/creature/player/nikto_male.iff",
 				"object/creature/player/quarren_male.iff",

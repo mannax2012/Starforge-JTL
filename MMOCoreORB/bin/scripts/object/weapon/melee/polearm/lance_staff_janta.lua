@@ -73,7 +73,7 @@ object_weapon_melee_polearm_lance_staff_janta = object_weapon_melee_polearm_shar
 				"object/creature/player/gotal_male.iff",
 				"object/creature/player/gran_male.iff",
 				"object/creature/player/ishi_tib_male.iff",
-				"object/creature/player/nautuolan_male.iff",
+				"object/creature/player/nautolan_male.iff",
 				"object/creature/player/nightsister_female.iff",
 				"object/creature/player/nikto_male.iff",
 				"object/creature/player/quarren_male.iff",
