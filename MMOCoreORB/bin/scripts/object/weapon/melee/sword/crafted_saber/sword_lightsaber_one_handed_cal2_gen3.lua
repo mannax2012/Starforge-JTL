@@ -73,12 +73,12 @@ object_weapon_melee_sword_crafted_saber_sword_lightsaber_one_handed_cal2_gen3 = 
 				"object/creature/player/gotal_male.iff",
 				"object/creature/player/gran_male.iff",
 				"object/creature/player/ishi_tib_male.iff",
-				"object/creature/player/nautuolan_male.iff",
+				"object/creature/player/nautolan_male.iff",
 				"object/creature/player/nightsister_female.iff",
 				"object/creature/player/nikto_male.iff",
 				"object/creature/player/quarren_male.iff",
 				"object/creature/player/smc_female.iff",
-				"object/creature/player/weequay_male.iff"s},
+				"object/creature/player/weequay_male.iff"},
 
 	-- RANGEDATTACK, MELEEATTACK, FORCEATTACK, TRAPATTACK, GRENADEATTACK, HEAVYACIDBEAMATTACK, 
 	-- HEAVYLIGHTNINGBEAMATTACK, HEAVYPARTICLEBEAMATTACK, HEAVYROCKETLAUNCHERATTACK, HEAVYLAUNCHERATTACK

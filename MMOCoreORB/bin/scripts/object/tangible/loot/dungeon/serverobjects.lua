@@ -48,3 +48,4 @@ includeFile("tangible/loot/dungeon/death_watch_bunker/serverobjects.lua")
 includeFile("tangible/loot/dungeon/geonosian_mad_bunker/serverobjects.lua")
 
 -- Server Objects
+includeFile("tangible/loot/dungeon/ig88_buff_head.lua")

@@ -102,7 +102,7 @@ object_tangible_wearables_cyborg_forearm_r_s01 = object_tangible_wearables_cybor
 				"object/creature/player/gotal_male.iff",
 				"object/creature/player/gran_male.iff",
 				"object/creature/player/ishi_tib_male.iff",
-				"object/creature/player/nautuolan_male.iff",
+				"object/creature/player/nautolan_male.iff",
 				"object/creature/player/nightsister_female.iff",
 				"object/creature/player/nikto_male.iff",
 				"object/creature/player/quarren_male.iff",

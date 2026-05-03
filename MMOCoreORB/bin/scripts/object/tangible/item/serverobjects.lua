@@ -48,6 +48,7 @@ includeFile("tangible/item/plant/serverobjects.lua")
 includeFile("tangible/item/quest/serverobjects.lua")
 
 -- Server Objects
+includeFile("tangible/item/axkva_min_entrance.lua")
 includeFile("tangible/item/yavin4_exar_kun_entry.lua")
 includeFile("tangible/item/dath_disciple_alter.lua")
 includeFile("tangible/item/dath_disciple_skull.lua")

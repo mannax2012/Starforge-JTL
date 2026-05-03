@@ -540,6 +540,8 @@ bool SkillModManager::compareMods(VectorMap<String, int>& mods, CreatureObject* 
 	}
 
 	if (match == false) {
+		warning() << compare;
+
 #ifdef DEBUG_SKILL_MOD
 		// Send output to log
 		creature->info(true) << compare;

@@ -105,7 +105,10 @@ Core3 = {
 	"talus",
 	"tatooine",
 	"tutorial",
-	"yavin4"
+	"yavin4",
+	"axkvaminprison",
+	"exarkuntomb",
+	"ig88factoryarena"
 	-------- TEST ZONES -------
 	--"09",
 	--"10",

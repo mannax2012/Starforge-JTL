@@ -12,12 +12,13 @@
 
 class SkillBuffTemplate : public SharedTangibleObjectTemplate {
 	int duration;
+	int reuseTime;
 	VectorMap<String, float> modifiers;
 	String buffName;
 	unsigned int buffCRC;
 
 public:
-	SkillBuffTemplate() : duration(0), buffCRC(0) {
+	SkillBuffTemplate() : duration(0), reuseTime(0), buffCRC(0) {
 
 	}
 
@@ -29,6 +30,7 @@ public:
 		SharedTangibleObjectTemplate::readObject(templateData);
 
 		duration = templateData->getIntField("duration");
+		reuseTime = templateData->getIntField("reuseTime");
 
 		modifiers.removeAll();
 		LuaObject mods = templateData->getObjectField("modifiers");
@@ -53,6 +55,10 @@ public:
 
     inline int getDuration() const {
 		return duration;
+	}
+
+	inline int getReuseTime() const {
+		return reuseTime;
 	}
 
 	VectorMap<String, float>* getModifiers() {

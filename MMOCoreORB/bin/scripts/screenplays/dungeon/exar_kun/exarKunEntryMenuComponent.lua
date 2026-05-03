@@ -28,7 +28,7 @@ function exarKunEntryMenuComponent:handleObjectMenuSelect(pSceneObject, pPlayer,
 		return 0
 	end
 
-	createEvent(1000, "exarKun", "activate", pPlayer, "")
+	createEvent(1, "exarKun", "sendStartSui", pPlayer, "")
 	return 0
 end
 

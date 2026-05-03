@@ -122,13 +122,7 @@ function CorvetteTicketTakerLogic:finishValidateTicket(pPlayer)
 		return
 	end
 
-	local result = CorellianCorvette:activate(pPlayer, self:getFactionString(), activeQuestType)
-
-	if (result) then
-		dropObserver(OBJECTREMOVEDFROMZONE, "CorvetteTicketGiverLogic", "notifyTicketDestroyed", pInvItem)
-		SceneObject(pInvItem):destroyObjectFromWorld()
-		SceneObject(pInvItem):destroyObjectFromDatabase()
-	end
+	CorellianCorvette:sendStartSui(pPlayer, self:getFactionString(), activeQuestType, pInvItem)
 end
 
 function CorvetteTicketTakerLogic:getFactionString()

@@ -311,8 +311,17 @@ void LootManagerImplementation::setRandomLootValues(TransactionLog& trx, Tangibl
 	auto debugAttributes = ConfigManager::instance()->getLootDebugAttributes();
 
 	float modifier = getRandomModifier(itemTemplate, level, excMod);
+	int lootRollTier = 0;
+
+	if (excMod >= legendaryModifier) {
+		lootRollTier = 2;
+	} else if (excMod >= exceptionalModifier) {
+		lootRollTier = 1;
+	}
 
 	auto lootValues = LootValues(itemTemplate, level, modifier);
+	lootValues.addExperimentalAttribute("lootRollTier", "null", lootRollTier, lootRollTier, 0, true, LootValues::STATIC);
+	lootValues.setCurrentValue("lootRollTier", lootRollTier);
 	prototype->updateCraftingValues(&lootValues, true);
 
 #ifdef LOOTVALUES_DEBUG

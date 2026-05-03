@@ -59,7 +59,7 @@ object_tangible_food_spice_spice_scramjet = object_tangible_food_spice_shared_sp
 	quantityMin = 0,
 	quantityMax = 0,
 
-	modifiers = { "strength", 300 },
+	modifiers = { "health", 500 },
 
 	buffName = "scramjet",
 	buffCRC = 0,

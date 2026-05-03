@@ -119,6 +119,26 @@ public:
 				}
 
 				temp << "\t\\#ffffffMaintainance:\t" << String::valueOf( (int) floor( (float) structure->getSurplusMaintenance())) << " credits " << getTimeString( (uint32)secsRemainingMaint ) << endl;
+
+				if (structure->isInstallationObject()) {
+					InstallationObject* installation = cast<InstallationObject*>(structure.get());
+
+					if (installation != nullptr) {
+						temp << "\t\\#ffffffStatus:\t\t\t" << (installation->isActive() ? "Online" : "Offline") << endl;
+					}
+				}
+
+				int powerRate = structure->getBasePowerRate();
+
+				if (powerRate > 0) {
+					float secsRemainingPower = 0.f;
+
+					if (structure->getSurplusPower() > 0) {
+						secsRemainingPower = ((float)structure->getSurplusPower() / (float)powerRate) * 3600;
+					}
+
+					temp << "\t\\#ffffffPower:\t\t\t" << String::valueOf((int) floor((float) structure->getSurplusPower())) << " units " << getTimeString((uint32)secsRemainingPower) << endl;
+				}
 			}
 
 			temp << "\t\\#ffffffPlanet:\t\t\t";

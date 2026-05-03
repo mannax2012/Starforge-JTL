@@ -48,7 +48,7 @@ Saber1hFlurry2Command = {
 	accuracyBonus = 50,
 	speedMultiplier = 4.0,
 	healthCostMultiplier = 0,
-	actionCostMultiplier = 0,
+	actionCostMultiplier = 2.0,
 	mindCostMultiplier = 0,
 	areaRange = 16,
 	areaAction = true,
@@ -98,4 +98,3 @@ Saber1hFlurry2Command = {
 }
 
 AddCommand(Saber1hFlurry2Command)
-

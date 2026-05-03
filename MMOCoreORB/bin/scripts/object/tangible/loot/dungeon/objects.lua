@@ -40,3 +40,9 @@
 --this exception also makes it possible to release a modified version
 --which carries forward this exception.
 
+
+object_tangible_loot_dungeon_shared_ig88_buff_head = SharedTangibleObjectTemplate:new {
+	clientTemplateFileName = "object/tangible/loot/dungeon/shared_ig88_buff_head.iff"
+}
+
+ObjectTemplates:addClientTemplate(object_tangible_loot_dungeon_shared_ig88_buff_head, "object/tangible/loot/dungeon/shared_ig88_buff_head.iff")

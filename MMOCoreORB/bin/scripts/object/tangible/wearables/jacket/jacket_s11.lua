@@ -59,7 +59,7 @@ object_tangible_wearables_jacket_jacket_s11 = object_tangible_wearables_jacket_s
 				"object/creature/player/ishi_tib_male.iff",
 				"object/creature/player/moncal_male.iff",
 				"object/creature/player/moncal_female.iff",
-				"object/creature/player/nautuolan_male.iff",
+				"object/creature/player/nautolan_male.iff",
 				"object/creature/player/nightsister_female.iff",
 				"object/creature/player/nikto_male.iff",
 				"object/creature/player/quarren_male.iff",

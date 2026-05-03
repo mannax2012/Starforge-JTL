@@ -48,7 +48,7 @@ Saber2hPhantomCommand = {
 	accuracyBonus = 50,
 	speedMultiplier = 4.0,
 	healthCostMultiplier = 0,
-	actionCostMultiplier = 0,
+	actionCostMultiplier = 2.5,
 	mindCostMultiplier = 0,
 	coneAngle = 45,
 	coneAction = true,
@@ -99,4 +99,3 @@ Saber2hPhantomCommand = {
 }
 
 AddCommand(Saber2hPhantomCommand)
-

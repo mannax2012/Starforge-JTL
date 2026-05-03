@@ -48,7 +48,7 @@ Saber2hHit3Command = {
 	accuracyBonus = 50,
 	speedMultiplier = 2.5,
 	healthCostMultiplier = 0,
-	actionCostMultiplier = 0,
+	actionCostMultiplier = 2.1,
 	mindCostMultiplier = 0,
 	forceCostMultiplier = 2.0,
 	visMod = 25,
@@ -66,4 +66,3 @@ Saber2hHit3Command = {
 }
 
 AddCommand(Saber2hHit3Command)
-

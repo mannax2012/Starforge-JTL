@@ -179,6 +179,10 @@ function TutorialScreenPlay:spawnObjects(pPlayer)
 			writeData(playerID .. ":tutorial:roomTwoDrum", SceneObject(pDrum):getObjectID())
 			writeData(SceneObject(pDrum):getObjectID() .. ":playerOwnerID", playerID)
 			addStartingItemsInto(pPlayer, pDrum)
+
+			if (readData(playerID .. ":tutorial:currentStep:r2") >= 2 and not self:isRoomComplete(pPlayer, "r2")) then
+				self:grantRoomTwoDrumAccess(pPlayer, pDrum)
+			end
 		end
 	end
 
@@ -771,7 +775,7 @@ function TutorialScreenPlay:handleRoomTwo(pPlayer)
 
 		if (pDrum ~= nil) then
 			SceneObject(pDrum):showFlyText("newbie_tutorial/system_messages", "open_me", 255, 255, 0)
-			self:givePermission(pPlayer, "RoomTwoItemDrum")
+			self:grantRoomTwoDrumAccess(pPlayer, pDrum)
 			createObserver(OBJECTRADIALOPENED, "TutorialScreenPlay", "drumRadialEvent", pDrum)
 			createObserver(OPENCONTAINER, "TutorialScreenPlay", "drumOpenEvent", pDrum)
 			createObserver(CLOSECONTAINER, "TutorialScreenPlay", "drumCloseEvent", pDrum)
@@ -800,6 +804,25 @@ function TutorialScreenPlay:handleRoomTwo(pPlayer)
 	end
 
 	writeData(playerID .. ":tutorial:currentStep:r2", curStep + 1)
+end
+
+function TutorialScreenPlay:grantRoomTwoDrumAccess(pPlayer, pDrum)
+	if (pPlayer == nil or pDrum == nil) then
+		return
+	end
+
+	local playerID = SceneObject(pPlayer):getObjectID()
+
+	self:givePermission(pPlayer, "RoomTwoItemDrum")
+	SceneObject(pDrum):setContainerOwnerID(playerID)
+
+	for i = 0, SceneObject(pDrum):getContainerObjectsSize() - 1, 1 do
+		local pItem = SceneObject(pDrum):getContainerObject(i)
+
+		if (pItem ~= nil) then
+			SceneObject(pItem):setContainerAllowPermission("RoomTwoItemDrum", MOVECONTAINER)
+		end
+	end
 end
 
 -- Reminder to move to commerce room if player has not changed room after timer ends

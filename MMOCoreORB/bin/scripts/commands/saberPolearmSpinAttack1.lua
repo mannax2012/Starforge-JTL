@@ -48,7 +48,7 @@ SaberPolearmSpinAttack1Command = {
 	accuracyBonus = 50,
 	speedMultiplier = 1.25,
 	healthCostMultiplier = 0,
-	actionCostMultiplier = 0,
+	actionCostMultiplier = 2.0,
 	mindCostMultiplier = 0,
 	forceCostMultiplier = 1.25,
 	areaAction = true,
@@ -68,4 +68,3 @@ SaberPolearmSpinAttack1Command = {
 }
 
 AddCommand(SaberPolearmSpinAttack1Command)
-

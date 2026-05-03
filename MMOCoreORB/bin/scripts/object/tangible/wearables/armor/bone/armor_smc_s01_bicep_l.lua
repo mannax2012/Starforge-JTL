@@ -96,7 +96,7 @@ object_tangible_wearables_armor_bone_armor_smc_s01_bicep_l = object_tangible_wea
 				"object/creature/player/gotal_male.iff",
 				"object/creature/player/gran_male.iff",
 				"object/creature/player/ishi_tib_male.iff",
-				"object/creature/player/nautuolan_male.iff",
+				"object/creature/player/nautolan_male.iff",
 				"object/creature/player/nightsister_female.iff",
 				"object/creature/player/nikto_male.iff",
 				"object/creature/player/quarren_male.iff",

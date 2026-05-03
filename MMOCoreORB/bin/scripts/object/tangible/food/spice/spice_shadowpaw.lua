@@ -59,7 +59,7 @@ object_tangible_food_spice_spice_shadowpaw = object_tangible_food_spice_shared_s
 	quantityMin = 0,
 	quantityMax = 0,
 
-	modifiers = { "strength" , -100, "action" , 250, "quickness", 250 },
+	modifiers = { "stamina" , -100, "action" , 250, "health", 250 },
 
 	buffName = "shadowpaw",
 	buffCRC = 0,

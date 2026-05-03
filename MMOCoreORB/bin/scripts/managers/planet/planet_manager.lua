@@ -603,6 +603,20 @@ tutorial = {
 	jtlLaunchPoint = {"space_dathomir", -6900, 2750, -4000},
 }
 
+axkvaminprison = {
+	weatherEnabled = 0,
+	gcwEnabled = 0,
+
+	jtlLaunchPoint = {"space_dathomir", -6900, 2750, -4000},
+}
+
+exarkuntomb = {
+	weatherEnabled = 0,
+	gcwEnabled = 0,
+
+	jtlLaunchPoint = {"space_yavin4", -5600, -5200, -5200},
+}
+
 dungeon1 = {
 	weatherEnabled = 0,
 	gcwEnabled = 0,

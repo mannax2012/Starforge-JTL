@@ -23,16 +23,7 @@ NightSisterStrongholdScreenPlay = ScreenPlay:new {
 		}
 	},
 
-	lootContainerRespawn = 1800, -- 30 minutes
-
-	axkvaGuards = {
-		{ -88.44, -102.87, -118.02 },
-		{ -95.26, -102.39, -121.17 },
-		{ -93.95, -103.28, -127.98 },
-		{ -80.15, -101.58, -119.85 },
-		{ -82.63, -102.43, -124.82 },
-		{ -95.73, -102.72, -122.55 }
-	}
+	lootContainerRespawn = 1800 -- 30 minutes
 }
 
 registerScreenPlay("NightSisterStrongholdScreenPlay", true)
@@ -125,7 +116,7 @@ function NightSisterStrongholdScreenPlay:spawnMobiles()
 
 	--in the cave, make difficulty 'scale' as player progresses into the cave, listed here from bottom to top:
 	spawnMobile("dathomir", "nightsister_sentinel",2400,-89.6414,-100.547,-149.769,54,4115626)
-	spawnMobile("dathomir", "grovo",2400,-82.0,-99.7,-93.1,-174,4115629)
+	spawnMobile("dathomir", "nightsister_enraged_bull_rancor",2400,-82.0,-99.7,-93.1,-174,4115629)
 	spawnMobile("dathomir", "nightsister_spell_weaver",2400,-82.2,-100.0,-103.6,-161,4115629)
 	spawnMobile("dathomir", "nightsister_sentinel",720,-28.3439,-80.1922,-151.496,7,4115628)
 	spawnMobile("dathomir", "nightsister_sentinel",720,-22.2057,-80.5683,-151.813,2,4115628)
@@ -187,8 +178,6 @@ function NightSisterStrongholdScreenPlay:spawnMobiles()
 	spawnMobile("dathomir", "nightsister_initiate",600,-9.30522,-31.6686,-33.0453,7,4115620)
 	spawnMobile("dathomir", "nightsister_initiate",600,5.27219,-24.4314,-26.0931,2,4115620)
 	spawnMobile("dathomir", "nightsister_initiate",600,2.20982,-11.8595,-2.93477,7,4115619)
-
-	self:respawnAxkvaMin()
 
 	local pTrap = spawnSceneObject("dathomir", "object/static/terrain/corellia/rock_crystl_shrpbush_med.iff", -11.5, -64.6, -202.2, 4115624, 0.707107, 0, 0.707107, 0)
 
@@ -266,44 +255,4 @@ function NightSisterStrongholdScreenPlay:notifyEnteredTrapArea(pActiveArea, pPla
 	CreatureObject(pPlayer):inflictDamage(pPlayer, 0, trapDmg, 1)
 
 	return 0
-end
-
-function NightSisterStrongholdScreenPlay:respawnAxkvaMin()
-	local pAxkvaMin = spawnMobile("dathomir", "axkva_min", 0, -90.5, -101, -102.2, 172, 4115629)
-
-	if (pAxkvaMin ~= nil) then
-		createObserver(STARTCOMBAT, "NightSisterStrongholdScreenPlay", "spawnGuards", pAxkvaMin)
-		createObserver(OBJECTDESTRUCTION, "NightSisterStrongholdScreenPlay", "axkvaKilled", pAxkvaMin)
-	end
-end
-
-function NightSisterStrongholdScreenPlay:axkvaKilled(pAxkvaMin)
-	createEvent(86400 * 1000, "NightSisterStrongholdScreenPlay", "respawnAxkvaMin", nil, "")
-
-	return 1
-end
-
-function NightSisterStrongholdScreenPlay:spawnGuards(pAxkvaMin)
-	if (pAxkvaMin == nil or CreatureObject(pAxkvaMin):isDead()) then
-		return 1
-	end
-
-	spatialChat(pAxkvaMin, "@dungeon/nightsister_rancor_cave:protect")
-
-	for i = 1, #self.axkvaGuards, 1 do
-		local guardID = readData("axkvaGuard:" .. i)
-
-		local pGuard = getSceneObject(guardID)
-
-		if (pGuard == nil or CreatureObject(pGuard):isDead()) then
-			local guardData = self.axkvaGuards[i]
-			pGuard = spawnMobile("dathomir", "nightsister_protector", 0, guardData[1], guardData[2], guardData[3], 0, 4115629)
-
-			if (pGuard ~= nil) then
-				writeData("axkvaGuard:" .. i, SceneObject(pGuard):getObjectID())
-			end
-		end
-	end
-
-	return 1
 end
