@@ -118,6 +118,46 @@
 
 #include "server/zone/managers/statistics/StatisticsManager.h"
 
+namespace {
+	struct CloneZoneFallback {
+		const char* zoneName;
+		const char* cloneZoneName;
+		float positionX;
+		float positionY;
+	};
+
+	bool getCloneZoneFallback(ZoneServer* server, Zone* currentZone, Zone*& cloneZone, Vector3& clonePosition) {
+		if (server == nullptr || currentZone == nullptr) {
+			return false;
+		}
+
+		static const CloneZoneFallback fallbacks[] = {
+			{"ig88factoryarena", "lok", 426.5f, 5151.5f},
+			{"axkvaminprison", "dathomir", -4029.f, -19.f},
+			{"exarkuntomb", "yavin4", 5093.f, 5546.1f}
+		};
+
+		const String& zoneName = currentZone->getZoneName();
+
+		for (const auto& fallback : fallbacks) {
+			if (zoneName != fallback.zoneName) {
+				continue;
+			}
+
+			cloneZone = server->getZone(fallback.cloneZoneName);
+
+			if (cloneZone == nullptr) {
+				return false;
+			}
+
+			clonePosition = Vector3(fallback.positionX, fallback.positionY, cloneZone->getHeight(fallback.positionX, fallback.positionY));
+			return true;
+		}
+
+		return false;
+	}
+}
+
 // #define DEBUG_SPEED_HACK
 
 PlayerManagerImplementation::PlayerManagerImplementation(ZoneServer* zoneServer, ZoneProcessServer* impl, bool trackOnlineUsers) : Logger("PlayerManager") {
@@ -1567,6 +1607,19 @@ void PlayerManagerImplementation::sendActivateCloneRequest(CreatureObject* playe
 		playerPos = ghost->getSpaceLaunchLocation();
 	}
 
+	SortedVector<ManagedReference<SceneObject*> > locations = zone->getPlanetaryObjectList("cloningfacility");
+
+	if (locations.size() == 0) {
+		Zone* fallbackZone = nullptr;
+		Vector3 fallbackPosition;
+
+		if (getCloneZoneFallback(server, zone, fallbackZone, fallbackPosition)) {
+			zone = fallbackZone;
+			playerPos = fallbackPosition;
+			locations = zone->getPlanetaryObjectList("cloningfacility");
+		}
+	}
+
 	ghost->removeSuiBoxType(SuiWindowType::CLONE_REQUEST);
 
 	ManagedReference<SuiListBox*> cloneMenu = new SuiListBox(player, SuiWindowType::CLONE_REQUEST);
@@ -1597,8 +1650,6 @@ void PlayerManagerImplementation::sendActivateCloneRequest(CreatureObject* playe
 
 	ManagedReference<SceneObject*> closestCloning = nullptr;
 	String closestName = "None";
-
-	SortedVector<ManagedReference<SceneObject*> > locations = zone->getPlanetaryObjectList("cloningfacility");
 
 	int checkDistanceSq = 16000 * 16000;
 
@@ -1754,23 +1805,11 @@ void PlayerManagerImplementation::sendPlayerToCloner(CreatureObject* player, uin
 		}
 	}
 
-	Zone* zone = player->getZone();
+	Zone* zone = cloner->getZone();
 
 	if (zone == nullptr) {
-		error() << player->getDisplayedName() << " ID: " << player->getObjectID() << " - Failed to activate clone due to null zone. Chosen Cloning Facility ID: " << cloner->getObjectID();
+		error() << player->getDisplayedName() << " ID: " << player->getObjectID() << " - Failed to activate clone due to null cloner zone. Chosen Cloning Facility ID: " << cloner->getObjectID();
 		return;
-	}
-
-	// Handle players death in space
-	if (zone->isSpaceZone()) {
-		auto launchZoneName = ghost->getSpaceLaunchZone();
-
-		zone = server->getZone(launchZoneName);
-
-		if (zone == nullptr || zone->isSpaceZone()) {
-			error() << player->getDisplayedName() << " ID: " << player->getObjectID() << " - Failed to activate clone on Ground Zone. Chosen Cloning Facility ID: " << cloner->getObjectID();
-			return;
-		}
 	}
 
 	ghost->setCloning(true);

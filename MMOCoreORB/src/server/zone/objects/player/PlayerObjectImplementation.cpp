@@ -2707,7 +2707,7 @@ void PlayerObjectImplementation::doForceRegen() {
 	if (creature == nullptr || creature->isIncapacitated() || creature->isDead())
 		return;
 
-	const static uint32 tick = creature->getSkillMod("jedi_force_power_regen");
+	const static uint32 tick = 15;
 
 	uint32 modifier = 1;
 
@@ -2715,7 +2715,7 @@ void PlayerObjectImplementation::doForceRegen() {
 		Reference<ForceMeditateTask*> medTask = creature->getPendingTask("forcemeditate").castTo<ForceMeditateTask*>();
 
 		if (medTask != nullptr)
-			modifier = 2;
+			modifier = 3;
 	}
 
 	uint32 forceTick = tick * modifier;
