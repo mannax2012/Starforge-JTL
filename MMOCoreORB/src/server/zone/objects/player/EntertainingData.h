@@ -14,11 +14,15 @@ class EntertainingData : public Serializable {
 	int duration;
 	int strength;
 	int timeStarted;
+	int lastMessageTime;
+	int lastMessageBucket;
 public:
 	EntertainingData() {
 		duration = 0;
 		strength = 0;
 		timeStarted = time(0);
+		lastMessageTime = 0;
+		lastMessageBucket = 0;
 		addSerializableVariables();
 	}
 
@@ -26,6 +30,8 @@ public:
 		duration = d.duration;
 		strength = d.strength;
 		timeStarted = d.timeStarted;
+		lastMessageTime = d.lastMessageTime;
+		lastMessageBucket = d.lastMessageBucket;
 
 		addSerializableVariables();
 	}
@@ -37,6 +43,8 @@ public:
 		duration = d.duration;
 		strength = d.strength;
 		timeStarted = d.timeStarted;
+		lastMessageTime = d.lastMessageTime;
+		lastMessageBucket = d.lastMessageBucket;
 
 		return *this;
 	}
@@ -44,6 +52,8 @@ public:
 	inline void addSerializableVariables() {
 		addSerializableVariable("duration", &duration);
 		addSerializableVariable("strength", &strength);
+		addSerializableVariable("lastMessageTime", &lastMessageTime);
+		addSerializableVariable("lastMessageBucket", &lastMessageBucket);
 	}
 
 	inline int getDuration() {
@@ -70,6 +80,22 @@ public:
 
 	inline void incrementDuration(int incr) {
 		duration += incr;
+	}
+
+	inline int getLastMessageTime() {
+		return lastMessageTime;
+	}
+
+	inline void setLastMessageTime(int val) {
+		lastMessageTime = val;
+	}
+
+	inline int getLastMessageBucket() {
+		return lastMessageBucket;
+	}
+
+	inline void setLastMessageBucket(int val) {
+		lastMessageBucket = val;
 	}
 };
 

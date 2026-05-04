@@ -30,6 +30,92 @@
 #include "server/zone/Zone.h"
 #include "server/zone/packets/scene/PlayClientEffectLocMessage.h"
 
+namespace {
+constexpr int MAX_ENTERTAINER_BUFF_DURATION_MINUTES = 120;
+constexpr int ENTERTAINER_BUFF_SECONDS_PER_DURATION_MINUTE = 105;
+constexpr int ENTERTAINER_BUFF_MESSAGE_INTERVAL_MINUTES = 15;
+constexpr int MAX_ENTERTAINER_BUFF_DURATION_SECONDS =
+	MAX_ENTERTAINER_BUFF_DURATION_MINUTES * ENTERTAINER_BUFF_SECONDS_PER_DURATION_MINUTE;
+constexpr int ENTERTAINER_BUFF_MAX_REMINDER_SECONDS =
+	ENTERTAINER_BUFF_MESSAGE_INTERVAL_MINUTES * 60;
+
+int getActualEntertainerBuffDurationSeconds(int currentDuration) {
+	int totalSeconds = currentDuration * ENTERTAINER_BUFF_SECONDS_PER_DURATION_MINUTE;
+
+	if (totalSeconds > MAX_ENTERTAINER_BUFF_DURATION_SECONDS)
+		totalSeconds = MAX_ENTERTAINER_BUFF_DURATION_SECONDS;
+
+	return totalSeconds;
+}
+
+int getActualEntertainerBuffDurationMinutes(int currentDuration) {
+	return getActualEntertainerBuffDurationSeconds(currentDuration) / 60;
+}
+
+int getEntertainerBuffMessageBucket(int currentDuration) {
+	return getActualEntertainerBuffDurationMinutes(currentDuration) / ENTERTAINER_BUFF_MESSAGE_INTERVAL_MINUTES;
+}
+
+bool shouldSendEntertainerBuffTimerMessage(int lastMessageBucket, int currentDuration, int lastMessageTime, int currentTime) {
+	int currentMinutes = getActualEntertainerBuffDurationMinutes(currentDuration);
+	int currentBucket = getEntertainerBuffMessageBucket(currentDuration);
+
+	if (currentMinutes <= 0)
+		return false;
+
+	if (currentBucket > lastMessageBucket)
+		return true;
+
+	return getActualEntertainerBuffDurationSeconds(currentDuration) >= MAX_ENTERTAINER_BUFF_DURATION_SECONDS
+		&& lastMessageTime > 0
+		&& (currentTime - lastMessageTime) >= ENTERTAINER_BUFF_MAX_REMINDER_SECONDS;
+}
+
+String getEntertainerBuffTimerText(int currentDuration) {
+	int totalSeconds = getActualEntertainerBuffDurationSeconds(currentDuration);
+	int totalMinutes = totalSeconds / 60;
+	int hours = totalMinutes / 60;
+	int minutes = totalMinutes % 60;
+
+	StringBuffer message;
+	message << hours << " " << (hours == 1 ? "hour" : "hours") << " "
+		<< minutes << " " << (minutes == 1 ? "minute" : "minutes") << " long.";
+
+	if (totalSeconds >= MAX_ENTERTAINER_BUFF_DURATION_SECONDS)
+		message << " (Max Duration)";
+
+	return message.toString();
+}
+
+void sendEntertainerBuffTimerMessage(CreatureObject* target, int currentDuration, bool eligibleForBuff) {
+	if (target == nullptr)
+		return;
+
+	StringBuffer message;
+	message << "Your entertainer buff timer is now " << getEntertainerBuffTimerText(currentDuration);
+
+	if (!eligibleForBuff)
+		message << " The buff cannot be applied until you have continued for at least 1 minute.";
+
+	target->sendSystemMessage(message.toString());
+}
+
+float getEntertainerBuffDurationMultiplier(CreatureObject* entertainer, bool dancing, bool playingMusic) {
+	if (entertainer == nullptr)
+		return 1.0f;
+
+	float durationMultiplier = 1.0f + ((float) entertainer->getSkillMod("accelerate_entertainer_buff") / 100.f);
+
+	if (dancing) {
+		durationMultiplier += ((float) entertainer->getSkillMod("healing_dance_mind") / 100.f);
+	} else if (playingMusic) {
+		durationMultiplier += ((float) entertainer->getSkillMod("healing_music_mind") / 100.f);
+	}
+
+	return durationMultiplier;
+}
+}
+
 void EntertainingSessionImplementation::doEntertainerPatronEffects() {
 	ManagedReference<CreatureObject*> creo = entertainer.get();
 
@@ -83,6 +169,7 @@ void EntertainingSessionImplementation::doEntertainerPatronEffects() {
 	int shockHeal = ceil(performance->getHealShockWound() * ((playerShockHealingSkill + buildingShockHealingSkill) / 100.0f));
 
 	healWounds(creo, woundHeal * (flourishCount + 1), shockHeal * (flourishCount + 1));
+	increaseEntertainerBuff(creo);
 
 	if (patronDataMap.size() <= 0)
 		return;
@@ -295,6 +382,8 @@ void EntertainingSessionImplementation::stopPlaying() {
 
 	if (!isPlayingMusic())
 		return;
+
+	activateEntertainerBuff(entertainer, PerformanceType::MUSIC);
 
 	performanceIndex = 0;
 	entertainer->setListenToID(0);
@@ -545,6 +634,12 @@ void EntertainingSessionImplementation::startEntertaining() {
 
 	Locker locker(entertainer);
 
+	selfBuffDuration = 0;
+	selfBuffStrength = 0;
+	selfBuffStartTime = time(0);
+	selfBuffLastMessageTime = 0;
+	selfBuffLastMessageBucket = 0;
+
 	startTickTask();
 
 	if (observer == nullptr) {
@@ -567,6 +662,7 @@ void EntertainingSessionImplementation::stopDancing() {
 		return;
 
 	entertainer->sendSystemMessage("@performance:dance_stop_self"); // You stop dancing.
+	activateEntertainerBuff(entertainer, PerformanceType::DANCE);
 
 	performanceIndex = 0;
 
@@ -619,6 +715,11 @@ bool EntertainingSessionImplementation::canGiveEntertainBuff() {
 }
 
 void EntertainingSessionImplementation::addEntertainerFlourishBuff() {
+	ManagedReference<CreatureObject*> entertainer = this->entertainer.get();
+
+	if (entertainer != nullptr)
+		increaseEntertainerBuff(entertainer);
+
 	if (patronDataMap.size() <= 0)
 		return;
 
@@ -703,8 +804,8 @@ void EntertainingSessionImplementation::addEntertainerBuffDuration(CreatureObjec
 
 	buffDuration += duration;
 
-	if (buffDuration > (120.0f + (10.0f / 60.0f)) ) // 2 hrs 10 seconds
-		buffDuration = (120.0f + (10.0f / 60.0f)); // 2hrs 10 seconds
+	if (buffDuration > MAX_ENTERTAINER_BUFF_DURATION_MINUTES)
+		buffDuration = MAX_ENTERTAINER_BUFF_DURATION_MINUTES;
 
 	setEntertainerBuffDuration(creature, performanceType, buffDuration);
 }
@@ -753,6 +854,11 @@ void EntertainingSessionImplementation::addEntertainerBuffStrength(CreatureObjec
 }
 
 void EntertainingSessionImplementation::setEntertainerBuffDuration(CreatureObject* creature, int performanceType, float duration) {
+	if (creature == entertainer.get()) {
+		selfBuffDuration = duration;
+		return;
+	}
+
 	if (!patronDataMap.contains(creature))
 		return;
 
@@ -765,6 +871,9 @@ void EntertainingSessionImplementation::setEntertainerBuffDuration(CreatureObjec
 }
 
 int EntertainingSessionImplementation::getEntertainerBuffDuration(CreatureObject* creature, int performanceType) {
+	if (creature == entertainer.get())
+		return selfBuffDuration;
+
 	if (!patronDataMap.contains(creature))
 		return 0;
 
@@ -777,6 +886,9 @@ int EntertainingSessionImplementation::getEntertainerBuffDuration(CreatureObject
 }
 
 int EntertainingSessionImplementation::getEntertainerBuffStrength(CreatureObject* creature, int performanceType) {
+	if (creature == entertainer.get())
+		return selfBuffStrength;
+
 	if (!patronDataMap.contains(creature))
 		return 0;
 
@@ -789,6 +901,9 @@ int EntertainingSessionImplementation::getEntertainerBuffStrength(CreatureObject
 }
 
 int EntertainingSessionImplementation::getEntertainerBuffStartTime(CreatureObject* creature, int performanceType) {
+	if (creature == entertainer.get())
+		return selfBuffStartTime;
+
 	if (!patronDataMap.contains(creature))
 		return 0;
 
@@ -801,6 +916,11 @@ int EntertainingSessionImplementation::getEntertainerBuffStartTime(CreatureObjec
 }
 
 void EntertainingSessionImplementation::setEntertainerBuffStrength(CreatureObject* creature, int performanceType, float strength) {
+	if (creature == entertainer.get()) {
+		selfBuffStrength = strength;
+		return;
+	}
+
 	if (!patronDataMap.contains(creature))
 		return;
 
@@ -810,6 +930,55 @@ void EntertainingSessionImplementation::setEntertainerBuffStrength(CreatureObjec
 		return;
 
 	data->setStrength(strength);
+}
+
+int EntertainingSessionImplementation::getEntertainerBuffLastMessageTime(CreatureObject* creature) {
+	if (creature == entertainer.get())
+		return selfBuffLastMessageTime;
+
+	if (!patronDataMap.contains(creature))
+		return 0;
+
+	EntertainingData* data = &patronDataMap.get(creature);
+
+	if (data == nullptr)
+		return 0;
+
+	return data->getLastMessageTime();
+}
+
+int EntertainingSessionImplementation::getEntertainerBuffLastMessageBucket(CreatureObject* creature) {
+	if (creature == entertainer.get())
+		return selfBuffLastMessageBucket;
+
+	if (!patronDataMap.contains(creature))
+		return 0;
+
+	EntertainingData* data = &patronDataMap.get(creature);
+
+	if (data == nullptr)
+		return 0;
+
+	return data->getLastMessageBucket();
+}
+
+void EntertainingSessionImplementation::setEntertainerBuffLastMessageState(CreatureObject* creature, int messageTime, int messageBucket) {
+	if (creature == entertainer.get()) {
+		selfBuffLastMessageTime = messageTime;
+		selfBuffLastMessageBucket = messageBucket;
+		return;
+	}
+
+	if (!patronDataMap.contains(creature))
+		return;
+
+	EntertainingData* data = &patronDataMap.get(creature);
+
+	if (data == nullptr)
+		return;
+
+	data->setLastMessageTime(messageTime);
+	data->setLastMessageBucket(messageBucket);
 }
 
 void EntertainingSessionImplementation::sendEntertainmentUpdate(CreatureObject* creature, uint64 entid, const String& mood) {
@@ -855,16 +1024,11 @@ void EntertainingSessionImplementation::sendEntertainingUpdate(CreatureObject* c
 
 void EntertainingSessionImplementation::activateEntertainerBuff(CreatureObject* creature, int performanceType) {
 	ManagedReference<CreatureObject*> entertainer = this->entertainer.get();
+	const bool selfBuff = creature == entertainer;
 
 	try {
 		//Check if on Deny Service list
-		if (isInDenyServiceList(creature))
-			return;
-
-		ManagedReference<PlayerObject*> entPlayer = entertainer->getPlayerObject();
-		//Check if the patron is a valid buff target
-		//Whether it be passive(in the same group) or active (/setPerform target)
-		if ((!entertainer->isGrouped() || entertainer->getGroupID() != creature->getGroupID()) && entPlayer->getPerformanceBuffTarget() != creature->getObjectID())
+		if (!selfBuff && isInDenyServiceList(creature))
 			return;
 
 		if (creature->isIncapacitated() || creature->isDead()) {
@@ -884,7 +1048,8 @@ void EntertainingSessionImplementation::activateEntertainerBuff(CreatureObject* 
 		//1 minute minimum listen/watch time
 		int timeElapsed = time(0) - getEntertainerBuffStartTime(creature, performanceType);
 		if (timeElapsed < 60) {
-			creature->sendSystemMessage("You must listen or watch a performer for at least 1 minute in order to gain the entertainer buffs.");
+			if (!selfBuff)
+				creature->sendSystemMessage("You must listen or watch a performer for at least 1 minute in order to gain the entertainer buffs.");
 			return;
 		}
 
@@ -916,39 +1081,24 @@ void EntertainingSessionImplementation::activateEntertainerBuff(CreatureObject* 
 		if (oldBuff != nullptr && (oldBuff->getBuffDuration() > buffDuration * 105) && (oldBuff->getBuffStrength() <= buffStrength))
 			return;
 
-		ManagedReference<PerformanceBuff*> mindBuff = new PerformanceBuff(creature, mindBuffCRC, buffStrength, buffDuration * 105, PerformanceBuffType::DANCE_MIND);							
-		//ManagedReference<PerformanceBuff*> focusBuff = new PerformanceBuff(creature, focusBuffCRC, buffStrength, buffDuration * 105, PerformanceBuffType::MUSIC_FOCUS);
+		ManagedReference<PerformanceBuff*> mindBuff = new PerformanceBuff(creature, mindBuffCRC, buffStrength, buffDuration * 105, PerformanceBuffType::DANCE_MIND);
 		ManagedReference<PerformanceBuff*> willBuff = new PerformanceBuff(creature, willBuffCRC, buffStrength, buffDuration * 105, PerformanceBuffType::MUSIC_WILLPOWER);
 		ManagedReference<PerformanceBuff*> starforgeFocus = new PerformanceBuff(creature, sfFocusBuffCRC, buffStrength, buffDuration * 105, PerformanceBuffType::STARFORGE_FOCUS);
 
+		{
+			Locker locker(mindBuff);
+			creature->addBuff(mindBuff);
+		}
 
-		ManagedReference<PerformanceBuff*> EntmindBuff = new PerformanceBuff(entertainer, mindBuffCRC, buffStrength, buffDuration * 105, PerformanceBuffType::DANCE_MIND);							
-		//ManagedReference<PerformanceBuff*> EntfocusBuff = new PerformanceBuff(entertainer, focusBuffCRC, buffStrength, buffDuration * 105, PerformanceBuffType::MUSIC_FOCUS);
-		ManagedReference<PerformanceBuff*> EntwillBuff = new PerformanceBuff(entertainer, willBuffCRC, buffStrength, buffDuration * 105, PerformanceBuffType::MUSIC_WILLPOWER);
-		ManagedReference<PerformanceBuff*> EntstarforgeFocus = new PerformanceBuff(entertainer, sfFocusBuffCRC, buffStrength, buffDuration * 105, PerformanceBuffType::STARFORGE_FOCUS);
+		{
+			Locker locker(willBuff);
+			creature->addBuff(willBuff);
+		}
 
-		Locker locker(mindBuff);
-		creature->addBuff(mindBuff);
-		locker.release();
-
-		Locker locker2(willBuff);
-		creature->addBuff(willBuff);
-		locker.release();
-
-		Locker locker3(starforgeFocus);
-		creature->addBuff(starforgeFocus);
-		locker.release();
-
-		Locker locker4(EntmindBuff);
-		entertainer->addBuff(EntmindBuff);
-		locker.release();
-
-		Locker locker5(EntwillBuff);
-		entertainer->addBuff(EntwillBuff);
-		locker.release();
-
-		Locker locker6(EntstarforgeFocus);
-		entertainer->addBuff(EntstarforgeFocus);
+		{
+			Locker locker(starforgeFocus);
+			creature->addBuff(starforgeFocus);
+		}
 	
 		}else{
 		switch (performanceType) {
@@ -964,31 +1114,22 @@ void EntertainingSessionImplementation::activateEntertainerBuff(CreatureObject* 
 
 			ManagedReference<PerformanceBuff*> focusBuff = new PerformanceBuff(creature, focusBuffCRC, buffStrength, buffDuration * 105, PerformanceBuffType::MUSIC_FOCUS);
 			ManagedReference<PerformanceBuff*> willBuff = new PerformanceBuff(creature, willBuffCRC, buffStrength, buffDuration * 105, PerformanceBuffType::MUSIC_WILLPOWER);
-						
-			ManagedReference<PerformanceBuff*> EntfocusBuff = new PerformanceBuff(entertainer, focusBuffCRC, buffStrength, buffDuration * 105, PerformanceBuffType::MUSIC_FOCUS);
-			ManagedReference<PerformanceBuff*> EntwillBuff = new PerformanceBuff(entertainer, willBuffCRC, buffStrength, buffDuration * 105, PerformanceBuffType::MUSIC_WILLPOWER);
 
-			Locker locker(focusBuff);
-			creature->addBuff(focusBuff);
-			locker.release();
+			{
+				Locker locker(focusBuff);
+				creature->addBuff(focusBuff);
+			}
 
-			Locker locker2(willBuff);
-			creature->addBuff(willBuff);
-			locker.release();
-
-			Locker locker3(EntfocusBuff);
-			entertainer->addBuff(EntfocusBuff);
-			locker.release();
-
-			Locker locker4(EntwillBuff);
-			entertainer->addBuff(EntwillBuff);
+			{
+				Locker locker(willBuff);
+				creature->addBuff(willBuff);
+			}
 			break;
 		}
 		case PerformanceType::DANCE:
 		{
 			uint32 mindBuffCRC = STRING_HASHCODE("medical_enhance_action");
 			uint32 willBuffCRC = STRING_HASHCODE("medical_enhance_stamina");
-			uint32 sfFocusBuffCRC = BuffCRC::STARFORGE_FOCUS;
 
 			oldBuff = cast<PerformanceBuff*>(creature->getBuff(willBuffCRC));
 
@@ -997,23 +1138,16 @@ void EntertainingSessionImplementation::activateEntertainerBuff(CreatureObject* 
 
 			ManagedReference<PerformanceBuff*> mindBuff = new PerformanceBuff(creature, mindBuffCRC, buffStrength, buffDuration * 105, PerformanceBuffType::DANCE_MIND);
 			ManagedReference<PerformanceBuff*> willBuff = new PerformanceBuff(creature, willBuffCRC, buffStrength, buffDuration * 105, PerformanceBuffType::MUSIC_WILLPOWER);
-			ManagedReference<PerformanceBuff*> EntmindBuff = new PerformanceBuff(entertainer, mindBuffCRC, buffStrength, buffDuration * 105, PerformanceBuffType::DANCE_MIND);	
-			ManagedReference<PerformanceBuff*> EntwillBuff = new PerformanceBuff(entertainer, willBuffCRC, buffStrength, buffDuration * 105, PerformanceBuffType::MUSIC_WILLPOWER);
 
-			Locker locker(mindBuff);
-			creature->addBuff(mindBuff);
-			locker.release();
-			
-			Locker locker2(willBuff);
-			creature->addBuff(willBuff);
-			locker.release();
+			{
+				Locker locker(mindBuff);
+				creature->addBuff(mindBuff);
+			}
 
-			Locker locker3(EntmindBuff);
-			entertainer->addBuff(EntmindBuff);
-			locker.release();
-
-			Locker locker4(EntwillBuff);
-			entertainer->addBuff(EntwillBuff);
+			{
+				Locker locker(willBuff);
+				creature->addBuff(willBuff);
+			}
 			break;
 		}
 		}
@@ -1058,6 +1192,7 @@ void EntertainingSessionImplementation::updateEntertainerMissionStatus(bool ente
 
 void EntertainingSessionImplementation::increaseEntertainerBuff(CreatureObject* patron) {
 	ManagedReference<CreatureObject*> entertainer = this->entertainer.get();
+	const bool selfBuff = patron == entertainer;
 
 	PerformanceManager* performanceManager = SkillManager::instance()->getPerformanceManager();
 	Performance* performance = performanceManager->getPerformanceFromIndex(performanceIndex);
@@ -1078,19 +1213,62 @@ void EntertainingSessionImplementation::increaseEntertainerBuff(CreatureObject* 
 	if (!canGiveEntertainBuff())
 		return;
 
-	ManagedReference<PlayerObject*> entPlayer = entertainer->getPlayerObject();
-	//Check if the patron is a valid buff target
-	//Whether it be passive(in the same group) or active (/setPerform target)
-	if ((!entertainer->isGrouped() || entertainer->getGroupID() != patron->getGroupID()) && entPlayer->getPerformanceBuffTarget() != patron->getObjectID())
-		return;
+	if (!selfBuff) {
+		if (isInDenyServiceList(patron))
+			return;
+	}
 
-	if (isInDenyServiceList(patron))
-		return;
-
-	float buffAcceleration = 1 + ((float)entertainer->getSkillMod("accelerate_entertainer_buff") / 100.f);
+	float buffAcceleration = getEntertainerBuffDurationMultiplier(entertainer, isDancing(), isPlayingMusic());
+	int timeElapsed = time(0) - getEntertainerBuffStartTime(patron, performance->getType());
+	bool eligibleForBuff = timeElapsed >= 60;
+	int currentTime = time(0);
+	int lastMessageTime = getEntertainerBuffLastMessageTime(patron);
+	int lastMessageBucket = getEntertainerBuffLastMessageBucket(patron);
 
 	addEntertainerBuffDuration(patron, performance->getType(), 2.0f * buffAcceleration);
-	addEntertainerBuffStrength(patron, performance->getType(), performance->getHealShockWound());
+	int currentDuration = getEntertainerBuffDuration(patron, performance->getType());
+
+	if (!selfBuff) {
+		addEntertainerBuffStrength(patron, performance->getType(), performance->getHealShockWound());
+		if (shouldSendEntertainerBuffTimerMessage(lastMessageBucket, currentDuration, lastMessageTime, currentTime)) {
+			sendEntertainerBuffTimerMessage(patron, currentDuration, eligibleForBuff);
+			setEntertainerBuffLastMessageState(patron, currentTime, getEntertainerBuffMessageBucket(currentDuration));
+		}
+		return;
+	}
+
+	int buffStrength = getEntertainerBuffStrength(patron, performance->getType());
+	float newBuffStrength = buffStrength + performance->getHealShockWound();
+	float maxBuffStrength = 0.0f;
+
+	if (isDancing()) {
+		maxBuffStrength = (float) entertainer->getSkillMod("healing_dance_mind");
+	} else if (isPlayingMusic()) {
+		maxBuffStrength = (float) entertainer->getSkillMod("healing_music_mind");
+	}
+
+	if (maxBuffStrength > 125.0f)
+		maxBuffStrength = 125.0f;
+
+	float factionPerkStrength = entertainer->getSkillMod("private_faction_buff_mind");
+	ManagedReference<BuildingObject*> building = cast<BuildingObject*>(entertainer->getRootParent());
+
+	if (building != nullptr && factionPerkStrength > 0 && building->isPlayerRegisteredWithin(entertainer->getObjectID())) {
+		unsigned int buildingFaction = building->getFaction();
+		unsigned int entFaction = entertainer->getFaction();
+
+		if (entFaction != 0 && entFaction == buildingFaction && entertainer->getFactionStatus() == FactionStatus::OVERT)
+			maxBuffStrength += factionPerkStrength;
+	}
+
+	if (newBuffStrength > maxBuffStrength)
+		newBuffStrength = maxBuffStrength;
+
+	setEntertainerBuffStrength(patron, performance->getType(), newBuffStrength);
+	if (shouldSendEntertainerBuffTimerMessage(lastMessageBucket, currentDuration, lastMessageTime, currentTime)) {
+		sendEntertainerBuffTimerMessage(patron, currentDuration, eligibleForBuff);
+		setEntertainerBuffLastMessageState(patron, currentTime, getEntertainerBuffMessageBucket(currentDuration));
+	}
 
 }
 
