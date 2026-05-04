@@ -25,6 +25,12 @@ class EntertainingSession extends Facade {
 	@dereferenced
 	protected EntertainingDataMap patronDataMap;
 
+	protected int selfBuffDuration;
+	protected int selfBuffStrength;
+	protected int selfBuffStartTime;
+	protected int selfBuffLastMessageTime;
+	protected int selfBuffLastMessageBucket;
+
 	@dereferenced
 	protected SortedVector<CreatureObject> denyServiceList;
 
@@ -52,6 +58,11 @@ class EntertainingSession extends Facade {
 		flourishCount = 0;
 		applauseCount = 0;
 		performanceIndex = 0;
+		selfBuffDuration = 0;
+		selfBuffStrength = 0;
+		selfBuffStartTime = 0;
+		selfBuffLastMessageTime = 0;
+		selfBuffLastMessageBucket = 0;
 
 		observer = null;
 
@@ -137,6 +148,11 @@ class EntertainingSession extends Facade {
 	public native int getEntertainerBuffStrength(CreatureObject creature, int performanceType);
 	public native int getEntertainerBuffDuration(CreatureObject creature, int performanceType);
 	public native int getEntertainerBuffStartTime(CreatureObject creature, int performanceType);
+	public native int getEntertainerBuffLastMessageTime(CreatureObject creature);
+	public native int getEntertainerBuffLastMessageBucket(CreatureObject creature);
+
+	@local
+	public native void setEntertainerBuffLastMessageState(CreatureObject creature, int messageTime, int messageBucket);
 
 	public native void sendEntertainingUpdate(CreatureObject creature, int performanceType, boolean startPerformance);
 	public native void sendEntertainmentUpdate(CreatureObject creature, unsigned long entid, final string mood);
