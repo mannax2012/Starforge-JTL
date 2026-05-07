@@ -18,9 +18,30 @@
 #include "server/zone/objects/creature/sui/RepairVehicleSuiCallback.h"
 #include "templates/customization/AssetCustomizationManagerTemplate.h"
 
+namespace {
+CreatureObject* getVehicleOwnerFromDevice(VehicleObject* vehicle) {
+	if (vehicle == nullptr) {
+		return nullptr;
+	}
+
+	ManagedReference<ControlDevice*> device = vehicle->getControlDevice().get();
+
+	if (device == nullptr) {
+		return nullptr;
+	}
+
+	return cast<CreatureObject*>(device->getRootParent());
+}
+}
 
 void VehicleObjectImplementation::fillObjectMenuResponse(ObjectMenuResponse* menuResponse, CreatureObject* player) {
-	if (!player->getPlayerObject()->isPrivileged() && linkedCreature != player)
+	ManagedReference<CreatureObject*> owner = linkedCreature.get();
+
+	if (owner == nullptr) {
+		owner = getVehicleOwnerFromDevice(_this.getReferenceUnsafeStaticCast());
+	}
+
+	if (!player->getPlayerObject()->isPrivileged() && owner != player)
 		return;
 
 	menuResponse->addRadialMenuItem(205, 1, "@pet/pet_menu:menu_enter_exit");
@@ -141,7 +162,13 @@ bool VehicleObjectImplementation::checkInRangeGarage() {
 
 
 int VehicleObjectImplementation::handleObjectMenuSelect(CreatureObject* player, byte selectedID) {
-	if (selectedID == 61 && linkedCreature == player) {
+	ManagedReference<CreatureObject*> owner = linkedCreature.get();
+
+	if (owner == nullptr) {
+		owner = getVehicleOwnerFromDevice(_this.getReferenceUnsafeStaticCast());
+	}
+
+	if (selectedID == 61 && owner == player) {
 		unlock();
 
 		try {

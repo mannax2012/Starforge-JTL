@@ -55,7 +55,7 @@ void MissionObjectiveImplementation::activate() {
 		int64 timeElapsed = missionStartTime.miliDifference();
 		int64 missionDuration = MISSIONDURATION;
 
-		if (mission->getTypeCRC() == MissionTypes::BOUNTY) {
+		if (MissionTypes::isBountyType(mission->getTypeCRC())) {
 			missionDuration = ConfigManager::instance()->getInt("Core3.MissionManager.BountyExpirationTime", MISSIONDURATION);
 		}
 
@@ -266,7 +266,7 @@ void MissionObjectiveImplementation::awardReward() {
 #endif
 				Vector3 memberPosition = groupMember->getWorldPosition();
 
-				if (mission->getTypeCRC() == MissionTypes::BOUNTY) {
+				if (MissionTypes::isBountyType(mission->getTypeCRC())) {
 					memberPosition.setZ(0);
 				}
 
