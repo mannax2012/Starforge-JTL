@@ -172,6 +172,7 @@ public:
 	const static int CREDITCHIP = 0x203F;
 	const static int COMPONENTANALYSISTOOL = 0x2040;
 	const static int SCHEMATICFRAGMENT = 0x2041;
+	const static int SHIPPAINTKIT = 0x2042;
 	/// End Not in client **************
 
 	const static int TERMINAL = 0x4000;
@@ -302,6 +303,7 @@ public:
 
 	// Not in client ************
 	const static int RESOURCESPAWN = 0x410000;
+	const static int CREATURESPAWNER = 0x410001;
 	// **************************
 
 	const static int DEED = 0x800000;

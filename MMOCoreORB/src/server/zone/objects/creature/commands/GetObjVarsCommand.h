@@ -9,6 +9,7 @@
 #include "server/chat/ChatManager.h"
 #include "server/zone/objects/group/GroupObject.h"
 #include "server/zone/objects/player/sui/messagebox/SuiMessageBox.h"
+#include "templates/params/creature/ObjectFlag.h"
 
 class GetObjVarsCommand : public QueueCommand {
 public:
@@ -52,7 +53,7 @@ public:
 			return GENERALERROR;
 		}
 
-		ManagedReference<SceneObject*> object = server->getZoneServer()->getObject(objectID, false);
+		ManagedReference<SceneObject*> object = zoneServer->getObject(objectID, false);
 
 		if (object == nullptr) {
 			creature->sendSystemMessage("ERROR GETTIGN OBJECT - nullptr " + String::valueOf(objectID));
@@ -75,7 +76,10 @@ public:
 
 		bool bIsUpdated = object->_isUpdated();
 		int rCount = object.get()->getReferenceCount();
-		uint64 parentID = object->getParentID();
+		auto containmentType = object->getContainmentType();
+
+		auto parent = object->getParent().get();
+		auto rootParent = object->getRootParent();
 
 		uint32 covSize = 0;
 		auto closeObjectsVector = object->getCloseObjects();
@@ -87,15 +91,27 @@ public:
 		StringBuffer msg;
 		msg << endl << "General Object Information:" << endl << endl <<
 		"Object ID: " << objectID << endl << endl <<
-		"Parent ID: " << parentID << endl <<
+		"Class Name: " << object->_getClassName() << endl <<
 		"Child Objects Size: " << object->getChildObjects()->size() << endl <<
 		"Close Objects Vector COV Size: " << covSize << endl <<
+		"ContainmentType: " << containmentType << endl;
 
-		endl << // Spacer
+		if (parent != nullptr) {
+			msg << "Parent: " << parent->getDisplayedName() << " ID: " << parent->getObjectID() << " Parent Class: " << parent->_getClassName() << endl;
+		} else {
+			msg << "Parent: null" << endl;
+		}
+
+		if (rootParent != nullptr) {
+			msg << "Root Parent: " << rootParent->getDisplayedName() << " ID: " << rootParent->getObjectID() << " Root Parent Class: " << rootParent->_getClassName() << endl;
+		} else {
+			msg << "Root Parent: null" << endl;
+		}
+
+		msg << endl << // Spacer
 
 		"Object Type: " << object->getGameObjectType() << endl <<
 		"Object Name String: " << nameString << endl <<
-		"_className: " << object->_getClassName() << endl <<
 		"Template Path: " << object->getObjectTemplate()->getFullTemplateString() << endl <<
 
 		endl << // Spacer
@@ -105,6 +121,8 @@ public:
 		"IsUpdated: " << bIsUpdated << endl << endl <<
 		"TreeNode is null: " << (object->getNode() == nullptr ? "true" : "false") << endl;
 
+		auto zone = object->getZone();
+		msg << "Zone: " << (zone != nullptr ? zone->getZoneName() : "nullptr") << endl;
 
 		if (object->isCreatureObject()) {
 			auto creoObject = object->asCreatureObject();
@@ -126,6 +144,19 @@ public:
 						int playerLevel = playerManager->calculatePlayerLevel(creoObject);
 
 						msg << "Player Level: " << playerLevel << endl;
+					}
+
+					auto tarGhost = creoObject->getPlayerObject();
+
+					if (tarGhost != nullptr) {
+						int pilotSquadron = tarGhost->getPilotSquadron();
+						int pilotTier = tarGhost->getPilotTier();
+						String pilotFaction = FactionManager::instance()->getSpaceFactionBySquadron(pilotSquadron, pilotTier);
+
+						msg <<
+						"Pilot Tier: " << pilotTier << endl <<
+						"Pilot Squadron: " << pilotSquadron << " (Defined in PlayerManager.idl)" << endl <<
+						"Pilot Faction: " << pilotFaction << endl;
 					}
 				}
 
@@ -151,8 +182,66 @@ public:
 						String aiEnabled = ((objectAgent->getOptionsBitmask() & OptionBitmask::AIENABLED) ? "True" : "False");
 						msg << "AI Enabled: " << aiEnabled << endl;
 
-						msg << "Creature Bitmask: " << objectAgent->getCreatureBitmask() << endl;
-						msg << "Creature Movement State: " << objectAgent->getMovementState() << endl;
+						auto creatureBitmask = objectAgent->getCreatureBitmask();
+
+						msg << "Creature Bitmask: " << creatureBitmask << endl;
+
+						// Display individual ObjectFlags
+						msg << "Creature Bitmask Flags:" << endl;
+						if (creatureBitmask & ObjectFlag::NPC) msg << "  - NPC" << endl;
+						if (creatureBitmask & ObjectFlag::PACK) msg << "  - PACK" << endl;
+						if (creatureBitmask & ObjectFlag::HERD) msg << "  - HERD" << endl;
+						if (creatureBitmask & ObjectFlag::KILLER) msg << "  - KILLER" << endl;
+						if (creatureBitmask & ObjectFlag::STALKER) msg << "  - STALKER" << endl;
+						if (creatureBitmask & ObjectFlag::BABY) msg << "  - BABY" << endl;
+						if (creatureBitmask & ObjectFlag::LAIR) msg << "  - LAIR" << endl;
+						if (creatureBitmask & ObjectFlag::HEALER) msg << "  - HEALER" << endl;
+						if (creatureBitmask & ObjectFlag::SCOUT) msg << "  - SCOUT" << endl;
+						if (creatureBitmask & ObjectFlag::PET) msg << "  - PET" << endl;
+						if (creatureBitmask & ObjectFlag::DROID_PET) msg << "  - DROID_PET" << endl;
+						if (creatureBitmask & ObjectFlag::FACTION_PET) msg << "  - FACTION_PET" << endl;
+						if (creatureBitmask & ObjectFlag::ESCORT) msg << "  - ESCORT" << endl;
+						if (creatureBitmask & ObjectFlag::FOLLOW) msg << "  - FOLLOW" << endl;
+						if (creatureBitmask & ObjectFlag::STATIC) msg << "  - STATIC" << endl;
+						if (creatureBitmask & ObjectFlag::STATIONARY) msg << "  - STATIONARY" << endl;
+						if (creatureBitmask & ObjectFlag::NOAIAGGRO) msg << "  - NOAIAGGRO" << endl;
+						if (creatureBitmask & ObjectFlag::SCANNING_FOR_CONTRABAND) msg << "  - SCANNING_FOR_CONTRABAND" << endl;
+						if (creatureBitmask & ObjectFlag::IGNORE_FACTION_STANDING) msg << "  - IGNORE_FACTION_STANDING" << endl;
+						if (creatureBitmask & ObjectFlag::SQUAD) msg << "  - SQUAD" << endl;
+						if (creatureBitmask & ObjectFlag::EVENTCONTROL) msg << "  - EVENTCONTROL" << endl;
+						if (creatureBitmask & ObjectFlag::NOINTIMIDATE) msg << "  - NOINTIMIDATE" << endl;
+						if (creatureBitmask & ObjectFlag::NODOT) msg << "  - NODOT" << endl;
+						if (creatureBitmask & ObjectFlag::TEST) msg << "  - TEST" << endl;
+						if (creatureBitmask == ObjectFlag::NONE) msg << "  - NONE" << endl;
+
+						msg << endl;
+
+						// Display movement state with readable name
+						unsigned int movementState = objectAgent->getMovementState();
+						String movementStateName;
+
+						switch (movementState) {
+							case 0: movementStateName = "OBLIVIOUS"; break;
+							case 1: movementStateName = "WATCHING"; break;
+							case 2: movementStateName = "STALKING"; break;
+							case 3: movementStateName = "FOLLOWING"; break;
+							case 4: movementStateName = "PATROLLING"; break;
+							case 5: movementStateName = "FLEEING"; break;
+							case 6: movementStateName = "LEASHING"; break;
+							case 7: movementStateName = "EVADING"; break;
+							case 8: movementStateName = "PATHING_HOME"; break;
+							case 9: movementStateName = "FOLLOW_FORMATION"; break;
+							case 10: movementStateName = "MOVING_TO_HEAL"; break;
+							case 11: movementStateName = "NOTIFY_ALLY"; break;
+							case 12: movementStateName = "CRACKDOWN_SCANNING"; break;
+							case 13: movementStateName = "HARVESTING"; break;
+							case 14: movementStateName = "RESTING"; break;
+							case 15: movementStateName = "CONVERSING"; break;
+							case 16: movementStateName = "LAIR_HEALING"; break;
+							default: movementStateName = "UNKNOWN"; break;
+						}
+
+						msg << "Creature Movement State: " << movementState << " (" << movementStateName << ")" << endl;
 
 						ManagedReference<SceneObject*> followCopy = objectAgent->getFollowObject();
 						StringBuffer hasFollow;
@@ -235,6 +324,27 @@ public:
 						msg << endl; // Spacing
 					}
 				}
+
+				// Movement Modifiers
+				msg << "Walk Speed: " << creoObject->getWalkSpeed() << endl;
+				msg << "Run Speed: " << creoObject->getRunSpeed() << endl;
+				msg << "Current Speed: " << creoObject->getCurrentSpeed() << endl;
+				msg << "Speed Multi Base: " << creoObject->getSpeedMultiplierBase() << endl;
+				msg << "Speed Multi Mod: " << creoObject->getSpeedMultiplierMod() << endl;
+				msg << "Creature Height: " << creoObject->getHeight() << endl;
+
+				msg << "Walk Acceleration: " << creoObject->getWalkAcceleration() << endl;
+				msg << "Run Acceleration: " << creoObject->getRunAcceleration() << endl;
+				msg << "Acceleration Multi Base: " << creoObject->getAccelerationMultiplierBase() << endl;
+				msg << "Acceleration Multi Mod: " << creoObject->getAccelerationMultiplierMod() << endl;
+
+				// Slope Modifiers
+				msg << "Slope Angle: " << creoObject->getSlopeModAngle() << endl;
+				msg << "Slope Mod Percent: " << creoObject->getSlopeModPercent() << endl;
+				msg << "Water Mod Percent: " << creoObject->getWaterModPercent() << endl;
+				msg << "Turn Scale: " << creoObject->getTurnScale() << endl;
+
+				msg << endl;
 
 				// List the active areas
 				SortedVector<ManagedReference<ActiveArea*>>* areas = creoObject->getActiveAreas();

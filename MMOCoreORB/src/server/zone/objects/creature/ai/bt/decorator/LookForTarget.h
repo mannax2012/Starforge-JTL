@@ -43,7 +43,8 @@ public:
 
 		// If we have a follow object, check if it is still valid then set as prospect
 		ManagedReference<SceneObject*> currObj = agent->getFollowObject().get();
-		if (currObj != nullptr) {
+
+		if (currObj != nullptr && agent->getHerdObserver().get() == nullptr) {
 			if (currObj->isCreatureObject() && isInvalidTarget(currObj->asCreatureObject(), agent)) {
 				if (!(agent->getCreatureBitmask() & ObjectFlag::FOLLOW)) {
 					agent->setFollowObject(nullptr);
@@ -98,16 +99,6 @@ public:
 		}
 
 		if (target->isVehicleObject() && !target->hasRidingCreature()) {
-			return true;
-		}
-
-		SceneObject* agentParent = agent->getParent().get();
-		SceneObject* targetParent = target->getParent().get();
-
-		uint64 agentParentID = agentParent != nullptr ? agentParent->getObjectID() : 0;
-		uint64 targetParentID = targetParent != nullptr ? targetParent->getObjectID() : 0;
-
-		if (agentParentID != targetParentID && !CollisionManager::checkLineOfSight(agent, target)) {
 			return true;
 		}
 

@@ -83,42 +83,45 @@ public:
 	BehaviorSpace::Status execute(ShipAiAgent* agent, unsigned int startIdx = 0) const {
 		ManagedReference<ShipObject*> targetShip = nullptr;
 
-		if (agent->peekBlackboard("targetShipProspect"))
+		if (agent->peekBlackboard("targetShipProspect")) {
 			targetShip = agent->readBlackboard("targetShipProspect").get<ManagedReference<ShipObject*>>();
+		}
 
 		// agent->info(true) << agent->getDisplayedName() << " set movement state: " << state;
 
 		switch (state) {
-		case ShipAiAgent::OBLIVIOUS:
-			break;
-		case ShipAiAgent::WATCHING: {
-			break;
-		}
-		case ShipAiAgent::FOLLOWING: {
-			targetShip = agent->getFollowShipObject().get();
-
-			if (targetShip != nullptr) {
+			case ShipAiAgent::OBLIVIOUS:
+			case ShipAiAgent::WATCHING:
+			case ShipAiAgent::PATROLLING: {
+				agent->clearOptionBit(OptionBitmask::WINGS_OPEN, true);
 				break;
 			}
-		}
-		case ShipAiAgent::PATROLLING:
-			break;
-		case ShipAiAgent::ATTACKING: {
-			if (targetShip != nullptr) {
-				Locker clocker(targetShip, agent);
+			case ShipAiAgent::ATTACKING: {
+				if (targetShip != nullptr) {
+					Locker clocker(targetShip, agent);
 
-				agent->setTargetShipObject(targetShip);
+					agent->setTargetShipObject(targetShip);
+				}
+
+				agent->setOptionBit(OptionBitmask::WINGS_OPEN, true);
+				agent->clearPatrolPoints();
+
+				break;
 			}
-			break;
-		}
-		case ShipAiAgent::FLEEING:
-		case ShipAiAgent::LEASHING:
-			break;
-		case ShipAiAgent::EVADING:
-		case ShipAiAgent::PATHING_HOME:
-		case ShipAiAgent::FOLLOW_FORMATION:
-		default:
-			break;
+			case ShipAiAgent::EVADING: {
+				agent->clearPatrolPoints();
+				break;
+			}
+			case ShipAiAgent::FLEEING:
+			case ShipAiAgent::LEASHING:
+			case ShipAiAgent::FOLLOWING:
+			case ShipAiAgent::PATHING_HOME:
+			case ShipAiAgent::FOLLOW_FORMATION:
+			default: {
+				agent->clearOptionBit(OptionBitmask::WINGS_OPEN, true);
+				agent->clearPatrolPoints();
+				break;
+			}
 		};
 
 		agent->setMovementState(state);
@@ -203,12 +206,15 @@ public:
 
 		if (evadeTime != nullptr && evadeTime->isPast()) {
 			evadeTime->updateToCurrentTime();
-			evadeTime->addMiliTime(evadeDelay);
 
-			// agent->info(true) << agent->getDisplayedName() << " Evade delay set for " << evadeDelay;
+			uint64 randomEvade = evadeDelay + System::random(evadeDelay);
+
+			evadeTime->addMiliTime(randomEvade);
+
+			// agent->info(true) << agent->getDisplayedName() << " Evade delay set for " << randomEvade;
 		}
 
-		// agent->info(true) << agent->getDisplayedName() << " Evade Success -- Evade Delay: " << evadeDelay;
+		// agent->info(true) << agent->getDisplayedName() << " Evade Success";
 
 		return SUCCESS;
 	}
@@ -321,7 +327,7 @@ public:
 		for (int i = 0; i < targetVectorCopy.size(); ++i) {
 			auto targetEntry = targetVectorCopy.get(i);
 
-			if (targetEntry == nullptr || !targetEntry->isAttackableBy(agent)) {
+			if (targetEntry == nullptr || !targetEntry->isAttackableBy(agent) || !agent->isAggressiveTo(targetEntry)) {
 				continue;
 			}
 
@@ -371,7 +377,13 @@ public:
 	BehaviorSpace::Status execute(ShipAiAgent* agent, unsigned int startIdx = 0) const {
 		agent->eraseBlackboard("targetShipProspect");
 
-		ManagedReference<TangibleObject*> topThreat = agent->getThreatMap()->getHighestThreatAttacker();
+		auto threatMap = agent->getThreatMap();
+
+		if (threatMap == nullptr) {
+			return FAILURE;
+		}
+
+		ManagedReference<TangibleObject*> topThreat = threatMap->getHighestThreatAttacker();
 
 		// Make sure top threat is not null and is a ship
 		if (topThreat == nullptr || !topThreat->isShipObject()) {
@@ -385,7 +397,7 @@ public:
 
 		Locker lock(targetShip, agent);
 
-		// agent->info(true) << " NEW THREAT SET ---  Top Threat setting targetShipProspect: " << targetShip->getDisplayedName();
+		// agent->info(true) << " NEW THREAT SET ---  Top Threat setting targetShipProspect: " << targetShip->getShipName();
 
 		agent->writeBlackboard("targetShipProspect", targetShip);
 
