@@ -101,8 +101,20 @@ public:
 			LuaObject resourceNameAndNumber = includes.getObjectAt(i);
 
 			if (resourceNameAndNumber.isValidTable()) {
-				String name = includes.getStringAt(1);
-				int number = includes.getIntAt(2);
+				String name = resourceNameAndNumber.getStringAt(1).trim();
+				int number = resourceNameAndNumber.getIntAt(2);
+
+				if (name.isEmpty()) {
+					warning("Skipping resource pool entry with empty resource type at row " + String::valueOf(i));
+					resourceNameAndNumber.pop();
+					continue;
+				}
+
+				if (number < 1) {
+					warning("Skipping resource pool entry '" + name + "' with invalid count " + String::valueOf(number));
+					resourceNameAndNumber.pop();
+					continue;
+				}
 
 				for (unsigned int j = 1; j <= number; j++) {
 					includedResources.put(name, nullptr);
