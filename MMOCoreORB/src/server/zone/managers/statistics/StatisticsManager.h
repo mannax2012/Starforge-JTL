@@ -106,6 +106,8 @@ public:
 	void completeMission(unsigned int missionType, int reward) {
 		switch (missionType) {
 		case MissionTypes::BOUNTY:
+		case MissionTypes::BOUNTY_NPC:
+		case MissionTypes::BOUNTY_PLAYER:
 			numberOfCompletedMissionsBounty.increment();
 			creditsGeneratedFromMissionsBounty.add(reward);
 			break;
