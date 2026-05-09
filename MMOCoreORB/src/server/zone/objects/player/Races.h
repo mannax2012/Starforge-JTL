@@ -328,8 +328,13 @@ public:
     	return 0;
 	}
 
-	inline static unsigned int * getAttribLimits(int raceid) {
-		return attributeLimits[raceid % 10];
+	inline static unsigned int* getAttribLimits(int raceid) {
+		if (raceid < 0 || raceid >= 23) {
+			System::out << "Races::getAttribLimits expected race ID in range [0, 22] but received invalid ID " << raceid << "\n";
+			return attributeLimits[0];
+		}
+
+		return attributeLimits[raceid];
 	}
 
 };
