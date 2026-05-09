@@ -85,6 +85,7 @@
 #include "server/zone/managers/player/creation/PlayerCreationManager.h"
 #include "server/ServerCore.h"
 #include "server/login/account/Account.h"
+#include "conf/ConfigManager.h"
 
 #include "server/zone/objects/player/sui/callbacks/PlayerTeachSuiCallback.h"
 #include "server/zone/objects/player/sui/callbacks/PlayerTeachConfirmSuiCallback.h"
@@ -6015,6 +6016,9 @@ void PlayerManagerImplementation::claimVeteranRewards(CreatureObject* player) {
 	box->setOkButton(true, "@ok");
 	box->setCancelButton(true, "@cancel");
 
+	const bool jtlEnabled = ConfigManager::instance()->isJtlEnabled();
+	int availableRewardCount = 0;
+
 	for (int i = 0; i < veteranRewards.size(); i++) {
 		// Any rewards at or below current milestone are eligible
 		VeteranReward reward = veteranRewards.get(i);
@@ -6023,6 +6027,10 @@ void PlayerManagerImplementation::claimVeteranRewards(CreatureObject* player) {
 
 		if (reward.getMilestone() > milestone)
 			continue;
+
+		if (reward.isJtlReward() && !jtlEnabled) {
+			continue;
+		}
 
 		// Filter out one-time rewards already claimed
 		if (reward.isOneTime() && ghost->hasChosenVeteranReward(reward.getTemplateFile())) {
@@ -6037,7 +6045,15 @@ void PlayerManagerImplementation::claimVeteranRewards(CreatureObject* player) {
 			} else {
 				box->addMenuItem(reward.getDescription(), i);
 			}
+
+			++availableRewardCount;
 		}
+	}
+
+	if (availableRewardCount == 0) {
+		player->sendSystemMessage("@veteran:reward_error"); // The reward could not be granted.
+		cancelVeteranRewardSession(player);
+		return;
 	}
 
 	box->setUsingObject(nullptr);
@@ -6078,6 +6094,18 @@ void PlayerManagerImplementation::confirmVeteranReward(CreatureObject* player, i
 	}
 
 	VeteranReward reward = veteranRewards.get(itemIndex);
+
+	if (reward.getMilestone() > rewardSession->getMilestone()) {
+		player->sendSystemMessage("@veteran:reward_error"); // The reward could not be granted.
+		cancelVeteranRewardSession(player);
+		return;
+	}
+
+	if (reward.isJtlReward() && !ConfigManager::instance()->isJtlEnabled()) {
+		player->sendSystemMessage("@veteran:reward_error"); // The reward could not be granted.
+		cancelVeteranRewardSession(player);
+		return;
+	}
 
 	if (reward.isOneTime() && ghost->hasChosenVeteranReward(reward.getTemplateFile())) {
 		player->sendSystemMessage("@veteran:reward_error"); //	The reward could not be granted.
@@ -6152,6 +6180,13 @@ void PlayerManagerImplementation::generateVeteranReward(CreatureObject* player) 
 	}
 
 	VeteranReward reward = veteranRewards.get(rewardSession->getSelectedRewardIndex());
+
+	if (reward.getMilestone() > rewardSession->getMilestone() || (reward.isJtlReward() && !ConfigManager::instance()->isJtlEnabled())) {
+		player->sendSystemMessage("@veteran:reward_error"); // The reward could not be granted.
+		cancelVeteranRewardSession(player);
+		return;
+	}
+
 	Reference<SceneObject*> rewardSceno = server->createObject(reward.getTemplateFile().hashCode(), 1);
 
 	if (rewardSceno == nullptr) {
