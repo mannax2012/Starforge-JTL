@@ -8,8 +8,10 @@ Distribution of this file for usage outside of Core3 is prohibited.
 #include "server/zone/TreeNode.h"
 #include "server/zone/objects/scene/SceneObject.h"
 #include "server/zone/objects/tangible/TangibleObject.h"
+#include "server/zone/objects/ship/ShipObject.h"
 
 //#define DEBUG_TREE_ENTRY
+// #define DEBUG_WORLD_POSITION
 
 TreeEntryImplementation::TreeEntryImplementation(TreeNode* n) {
 	node = n;
@@ -21,14 +23,17 @@ TreeEntryImplementation::TreeEntryImplementation(TreeNode* n) {
 }
 
 void TreeEntryImplementation::setNode(TreeNode* n) {
-#ifdef DEBUG_TREE_ENTRY_AI
-	if (n == nullptr) {
-		auto sceneO = static_cast<SceneObject*>(_this.getReferenceUnsafeStaticCast());
+#ifdef DEBUG_TREE_ENTRY
+	auto sceneO = static_cast<SceneObject*>(_this.getReferenceUnsafeStaticCast());
 
-		if (sceneO->isShipAiAgent())
-			Logger::console.info(true) << sceneO->getDisplayedName() << " setting a null treeNode - ID: " << sceneO->getObjectID();
+	if (sceneO->isPlayerShip()) {
+		if (n == nullptr) {
+			Logger::console.info(true) << "TreeEntryImplementation::setNode -- " << sceneO->getDisplayedName() << " setting a NULL treeNode - ID: " << sceneO->getObjectID();
+		} else {
+			Logger::console.info(true) << "TreeEntryImplementation::setNode -- " << sceneO->getDisplayedName() << " setting a NEW treeNode - ID: " << sceneO->getObjectID();
+		}
 	}
-#endif // DEBUG_TREE_ENTRY_AI
+#endif // DEBUG_TREE_ENTRY
 
 	node = n;
 }
@@ -38,14 +43,14 @@ void TreeEntryImplementation::addInRangeObject(TreeEntry* obj, bool doNotifyUpda
 		return;
 	}
 
-	/*
+#ifdef DEBUG_TREE_ENTRY
 	auto objSceneO = static_cast<SceneObject*>(obj);
 	auto sceneO = static_cast<SceneObject*>(_this.getReferenceUnsafeStaticCast());
 
-	if ((objSceneO->isShipObject() && sceneO->isShipObject()) || (objSceneO->isShipObject() && sceneO->isPlayerCreature()) || (objSceneO->isPlayerCreature() && sceneO->isShipObject())) {
-		sceneO->info(true) << sceneO->getDisplayedName() << " is ADDING in range object: " << objSceneO->getDisplayedName();
+	if (objSceneO->isShipObject() && sceneO->isPlayerShip()) {
+		//sceneO->info(true) << "TreeEntryImplementation::addInRangeObject -- " << sceneO->getDisplayedName() << " is ADDING in range object: " << objSceneO->getDisplayedName();
 	}
-	*/
+#endif // DEBUG_TREE_ENTRY
 
 	if (closeobjects != nullptr && closeobjects->put(obj) != -1) {
  		notifyInsert(obj);
@@ -392,6 +397,10 @@ float TreeEntryImplementation::getOutOfRangeDistance(uint64 specialRangeID) {
 	return closeRange;
 }
 
+float TreeEntryImplementation::getInRangeDistance(bool lightUpdate) {
+	return ZoneServer::CLOSEOBJECTRANGE;
+}
+
 void TreeEntryImplementation::setParent(TreeEntry* value) {
 	parent = value;
 	updateWorldPosition(false);
@@ -413,62 +422,24 @@ void TreeEntryImplementation::setPosition(const Vector3& value) {
 }
 
 void TreeEntryImplementation::setPosition(float x, float z, float y) {
+	/*
+	auto sceneO = static_cast<SceneObject*>(_this.getReferenceUnsafeStaticCast());
+
+	if (sceneO->isPlayerCreature()) {
+		Logger::console.info(true) << "TreeEntryImplementation::setPosition -- " << sceneO->getDisplayedName() << " X: " << x << " Z: " << z << " Y: " << y;
+	}
+	*/
+
 	coordinates.setPosition(x, z, y);
 	updateWorldPosition(false);
 }
 
 void TreeEntryImplementation::updateWorldPosition(bool initialize) {
-#ifdef DEBUG_WORLD_POSITION
-	auto sceneO = static_cast<SceneObject*>(_this.getReferenceUnsafeStaticCast());
-#endif // DEBUG_WORLD_POSITION
-
-	auto root = static_cast<SceneObject*>(getRootParentUnsafe());
-
 	Vector3 worldPosition = getPosition();
 
-	if (root != nullptr) {
-		if (root->isBuildingObject() || root->isPobShip()) {
-			float rootRad = -root->getDirection()->getRadians();
-			float rootCos = cos(rootRad);
-			float rootSin = sin(rootRad);
-
-			float localX = getPositionX();
-			float localY = getPositionY();
-			float localZ = getPositionZ();
-
-			float rotatedX = (localX * rootCos) - (localY * rootSin);
-			float rotatedY = (localX * rootSin) + (localY * rootCos);
-
-			float worldX = root->getPositionX() + rotatedX;
-			float worldY = root->getPositionY() + rotatedY;
-			float worldZ = root->getPositionZ() + localZ;
-
-#ifdef DEBUG_WORLD_POSITION
-			if (sceneO != nullptr && sceneO->isPlayerCreature())
-				Logger::console.info(true) << sceneO->getDisplayedName() << " -- Coordinates are using root parent to calculate";
-#endif // DEBUG_WORLD_POSITION
-
-			worldPosition = Vector3(worldX, worldY, worldZ);
-		} else {
-			worldPosition = root->getPosition();
-		}
-	}
-
 	if (initialize) {
-#ifdef DEBUG_WORLD_POSITION
-		if (sceneO != nullptr && sceneO->isPlayerCreature()) {
-			Logger::console.info(true) << sceneO->getDisplayedName() << " -- INITIALIZING - World Coordinates to " << worldPosition.toString();
-		}
-#endif // DEBUG_WORLD_POSITION
-
 		worldCoordinates.initializePosition(worldPosition.getX(), worldPosition.getZ(), worldPosition.getY());
 	} else {
-#ifdef DEBUG_WORLD_POSITION
-		if (sceneO != nullptr && sceneO->isPlayerCreature()) {
-			Logger::console.info(true) << sceneO->getDisplayedName() << " -- UPDATING - World Coordinates to " << worldPosition.toString();
-		}
-#endif // DEBUG_WORLD_POSITION
-
 		worldCoordinates.setPosition(worldPosition.getX(), worldPosition.getZ(), worldPosition.getY());
 	}
 }

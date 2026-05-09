@@ -62,13 +62,14 @@ option(ENABLE_NATIVE "Enables -march=native compiler option" ON)
 option(ENABLE_OMIT_FRAMEPOINTER "Enables -fno-omit-frame-pointer compiler option" ON)
 option(ENABLE_ERROR_ON_WARNINGS "Enables -Werror compiler option" ON)
 option(ENABLE_REST_SERVER "Enables REST API Server" OFF)
-option(ENABLE_SESSION_API "Enables Session API support" OFF)
+option(ENABLE_SWGREALMS "Enables SWGRealms API support" OFF)
 option(ENABLE_ODB "Enables odb3 compiling" OFF)
 option(ENABLE_ODB_REFERENCES "Sets ODB_REFERENCES define" ON) #needs to match engine3
 option(ENABLE_BUILD_CLIENT "Enables core3client build" ON)
 option(ENABLE_JEMALLOC_LINK "Enables jemalloc linking if found" ON)
 option(ENABLE_MULTITHREADED_LINKER "Enables ld.gold/lld with --threads check and use" OFF)
 option(ENABLE_LOCKFREE_BCLIENT_BUFFERS "Enables lock free base client buffers, requires boost thread" OFF) #needs to match engine3
+option(ENABLE_DEV_MODE "Enables developer instrumentation, verbose tracing, and relaxed config validation" OFF)
 option(DUMP_ALL_CMAKE_VARIABLES "Prints all cmake variables" OFF)
 
 # Set cmake paths
@@ -108,9 +109,14 @@ if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
 	add_definitions(-DDEBUG_SHIP_AI)
 endif()
 
-if (ENABLE_SESSION_API)
-    message(STATUS "Compiling with session API support")
-    add_definitions(-DWITH_SESSION_API)
+if (ENABLE_DEV_MODE)
+    message(STATUS "Compiling with developer mode enabled")
+    add_definitions(-DWITH_DEV_MODE)
+endif()
+
+if (ENABLE_SWGREALMS)
+    message(STATUS "Compiling with SWGRealms API support")
+    add_definitions(-DWITH_SWGREALMS_API)
 endif()
 
 if (ENABLE_REST_SERVER)
