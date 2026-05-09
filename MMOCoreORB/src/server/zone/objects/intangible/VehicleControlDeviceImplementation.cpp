@@ -19,6 +19,74 @@
 #include "server/zone/managers/player/PlayerManager.h"
 #include "server/zone/objects/player/PlayerObject.h"
 
+namespace {
+bool reconcileVehicleState(VehicleControlDevice* device, CreatureObject* owner, bool notifyClient) {
+	if (device == nullptr)
+		return false;
+
+	ManagedReference<TangibleObject*> controlledObject = device->getControlledObject();
+
+	if (controlledObject == nullptr)
+		return false;
+
+	ManagedReference<VehicleObject*> vehicle = cast<VehicleObject*>(controlledObject.get());
+
+	if (vehicle != nullptr) {
+		Locker vehicleLocker(vehicle, device);
+
+		if (owner != nullptr && vehicle->getLinkedCreature() != owner) {
+			vehicle->setCreatureLink(owner, notifyClient);
+		}
+
+		if (vehicle->getControlDevice() != device) {
+			vehicle->setControlDevice(device);
+		}
+	}
+
+	if (controlledObject->isInQuadTree()) {
+		if (device->getStatus() == 0) {
+			device->updateStatus(1, notifyClient);
+		}
+
+		return false;
+	}
+
+	if (device->getStatus() == 0) {
+		return false;
+	}
+
+	Locker objectLocker(controlledObject, device);
+
+	Reference<Task*> decayTask = controlledObject->getPendingTask("decay");
+
+	if (decayTask != nullptr) {
+		decayTask->cancel();
+		controlledObject->removePendingTask("decay");
+	}
+
+	controlledObject->destroyObjectFromWorld(true);
+
+	if (controlledObject->isCreatureObject()) {
+		cast<CreatureObject*>(controlledObject.get())->setCreatureLink(nullptr, notifyClient);
+	}
+
+	device->updateStatus(0, notifyClient);
+
+	return true;
+}
+}
+
+void VehicleControlDeviceImplementation::notifyLoadFromDatabase() {
+	ControlDeviceImplementation::notifyLoadFromDatabase();
+
+	ManagedReference<CreatureObject*> owner = cast<CreatureObject*>(getRootParent());
+	const bool recovered = reconcileVehicleState(_this.getReferenceUnsafeStaticCast(), owner, false);
+
+	if (recovered && owner != nullptr) {
+		owner->sendSystemMessage("A vehicle left deployed during shutdown was recovered to your datapad.");
+	}
+}
+
 void VehicleControlDeviceImplementation::generateObject(CreatureObject* player) {
 	if (player->isDead() || player->isIncapacitated())
 		return;
@@ -32,6 +100,13 @@ void VehicleControlDeviceImplementation::generateObject(CreatureObject* player) 
 	}
 
 	ManagedReference<TangibleObject*> controlledObject = this->controlledObject.get();
+
+	if (controlledObject == nullptr) {
+		return;
+	}
+
+	reconcileVehicleState(_this.getReferenceUnsafeStaticCast(), player, true);
+	controlledObject = this->controlledObject.get();
 
 	if (controlledObject == nullptr || controlledObject->getLocalZone() != nullptr) {
 		return;
@@ -188,9 +263,13 @@ void VehicleControlDeviceImplementation::cancelSpawnObject(CreatureObject* playe
 }
 
 void VehicleControlDeviceImplementation::storeObject(CreatureObject* player, bool force) {
+	const bool recovered = reconcileVehicleState(_this.getReferenceUnsafeStaticCast(), player, true);
 	ManagedReference<TangibleObject*> controlledObject = this->controlledObject.get();
 
 	if (controlledObject == nullptr)
+		return;
+
+	if (recovered && !controlledObject->isInQuadTree())
 		return;
 
 	/*if (!controlledObject->isInQuadTree())
