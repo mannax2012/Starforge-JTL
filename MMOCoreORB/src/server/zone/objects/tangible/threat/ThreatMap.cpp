@@ -30,11 +30,15 @@ void ThreatMapEntry::addDamage(String xp, uint32 damage) {
 
 		*dmg = *dmg + damage;
 	}
+
+	touchThreat();
 }
 
 void ThreatMapEntry::setThreatState(uint64 state) {
 	if (!(threatBitmask & state))
 		threatBitmask |= state;
+
+	touchThreat();
 }
 
 bool ThreatMapEntry::hasState(uint64 state) {
@@ -47,6 +51,12 @@ bool ThreatMapEntry::hasState(uint64 state) {
 void ThreatMapEntry::clearThreatState(uint64 state) {
 	if (threatBitmask & state)
 		threatBitmask &= ~state;
+
+	touchThreat();
+}
+
+void ThreatMapEntry::touchThreat() {
+	lastThreatUpdate.updateToCurrentTime();
 }
 
 void ThreatMap::registerObserver(TangibleObject* target) {
@@ -96,11 +106,17 @@ void ThreatMap::addDamage(TangibleObject* target, uint32 damage, String xp) {
 
 		put(target, entry);
 		registerObserver(target);
+		idx = find(target);
 
 	} else {
 		ThreatMapEntry* entry = &elementAt(idx).getValue();
 		entry->addDamage(xpToAward, damage);
 		entry->addAggro(1);
+	}
+
+	if (idx != -1) {
+		ThreatMapEntry* entry = &elementAt(idx).getValue();
+		invalidateTargetEvaluation(target, *entry);
 	}
 }
 
@@ -539,6 +555,22 @@ TangibleObject* ThreatMap::getHighestThreatAttacker() {
 	ManagedReference<TangibleObject*> currentThreat = this->currentThreat.get();
 
 	if (currentThreat != nullptr && !currentThreat->isDestroyed() && !cooldownTimerMap.isPast("doEvaluation")) {
+		int currentIdx = find(currentThreat);
+
+		if (currentIdx == -1) {
+			this->currentThreat = nullptr;
+			currentThreat = nullptr;
+		} else {
+			ThreatMapEntry* currentEntry = &elementAt(currentIdx).getValue();
+
+			if (!currentEntry->hasEffectiveThreat()) {
+				this->currentThreat = nullptr;
+				currentThreat = nullptr;
+			}
+		}
+	}
+
+	if (currentThreat != nullptr && !currentThreat->isDestroyed() && !cooldownTimerMap.isPast("doEvaluation")) {
 		if (currentThreat->isCreatureObject()) {
 			ManagedReference<CreatureObject*> currentCreo = currentThreat->asCreatureObject();
 
@@ -613,10 +645,16 @@ void ThreatMap::addAggro(TangibleObject* target, int value, uint64 duration) {
 		entry.addAggro(value);
 		put(target, entry);
 		registerObserver(target);
+		idx = find(target);
 
 	} else {
 		ThreatMapEntry* entry = &elementAt(idx).getValue();
 		entry->addAggro(value);
+	}
+
+	if (idx != -1) {
+		ThreatMapEntry* entry = &elementAt(idx).getValue();
+		invalidateTargetEvaluation(target, *entry);
 	}
 
 	if (duration > 0) {
@@ -642,8 +680,8 @@ void ThreatMap::clearAggro(TangibleObject* target) {
 	int idx = find(target);
 
 	if (idx != -1) {
-		ThreatMapEntry entry;
-		entry.clearAggro();
+		ThreatMapEntry* entry = &elementAt(idx).getValue();
+		entry->clearAggro();
 	}
 }
 
@@ -662,10 +700,44 @@ void ThreatMap::addHeal(TangibleObject* target, int value) {
 		entry.addAggro(1);
 		put(target, entry);
 		registerObserver(target);
+		idx = find(target);
 
 	} else {
 		ThreatMapEntry* entry = &elementAt(idx).getValue();
 		entry->addHeal(value);
 		entry->addAggro(1);
+	}
+
+	if (idx != -1) {
+		ThreatMapEntry* entry = &elementAt(idx).getValue();
+		invalidateTargetEvaluation(target, *entry);
+	}
+}
+
+void ThreatMap::invalidateTargetEvaluation(TangibleObject* target, ThreatMapEntry& targetEntry) {
+	ManagedReference<TangibleObject*> currentTarget = currentThreat.get();
+
+	if (target == nullptr || currentTarget == nullptr || currentTarget == target) {
+		return;
+	}
+
+	int currentIdx = find(currentTarget);
+
+	if (currentIdx == -1) {
+		cooldownTimerMap.updateToCurrentTime("doEvaluation");
+		return;
+	}
+
+	ThreatMapEntry* currentEntry = &elementAt(currentIdx).getValue();
+
+	uint32 targetDamage = targetEntry.getEffectiveDamageThreat();
+	uint32 currentDamage = currentEntry->getEffectiveDamageThreat();
+
+	// Re-evaluate sooner when another combatant has clearly overtaken the current target.
+	if (targetEntry.hasState(ThreatStates::TAUNTED) || targetEntry.hasState(ThreatStates::FOCUSED) ||
+		targetEntry.getEffectiveAggroMod() > currentEntry->getEffectiveAggroMod() ||
+		targetEntry.getEffectiveHeal() > currentEntry->getEffectiveHeal() ||
+		targetDamage > currentDamage) {
+		cooldownTimerMap.updateToCurrentTime("doEvaluation");
 	}
 }

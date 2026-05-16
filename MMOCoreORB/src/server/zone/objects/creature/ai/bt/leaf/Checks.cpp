@@ -281,9 +281,9 @@ template<> bool CheckFlee::check(AiAgent* agent) const {
 		return false;
 	}
 
-	if ((agent->getHAM(CreatureAttribute::HEALTH) < agent->getMaxHAM(CreatureAttribute::HEALTH) * checkVar)
-		|| (agent->getHAM(CreatureAttribute::ACTION) < agent->getMaxHAM(CreatureAttribute::ACTION) * checkVar)
-		|| (agent->getHAM(CreatureAttribute::MIND) < agent->getMaxHAM(CreatureAttribute::MIND) * checkVar)) {
+	// Low action or mind should not make NPCs disengage; they should stay in
+	// combat and fall back to basic attacks until their action has recovered.
+	if (agent->getHAM(CreatureAttribute::HEALTH) < agent->getMaxHAM(CreatureAttribute::HEALTH) * checkVar) {
 
 		return true;
 	}

@@ -37,9 +37,9 @@ protected:
 	ManagedReference<TangibleObject*> tauntThreat;
 	ManagedReference<TangibleObject*> focusedThreat;
 
-	VectorMap<uint32, ManagedReference<TangibleObject*>> damageMap;
-	VectorMap<int, ManagedReference<TangibleObject*>> aggroMap;
-	VectorMap<int, ManagedReference<TangibleObject*>> healMap;
+	VectorMap<uint64, ManagedReference<TangibleObject*>> damageMap;
+	VectorMap<uint64, ManagedReference<TangibleObject*>> aggroMap;
+	VectorMap<uint64, ManagedReference<TangibleObject*>> healMap;
 
 public:
 	ThreatMatrix();

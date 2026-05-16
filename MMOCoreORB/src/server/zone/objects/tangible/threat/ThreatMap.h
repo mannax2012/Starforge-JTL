@@ -10,6 +10,7 @@
 
 #include "engine/engine.h"
 #include "ThreatMatrix.h"
+#include "ThreatStates.h"
 #include "server/zone/objects/tangible/threat/ThreatMapObserver.h"
 #include "server/zone/objects/creature/variables/CooldownTimerMap.h"
 #include "server/zone/objects/tangible/weapon/WeaponObject.h"
@@ -41,6 +42,7 @@ class ThreatMapEntry : public VectorMap<String, uint32> {
 	int healAmount;
 	uint32 nonAggroDamageTotal;
 	Time startTime;
+	Time lastThreatUpdate;
 
 public:
 	ThreatMapEntry() {
@@ -49,6 +51,8 @@ public:
 		threatBitmask = 0;
 		healAmount = 0;
 		nonAggroDamageTotal = 0;
+		startTime.updateToCurrentTime();
+		lastThreatUpdate.updateToCurrentTime();
 	}
 
 	ThreatMapEntry(const ThreatMapEntry& e) : VectorMap<String, uint32>(e) {
@@ -58,6 +62,7 @@ public:
 		healAmount = e.healAmount;
 		nonAggroDamageTotal = e.nonAggroDamageTotal;
 		startTime = e.startTime;
+		lastThreatUpdate = e.lastThreatUpdate;
 	}
 
 	ThreatMapEntry& operator=(const ThreatMapEntry& e) {
@@ -69,6 +74,7 @@ public:
 		healAmount = e.healAmount;
 		nonAggroDamageTotal = e.nonAggroDamageTotal;
 		startTime = e.startTime;
+		lastThreatUpdate = e.lastThreatUpdate;
 
 		VectorMap<String, uint32>::operator=(e);
 
@@ -81,13 +87,16 @@ public:
 	void setThreatState(uint64 state);
 	bool hasState(uint64 state);
 	void clearThreatState(uint64 state);
+	void touchThreat();
 
 	void addAggro(int value) {
 		aggroMod += value;
+		touchThreat();
 	}
 
 	void addHeal(int value) {
 		healAmount += value;
+		touchThreat();
 	}
 
 	int getHeal() {
@@ -96,6 +105,50 @@ public:
 
 	int getAggroMod() {
 		return aggroMod;
+	}
+
+	uint32 getSecondsSinceThreatUpdate() {
+		return lastThreatUpdate.miliDifference() / 1000.0;
+	}
+
+	float getThreatDecayMultiplier() {
+		float seconds = (float)getSecondsSinceThreatUpdate();
+
+		if (seconds <= 6.f)
+			return 1.f;
+
+		if (seconds >= 36.f)
+			return 0.f;
+
+		return 1.f - ((seconds - 6.f) / 30.f);
+	}
+
+	uint32 getEffectiveDamageThreat() {
+		uint32 damageThreat = getTotalDamage() - nonAggroDamageTotal;
+
+		if (damageThreat == 0)
+			return 0;
+
+		return Math::max(1u, (uint32)(damageThreat * getThreatDecayMultiplier()));
+	}
+
+	int getEffectiveAggroMod() {
+		if (aggroMod <= 0)
+			return 0;
+
+		return Math::max(1, (int)(aggroMod * getThreatDecayMultiplier()));
+	}
+
+	int getEffectiveHeal() {
+		if (healAmount <= 0)
+			return 0;
+
+		return Math::max(1, (int)(healAmount * getThreatDecayMultiplier()));
+	}
+
+	bool hasEffectiveThreat() {
+		return hasState(ThreatStates::TAUNTED) || hasState(ThreatStates::FOCUSED) || getEffectiveDamageThreat() > 0 ||
+			getEffectiveAggroMod() > 0 || getEffectiveHeal() > 0;
 	}
 
 	uint32 getDurationSeconds() {
@@ -115,10 +168,12 @@ public:
 
 	void removeAggro(int value) {
 		aggroMod -= value;
+		touchThreat();
 	}
 
 	void clearAggro() {
 		aggroMod = 0;
+		touchThreat();
 	}
 
 	uint32 getTotalDamage() {
@@ -238,6 +293,7 @@ public:
 
 private:
 	void registerObserver(TangibleObject* target);
+	void invalidateTargetEvaluation(TangibleObject* target, ThreatMapEntry& targetEntry);
 };
 }
 }

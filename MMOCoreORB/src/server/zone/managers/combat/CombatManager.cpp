@@ -2979,7 +2979,7 @@ void CombatManager::showHitLocationFlyText(CreatureObject* attacker, CreatureObj
 // Special Attack Cost
 
 bool CombatManager::applySpecialAttackCost(CreatureObject* attacker, WeaponObject* weapon, const CreatureAttackData& data, WeaponObject* offHand) const {
-	if (attacker->isAiAgent() || data.isForceAttack())
+	if (data.isForceAttack())
 		return true;
 
 	float force = weapon->getForceCost() * data.getForceCostMultiplier();
@@ -3020,28 +3020,26 @@ bool CombatManager::applySpecialAttackCost(CreatureObject* attacker, WeaponObjec
 			return false;
 		}
 	}
-/*
-	health = attacker->calculateCostAdjustment(CreatureAttribute::STRENGTH, health);
-	action = attacker->calculateCostAdjustment(CreatureAttribute::QUICKNESS, action);
-	mind = attacker->calculateCostAdjustment(CreatureAttribute::FOCUS, mind);
-*/
-	if (attacker->getHAM(CreatureAttribute::HEALTH) <= health)
+	// Combat resource costs are now paid from action only so the attacker-side
+	// resource model matches the health-only combat damage model.
+	float totalActionCost = health + action + mind;
+
+	// Many creature-only special attacks run on natural/unarmed weapons that do
+	// not carry player-style HAM attack cost data. Give AI specials a fallback
+	// action cost so template attacks like poison/disease/area specials still
+	// consume action and throttle correctly.
+	if (attacker->isAiAgent() && totalActionCost <= 0.f && !data.isStateOnlyAttack()) {
+		float fallbackMultiplier = data.getHealthCostMultiplier() + data.getActionCostMultiplier() + data.getMindCostMultiplier();
+		int wieldCount = (data.isDualWieldAttack() && offHand != nullptr) ? 2 : 1;
+
+		totalActionCost = 100.f * fallbackMultiplier * wieldCount;
+	}
+
+	if (attacker->getHAM(CreatureAttribute::ACTION) <= totalActionCost)
 		return false;
 
-	if (attacker->getHAM(CreatureAttribute::ACTION) <= action)
-		return false;
-
-	if (attacker->getHAM(CreatureAttribute::MIND) <= mind)
-		return false;
-
-	if (health > 0)
-		attacker->inflictDamage(attacker, CreatureAttribute::ACTION, health, true, true, true);
-
-	if (action > 0)
-		attacker->inflictDamage(attacker, CreatureAttribute::ACTION, action, true, true, true);
-
-	if (mind > 0)
-		attacker->inflictDamage(attacker, CreatureAttribute::ACTION, mind, true, true, true);
+	if (totalActionCost > 0)
+		attacker->inflictDamage(attacker, CreatureAttribute::ACTION, totalActionCost, true, true, true);
 
 	return true;
 }

@@ -2,10 +2,10 @@
 #define LOOKFORTARGET_H_
 
 #include "server/zone/objects/creature/ai/AiAgent.h"
+#include "server/zone/objects/creature/ai/bt/decorator/AiPerception.h"
 #include "templates/params/OptionBitmask.h"
 #include "templates/params/creature/ObjectFlag.h"
 #include "server/zone/objects/creature/ai/bt/decorator/Decorator.h"
-#include "server/zone/managers/collision/CollisionManager.h"
 
 #include <cassert>
 
@@ -47,7 +47,7 @@ public:
 		if (currObj != nullptr && agent->getHerdObserver().get() == nullptr) {
 			if (currObj->isCreatureObject() && isInvalidTarget(currObj->asCreatureObject(), agent)) {
 				if (!(agent->getCreatureBitmask() & ObjectFlag::FOLLOW)) {
-					agent->setFollowObject(nullptr);
+					agent->setTargetObject(nullptr);
 					agent->setMovementState(AiAgent::PATHING_HOME);
 				}
 				return FAILURE;
@@ -102,7 +102,7 @@ public:
 			return true;
 		}
 
-		return false;
+		return !detail::canPerceiveTarget(agent, target);
 	}
 };
 

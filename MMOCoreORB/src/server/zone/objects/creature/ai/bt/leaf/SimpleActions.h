@@ -4,6 +4,7 @@
 #include "server/zone/objects/creature/ai/bt/Behavior.h"
 #include "server/zone/objects/creature/ai/bt/BlackboardData.h"
 #include "server/zone/objects/creature/ai/AiAgent.h"
+#include "server/zone/managers/collision/CollisionManager.h"
 #include "server/zone/managers/gcw/GCWManager.h"
 #include "server/zone/managers/reaction/ReactionManager.h"
 #include "server/zone/managers/creature/observers/CreatureHerdObserver.h"
@@ -885,7 +886,34 @@ public:
 					Locker lock(allyAgent);
 					Locker enlocker(enemyTarget, allyAgent);
 
-					allyAgent->addDefender(enemyTarget);
+					if (allyAgent->peekBlackboard("targetProspect")) {
+						allyAgent->eraseBlackboard("targetProspect");
+					}
+
+					allyAgent->writeBlackboard("targetProspect", enemyTarget);
+
+					SceneObject* currentFollow = allyAgent->getFollowObject().get();
+					bool canKeepCurrentTarget = false;
+
+					if (currentFollow != nullptr && currentFollow->isTangibleObject()) {
+						TangibleObject* currentTano = currentFollow->asTangibleObject();
+
+						if (currentTano != nullptr && currentTano->isAttackableBy(allyAgent) && currentFollow->isInRange(allyAgent, 128.f) &&
+								CollisionManager::checkLineOfSight(allyAgent, currentFollow)) {
+							if (!currentFollow->isCreatureObject()) {
+								canKeepCurrentTarget = !currentTano->isDestroyed();
+							} else {
+								CreatureObject* currentCreo = currentFollow->asCreatureObject();
+								canKeepCurrentTarget = currentCreo != nullptr && !currentCreo->isDead() && !currentCreo->isIncapacitated() && !currentCreo->isInvisible();
+							}
+						}
+					}
+
+					if (!allyAgent->isInCombat() || !canKeepCurrentTarget || currentFollow == enemyTarget) {
+						allyAgent->setDefender(enemyTarget);
+					} else {
+						allyAgent->addDefender(enemyTarget);
+					}
 
 				}, "CallForHelpLambda");
 			}
