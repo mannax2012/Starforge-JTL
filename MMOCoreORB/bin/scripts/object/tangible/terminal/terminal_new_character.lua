@@ -77,8 +77,7 @@ object_tangible_terminal_terminal_new_character = object_tangible_terminal_share
 			{
 				"Vehicle Deeds",
 				{
-					"Speederbike", "object/tangible/deed/vehicle_deed/speederbike_deed.iff",
-					"Sorosuub Luxury Yacht", "object/ship/player/player_sorosuub_space_yacht.iff"
+					"Speederbike", "object/tangible/deed/vehicle_deed/speederbike_deed.iff"
 				},
 			},
 

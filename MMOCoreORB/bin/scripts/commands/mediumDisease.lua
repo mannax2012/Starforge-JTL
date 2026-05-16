@@ -44,6 +44,9 @@
 MediumDiseaseCommand = {
         name = "mediumdisease",
         combatSpam = "attack",
+	healthCostMultiplier = 0,
+	actionCostMultiplier = 2.0,
+	mindCostMultiplier = 0,
 	dotEffects = {
 	  DotEffect( 
 		DISEASED, 
@@ -60,4 +63,3 @@ MediumDiseaseCommand = {
 }
 
 AddCommand(MediumDiseaseCommand)
-

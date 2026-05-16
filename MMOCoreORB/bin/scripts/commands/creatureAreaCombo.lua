@@ -53,7 +53,7 @@ CreatureAreaComboCommand = {
 	animType = GENERATE_INTENSITY,
 
 	healthCostMultiplier = 0,
-	actionCostMultiplier = 0,
+	actionCostMultiplier = 2.0,
 	mindCostMultiplier = 0,
 
 	areaRange = 25,
@@ -91,4 +91,3 @@ CreatureAreaComboCommand = {
 }
 
 AddCommand(CreatureAreaComboCommand)
-

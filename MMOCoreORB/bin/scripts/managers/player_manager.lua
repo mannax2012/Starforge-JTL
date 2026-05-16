@@ -73,11 +73,14 @@ baseStoredShips = 5
 -----------------------------------
 --VETERAN REWARDS CONFIG
 -----------------------------------
-veteranRewardMilestones = {90, 180, 270, 360, 450, 540, 630, 720, 810, 900, 990, 1080} --days, must be sorted low to high
+veteranRewardMilestones = {30, 90, 180, 270, 360, 450, 540, 630, 720, 810, 900, 990, 1080} --days, must be sorted low to high
 
 veteranRewardAdditionalMilestones = 360 --frequency, in days, of additional milestones (beyond the established ones)
 
 veteranRewards = {
+	-- 30 Day Rewards
+	{templateFile = "object/tangible/space/veteran_reward/sorosuub_space_yacht_deed.iff", milestone=30, oneTime=true, description="@veteran_new:sorosuub", jtlReward = true},
+
 	-- 90 Day Rewards
 	{templateFile = "object/tangible/veteran_reward/harvester.iff", milestone=90, oneTime=true, description="@veteran_new:poweredharvester", jtlReward = false},
 	{templateFile = "object/tangible/veteran_reward/data_terminal_s1.iff", milestone=90, oneTime=false, description="@veteran_new:dataterminal1", jtlReward = false},
@@ -93,7 +96,6 @@ veteranRewards = {
 	{templateFile = "object/tangible/veteran_reward/frn_couch_falcon_section_s01.iff", milestone=180, oneTime=false, description="@veteran_new:falconchair", jtlReward = false},
 	{templateFile = "object/tangible/veteran_reward/frn_vet_tie_fighter_toy.iff", milestone=180, oneTime=false, description="@veteran_new:mini_tiefighter", jtlReward = false},
 	{templateFile = "object/tangible/veteran_reward/frn_vet_x_wing_toy.iff", milestone=180, oneTime=false, description="@veteran_new:mini_xwing", jtlReward = false},
-	{templateFile = "object/tangible/space/veteran_reward/sorosuub_space_yacht_deed.iff", milestone=180, oneTime=true, description="@veteran_new:sorosuub", jtlReward = true},
 
 	-- 270 Day Rewards
 	{templateFile = "object/tangible/deed/vehicle_deed/speederbike_flash_deed.iff", milestone=270, oneTime=true, jtlReward = false},

@@ -62,10 +62,9 @@ public:
 
 			player->sendSystemMessage(timeMsg);
 
-			// Handle JTL Reward message
-			if (eligibleMilestone >= 180 && ConfigManager::instance()->isJtlEnabled()) {
-				StringIdChatParameter yachtMsg("veteran_new", "announcement_180day_jtl"); // "Congratulations!  You have earned the 180-day Jump to Lightspeed Veteran Reward, the Sorosuub Luxury Yacht!  You can claim this reward for every character on your account."
-				player->sendSystemMessage(yachtMsg);
+			// Call out the yacht now that it sits on its own 30-day tier.
+			if (eligibleMilestone == 30 && ConfigManager::instance()->isJtlEnabled()) {
+				player->sendSystemMessage("You are eligible for the 30-day Jump to Lightspeed veteran reward, the Sorosuub Luxury Yacht.");
 			}
 		} else {
 			player->sendSystemMessage("@veteran:not_eligible"); // You are not currently eligible for a veteran reward.

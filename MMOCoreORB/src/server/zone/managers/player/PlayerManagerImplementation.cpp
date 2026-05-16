@@ -78,6 +78,7 @@
 #include "server/zone/objects/region/CityRegion.h"
 #include "server/zone/managers/director/DirectorManager.h"
 #include "server/zone/objects/player/sui/callbacks/CloningRequestSuiCallback.h"
+
 #include "server/zone/objects/tangible/tool/CraftingStation.h"
 #include "server/zone/objects/tangible/tool/CraftingTool.h"
 
@@ -124,6 +125,32 @@
 #include "server/zone/managers/statistics/StatisticsManager.h"
 
 namespace {
+	bool hasClaimableVeteranRewardForMilestone(PlayerObject* ghost, const VeteranRewardList& veteranRewards, int milestone, bool jtlEnabled) {
+		if (ghost == nullptr) {
+			return false;
+		}
+
+		for (int i = 0; i < veteranRewards.size(); ++i) {
+			VeteranReward reward = veteranRewards.get(i);
+
+			if (reward.getMilestone() > milestone) {
+				continue;
+			}
+
+			if (reward.isJtlReward() && !jtlEnabled) {
+				continue;
+			}
+
+			if (reward.isOneTime() && ghost->hasChosenVeteranReward(reward.getTemplateFile())) {
+				continue;
+			}
+
+			return true;
+		}
+
+		return false;
+	}
+
 	struct CloneZoneFallback {
 		const char* zoneName;
 		const char* cloneZoneName;
@@ -6214,11 +6241,11 @@ void PlayerManagerImplementation::generateVeteranReward(CreatureObject* player) 
 	// Record reward in all characters registered to the account
 	GalaxyAccountInfo* accountInfo = account->getGalaxyAccountInfo(player->getZoneServer()->getGalaxyName());
 
-	// sorosuub_space_yacht_deed
+	accountInfo->addChosenVeteranReward(rewardSession->getMilestone(), reward.getTemplateFile());
+
+	// Preserve the legacy Sorosuub lookup key for older account data and tools.
 	if (reward.isJtlReward()) {
 		accountInfo->addChosenVeteranReward(1, reward.getTemplateFile());
-	} else {
-		accountInfo->addChosenVeteranReward(rewardSession->getMilestone(), reward.getTemplateFile());
 	}
 
 	cancelVeteranRewardSession(player);
@@ -6235,6 +6262,7 @@ int PlayerManagerImplementation::getEligibleMilestone(PlayerObject *ghost, Accou
 
 	int accountAge = account->getAgeInDays();
 	int milestone = -1;
+	const bool jtlEnabled = ConfigManager::instance()->isJtlEnabled();
 
 	// Return -1 if account age is less than the first milestone
 	if (accountAge < veteranRewardMilestones.get(0)) {
@@ -6245,7 +6273,8 @@ int PlayerManagerImplementation::getEligibleMilestone(PlayerObject *ghost, Accou
 	for (int i = 0; i < veteranRewardMilestones.size(); i++) {
 		milestone = veteranRewardMilestones.get(i);
 
-		if (accountAge >= milestone && ghost->getChosenVeteranReward(milestone).isEmpty()) {
+		if (accountAge >= milestone && ghost->getChosenVeteranReward(milestone).isEmpty() &&
+				hasClaimableVeteranRewardForMilestone(ghost, veteranRewards, milestone, jtlEnabled)) {
 			return milestone;
 		}
 	}
@@ -6254,7 +6283,8 @@ int PlayerManagerImplementation::getEligibleMilestone(PlayerObject *ghost, Accou
 	milestone += veteranRewardAdditionalMilestones;
 
 	while (accountAge >= milestone) {
-		if (ghost->getChosenVeteranReward(milestone).isEmpty()) {
+		if (ghost->getChosenVeteranReward(milestone).isEmpty() &&
+				hasClaimableVeteranRewardForMilestone(ghost, veteranRewards, milestone, jtlEnabled)) {
 			return milestone;
 		}
 
@@ -6271,19 +6301,20 @@ int PlayerManagerImplementation::getFirstIneligibleMilestone(PlayerObject *playe
 
 	int accountAge = account->getAgeInDays();
 	int milestone = -1;
+	const bool jtlEnabled = ConfigManager::instance()->isJtlEnabled();
 
-	// Return the first milestone the player has not already claimed
+	// Return the first future milestone that has at least one claimable reward.
 	for (int i = 0; i < veteranRewardMilestones.size(); i++) {
 		milestone = veteranRewardMilestones.get(i);
-		if (accountAge < milestone) {
+		if (accountAge < milestone && hasClaimableVeteranRewardForMilestone(playerGhost, veteranRewards, milestone, jtlEnabled)) {
 			return milestone;
 		}
 	}
 
-	// Check additional milestones if all established ones have been claimed
-	while (accountAge >= milestone) {
+	// Check additional milestones if all established ones have been claimed.
+	do {
 		milestone += veteranRewardAdditionalMilestones;
-	}
+	} while (!hasClaimableVeteranRewardForMilestone(playerGhost, veteranRewards, milestone, jtlEnabled) || accountAge >= milestone);
 
 	return milestone;
 }

@@ -44,6 +44,9 @@
 MediumPoisonCommand = {
         name = "mediumpoison",
         combatSpam = "attack",
+	healthCostMultiplier = 0,
+	actionCostMultiplier = 2.0,
+	mindCostMultiplier = 0,
 	dotEffects = {
 	  DotEffect( 
 		POISONED, 
@@ -60,4 +63,3 @@ MediumPoisonCommand = {
 }
 
 AddCommand(MediumPoisonCommand)
-

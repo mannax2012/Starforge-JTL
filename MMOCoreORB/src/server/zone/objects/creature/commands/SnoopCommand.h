@@ -327,16 +327,6 @@ public:
 		body << "Claimed Rewards:" << endl;
 		body << "\tMilestone\tReward" << endl;
 
-		// Sorosuub Yacht claim
-		body << "\t" << "1";
-		String claimedSorosuub = targetGhost->getChosenVeteranReward(1);
-
-		if (claimedSorosuub.isEmpty()) {
-			body << "\t\t\t" << "Unclaimed" << endl;
-		} else {
-			body << "\t\t\t" << claimedSorosuub << endl;
-		}
-
 		// Standard reward milestones
 		for (int i = 0; i < playerManager->getNumVeteranRewardMilestones(); i++) {
 			int milestone = playerManager->getVeteranRewardMilestone(i);
@@ -344,10 +334,15 @@ public:
 			body << "\t" << String::valueOf(milestone);
 			String claimedReward = targetGhost->getChosenVeteranReward(milestone);
 
+			// Older Sorosuub claims were recorded under milestone 1.
+			if (milestone == 30 && claimedReward.isEmpty()) {
+				claimedReward = targetGhost->getChosenVeteranReward(1);
+			}
+
 			if (claimedReward.isEmpty()) {
-				body << (milestone > 90 ? "\t\t" : "\t\t\t") << "Unclaimed" << endl;
+				body << (milestone >= 100 ? "\t\t" : "\t\t\t") << "Unclaimed" << endl;
 			} else {
-				body << (milestone > 90 ? "\t\t" : "\t\t\t") << claimedReward << endl;
+				body << (milestone >= 100 ? "\t\t" : "\t\t\t") << claimedReward << endl;
 			}
 		}
 

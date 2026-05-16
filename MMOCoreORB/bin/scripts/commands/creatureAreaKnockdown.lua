@@ -51,7 +51,7 @@ CreatureAreaKnockdownCommand = {
 	animType = GENERATE_INTENSITY,
 
 	healthCostMultiplier = 0,
-	actionCostMultiplier = 0,
+	actionCostMultiplier = 2.0,
 	mindCostMultiplier = 0,
 
 	stateEffects = {
@@ -81,4 +81,3 @@ CreatureAreaKnockdownCommand = {
 }
 
 AddCommand(CreatureAreaKnockdownCommand)
-

@@ -44,6 +44,9 @@
 StrongPoisonCommand = {
         name = "strongpoison",
         combatSpam = "attack",
+	healthCostMultiplier = 0,
+	actionCostMultiplier = 2.5,
+	mindCostMultiplier = 0,
 	dotEffects = {
 	  DotEffect( 
 		POISONED, 
@@ -60,4 +63,3 @@ StrongPoisonCommand = {
 }
 
 AddCommand(StrongPoisonCommand)
-

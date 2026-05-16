@@ -838,7 +838,7 @@ namespace conf {
 
 			if (configVersion.get() > cachedVersion) {
 				Locker guard(&mutex);
-				cachedJtlEnabled = getBool("Core3.JTL.JTLEnabled", false);
+				cachedJtlEnabled = getBool("Core3.JTL.JTLEnabled", true);
 				cachedVersion = configVersion.get();
 			}
 
