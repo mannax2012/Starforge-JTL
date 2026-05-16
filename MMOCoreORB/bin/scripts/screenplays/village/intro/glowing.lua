@@ -1,6 +1,9 @@
 local ObjectManager = require("managers.object.object_manager")
 local Logger = require("utils.logger")
 
+local BOUNTY_TERMINAL_VIS_THRESHOLD = 500
+local BOUNTY_VIS_CAP = 8000
+
 Glowing = ScreenPlay:new {
 	requiredBadges = {
 		{ type = "exploration_jedi", amount = 3 },
@@ -51,6 +54,20 @@ function Glowing:isGlowing(pPlayer)
 	return VillageJediManagerCommon.hasJediProgressionScreenPlayState(pPlayer, VILLAGE_JEDI_PROGRESSION_GLOWING)
 end
 
+function Glowing:isFrsKnight(pPlayer)
+	local pGhost = CreatureObject(pPlayer):getPlayerObject()
+
+	if (pGhost == nil) then
+		return false
+	end
+
+	local playerObject = PlayerObject(pGhost)
+	local jediState = playerObject:getJediState()
+	local frsRank = playerObject:getFrsRank()
+
+	return (jediState == 4 or jediState == 8) and frsRank >= 0
+end
+
 -- Event handler for the BADGEAWARDED event.
 -- @param pPlayer pointer to the creature object of the player who was awarded with a badge.
 -- @param pPlayer2 pointer to the creature object of the player who was awarded with a badge.
@@ -93,6 +110,29 @@ end
 -- Handling of the checkForceStatus command.
 -- @param pPlayer pointer to the creature object of the player who performed the command
 function Glowing:checkForceStatusCommand(pPlayer)
+	if self:isFrsKnight(pPlayer) then
+		local pGhost = CreatureObject(pPlayer):getPlayerObject()
+
+		if (pGhost == nil) then
+			return
+		end
+
+		local visibility = PlayerObject(pGhost):getVisibility()
+		local visDebug = math.floor(visibility + 0.5)
+
+		CreatureObject(pPlayer):sendSystemMessage("DEBUG: Current visibility is " .. visDebug .. ".")
+
+		if visibility >= BOUNTY_VIS_CAP then
+			CreatureObject(pPlayer):sendSystemMessage("Every shadowport in the galaxy is whispering your name. You are on the bounty boards.")
+		elseif visibility >= BOUNTY_TERMINAL_VIS_THRESHOLD then
+			CreatureObject(pPlayer):sendSystemMessage("Word from the underworld is you are likely wanted.")
+		else
+			CreatureObject(pPlayer):sendSystemMessage("The bounty boards are quiet for now. Your trail has not drawn enough notice.")
+		end
+
+		return
+	end
+
 	local progress = "@jedi_spam:fs_progress_" .. self:getCompletedBadgeTypeCount(pPlayer)
 
 	CreatureObject(pPlayer):sendSystemMessage(progress)
