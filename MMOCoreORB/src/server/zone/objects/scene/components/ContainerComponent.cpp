@@ -122,6 +122,8 @@ int ContainerComponent::canAddObject(SceneObject* sceneObject, SceneObject* obje
 		return TransferErrorCode::CANTADD;
 	}
 
+	sceneObject->cleanupInvalidSlottedObjects();
+
 	Locker contLocker(sceneObject->getContainerLock());
 
 	const VectorMap<String, ManagedReference<SceneObject*> >* slottedObjects = sceneObject->getSlottedObjects();
@@ -387,6 +389,8 @@ bool ContainerComponent::removeObject(SceneObject* sceneObject, SceneObject* obj
 	}
 #endif // DEBUG_CONTAINER_TRANSFER
 
+	sceneObject->cleanupInvalidSlottedObjects();
+
 	Locker contLocker(sceneObject->getContainerLock());
 
 	VectorMap<String, ManagedReference<SceneObject*> >* slottedObjects = sceneObject->getSlottedObjects();
@@ -491,4 +495,3 @@ int ContainerComponent::notifyObjectInserted(SceneObject* sceneObject, SceneObje
 int ContainerComponent::notifyObjectRemoved(SceneObject* sceneObject, SceneObject* object, SceneObject* destination) const {
 	return sceneObject->notifyObjectRemoved(object);
 }
-

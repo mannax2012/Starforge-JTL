@@ -463,6 +463,8 @@ void SceneObjectImplementation::notifyLoadFromDatabase() {
 
 	}
 
+	cleanupInvalidSlottedObjects();
+
 	// Players are sent into the zone or parent when they connect
 	if (zone != nullptr && !isPlayerCreature()) {
 		class InsertZoneTask : public Task {
@@ -1789,6 +1791,41 @@ void SceneObjectImplementation::getContainerObjects(VectorMap<uint64, ManagedRef
 
 		objects = *containerObjects.getContainerObjects();
 	}
+}
+
+bool SceneObjectImplementation::cleanupInvalidSlottedObjects() {
+	Locker locker(&containerLock);
+
+	bool updated = false;
+
+	for (int i = slottedObjects.size() - 1; i >= 0; --i) {
+		const String& slotKey = slottedObjects.elementAt(i).getKey();
+		ManagedReference<SceneObject*> obj = slottedObjects.get(i);
+		bool keepSlot = false;
+
+		if (obj != nullptr && obj->getParent() == asSceneObject()) {
+			int arrangementSize = obj->getArrangementDescriptorSize();
+			int arrangementGroup = obj->getContainmentType() >= 4 ? static_cast<int>(obj->getContainmentType() - 4) : 0;
+
+			if (arrangementSize > arrangementGroup) {
+				const Vector<String>* descriptors = obj->getArrangementDescriptor(arrangementGroup);
+
+				for (int j = 0; j < descriptors->size(); ++j) {
+					if (descriptors->get(j) == slotKey) {
+						keepSlot = true;
+						break;
+					}
+				}
+			}
+		}
+
+		if (!keepSlot) {
+			slottedObjects.remove(i);
+			updated = true;
+		}
+	}
+
+	return updated;
 }
 
 void SceneObjectImplementation::getSlottedObjects(VectorMap<String, ManagedReference<SceneObject*> >& objects) {
