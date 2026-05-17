@@ -151,7 +151,9 @@ void CloseObjectsVector::safeCopyReceiversTo(Vector<TreeEntry*>& vec, uint32 rec
 
 		vec.removeAll(receivers.size(), receivers.size() / 2);
 
-		vec.addAll(receivers);
+		for (int j = 0; j < receivers.size(); ++j) {
+			vec.add(receivers.getUnsafe(j).get());
+		}
 	}
 }
 
@@ -163,7 +165,13 @@ void CloseObjectsVector::safeRunForEach(const Function<void(TreeEntry* const&)>&
 	if (i != -1) {
 		const auto& receivers = messageReceivers.elementAt(i).getValue();
 
-		receivers.forEach(lambda);
+		for (int j = 0; j < receivers.size(); ++j) {
+			auto entry = receivers.getUnsafe(j).get();
+
+			if (entry != nullptr) {
+				lambda(entry);
+			}
+		}
 	}
 }
 
@@ -177,8 +185,9 @@ void CloseObjectsVector::safeCopyReceiversTo(Vector<ManagedReference<TreeEntry*>
 
 		vec.removeAll(receivers.size(), receivers.size() / 2);
 
-		for (int i = 0; i < receivers.size(); ++i)
-			vec.emplace(receivers.getUnsafe(i));
+		for (int j = 0; j < receivers.size(); ++j) {
+			vec.emplace(receivers.getUnsafe(j).get());
+		}
 	}
 }
 
@@ -189,7 +198,10 @@ void CloseObjectsVector::safeAppendReceiversTo(Vector<TreeEntry*>& vec, uint32 r
 
 	if (i != -1) {
 		const auto& receivers = messageReceivers.elementAt(i).getValue();
-		vec.addAll(receivers);
+
+		for (int j = 0; j < receivers.size(); ++j) {
+			vec.add(receivers.getUnsafe(j).get());
+		}
 	}
 }
 
@@ -200,8 +212,9 @@ void CloseObjectsVector::safeAppendReceiversTo(Vector<ManagedReference<TreeEntry
 
 	if (i != -1) {
 		const auto& receivers = messageReceivers.elementAt(i).getValue();
-		for (int i = 0; i < receivers.size(); ++i)
-			vec.emplace(receivers.getUnsafe(i));
+		for (int j = 0; j < receivers.size(); ++j) {
+			vec.emplace(receivers.getUnsafe(j).get());
+		}
 	}
 }
 
@@ -222,7 +235,7 @@ void CloseObjectsVector::putReceiver(TreeEntry* entry, uint32 receiverTypes) {
 
 					receivers.put(entry);
 				} else {
-					SortedVector<TreeEntry*> vec;
+					SortedVector<Reference<TreeEntry*> > vec;
 					vec.setNoDuplicateInsertPlan();
 
 					vec.put(entry);

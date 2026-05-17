@@ -21,7 +21,7 @@ class CloseObjectsVector : public Object {
 	mutable ReadWriteLock mutex;
 	SortedVector<Reference<server::zone::TreeEntry*> > objects;
 
-	VectorMap<uint32, SortedVector<server::zone::TreeEntry*> > messageReceivers;
+	VectorMap<uint32, SortedVector<Reference<server::zone::TreeEntry*> > > messageReceivers;
 
 	uint32 count;
 
