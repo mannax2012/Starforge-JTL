@@ -2,12 +2,24 @@
 
 includeFile("space/SpaceQuestLogic.lua")
 includeFile("space/SpaceAssassinateScreenplay.lua")
+includeFile("space/SpaceBattleScreenplay.lua")
+includeFile("space/SpaceDeliveryScreenplay.lua")
+includeFile("space/SpaceDeliveryNoPickupScreenplay.lua")
 includeFile("space/SpaceDestroyScreenplay.lua")
-includeFile("space/SpaceDutyDestroyScreenplay.lua")
 includeFile("space/SpaceEscortScreenplay.lua")
-includeFile("space/SpaceDutyEscortScreenplay.lua")
+includeFile("space/SpaceInspectScreenplay.lua")
 includeFile("space/SpacePatrolScreenplay.lua")
+includeFile("space/SpaceRecoveryScreenplay.lua")
+includeFile("space/SpaceRescueScreenplay.lua")
 includeFile("space/SpaceSurpriseAttackScreenplay.lua")
+includeFile("space/SpaceSurvivalScreenplay.lua")
+
+-- Duty Screenplays
+includeFile("space/SpaceDutyDestroyScreenplay.lua")
+includeFile("space/SpaceDutyEscortScreenplay.lua")
+includeFile("space/SpaceDutyPatrolScreenplay.lua")
+includeFile("space/SpaceDutyRecoveryScreenplay.lua")
+includeFile("space/SpaceDutyRescueScreenplay.lua")
 
 includeFile("space/chassis_dealer.lua")
 
@@ -20,8 +32,10 @@ includeFile("space/spacestations/spacestation_corellia_conv_handler.lua")
 includeFile("space/spacestations/spacestation_dantooine_conv_handler.lua")
 includeFile("space/spacestations/spacestation_dathomir_conv_handler.lua")
 includeFile("space/spacestations/spacestation_endor_conv_handler.lua")
+includeFile("space/spacestations/spacestation_imperial_conv_handler.lua")
 includeFile("space/spacestations/spacestation_lok_conv_handler.lua")
 includeFile("space/spacestations/spacestation_naboo_conv_handler.lua")
+includeFile("space/spacestations/spacestation_rebel_conv_handler.lua")
 includeFile("space/spacestations/spacestation_rori_conv_handler.lua")
 includeFile("space/spacestations/spacestation_talus_conv_handler.lua")
 includeFile("space/spacestations/spacestation_tatooine_conv_handler.lua")
@@ -74,40 +88,64 @@ includeFile("space/conversations/greeters/kessYarrowConvoHandler.lua")
 includeFile("space/conversations/neutral/gilBurtinConvoHandler.lua")
 
 -- Corsec
-includeFile("space/CorsecSquadronScreenplay.lua")
+includeFile("space/squadrons/CorsecSquadronScreenplay.lua")
+
 includeFile("space/conversations/neutral/corsec_squadron/rheaConvoHandler.lua")
+includeFile("space/conversations/neutral/corsec_squadron/rikkhConvoHandler.lua")
+includeFile("space/conversations/neutral/corsec_squadron/ramnaConvoHandler.lua")
+includeFile("space/conversations/neutral/corsec_squadron/turoldineConvoHandler.lua")
 
--- Smuggler
-includeFile("space/SmugglerSquadronScreenplay.lua")
+-- Smuggler Squadron
+includeFile("space/squadrons/SmugglerSquadronScreenplay.lua")
 
--- RSF
-includeFile("space/RsfSquadronScreenplay.lua")
+-- RSF Squadron
+includeFile("space/squadrons/RsfSquadronScreenplay.lua")
+
+includeFile("space/conversations/neutral/rsf_squadron/dingeConvoHandler.lua")
+includeFile("space/conversations/neutral/rsf_squadron/kaydineConvoHandler.lua")
+includeFile("space/conversations/neutral/rsf_squadron/duliosConvoHandler.lua")
 
 
 -- Rebel
 includeFile("space/conversations/rebel/jPaiBrekConvoHandler.lua")
 
--- Crimson Phoenix
-includeFile("space/CrimsonPhoenixSquadronScreenplay.lua")
+-- Crimson Phoenix Squadron
+includeFile("space/squadrons/CrimsonPhoenixSquadronScreenplay.lua")
 
--- Havoc
-includeFile("space/HavocSquadronScreenplay.lua")
+--includeFile("space/conversations/rebel/crimson_phoenix_squadron/ekerConvoHandler.lua")
+--includeFile("space/conversations/rebel/crimson_phoenix_squadron/socunaConvoHandler.lua")
+--includeFile("space/conversations/rebel/crimson_phoenix_squadron/ulvawopConvoHandler.lua")
+--includeFile("space/conversations/rebel/crimson_phoenix_squadron/ufwolConvoHandler.lua")
 
--- Vortex
-includeFile("space/VortexSquadronScreenplay.lua")
+-- Havoc Squadron (Arkon)
+includeFile("space/squadrons/HavocSquadronScreenplay.lua")
+
+includeFile("space/conversations/rebel/havoc_squadron/kreezoConvoHandler.lua")
+includeFile("space/conversations/rebel/havoc_squadron/viopaConvoHandler.lua")
+includeFile("space/conversations/rebel/havoc_squadron/vrakConvoHandler.lua")
+includeFile("space/conversations/rebel/havoc_squadron/aqzowConvoHandler.lua")
+--includeFile("space/conversations/rebel/havoc_squadron/arkonConvoHandler.lua")
+
+-- Vortex Squadron
+includeFile("space/squadrons/VortexSquadronScreenplay.lua")
+
+--includeFile("space/conversations/rebel/vortex_squadron/evinConvoHandler.lua")
+--includeFile("space/conversations/rebel/vortex_squadron/ezkielConvoHandler.lua")
+--includeFile("space/conversations/rebel/vortex_squadron/v3fxConvoHandler.lua")
+--includeFile("space/conversations/rebel/vortex_squadron/vrovelConvoHandler.lua")
 
 
 -- Imperial
 includeFile("space/conversations/imperial/imperialBrokerConvoHandler.lua")
 
--- Black Epsilon
-includeFile("space/BlackEpsilonSquadronScreenplay.lua")
+-- Black Epsilon Squadron
+includeFile("space/squadrons/BlackEpsilonSquadronScreenplay.lua")
 
--- Imperial Inquisition
-includeFile("space/InquisitionSquadronScreenplay.lua")
+-- Imperial Inquisition Squadron
+includeFile("space/squadrons/InquisitionSquadronScreenplay.lua")
 
--- Storm
-includeFile("space/StormSquadronScreenplay.lua")
+-- Storm Squadron
+includeFile("space/squadrons/StormSquadronScreenplay.lua")
 
 
 -- Spawning Sub Folder

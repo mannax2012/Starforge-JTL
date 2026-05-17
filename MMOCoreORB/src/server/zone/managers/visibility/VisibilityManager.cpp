@@ -6,6 +6,7 @@
 #include "server/zone/managers/mission/MissionManager.h"
 #include "server/zone/managers/collision/CollisionManager.h"
 #include "server/zone/objects/player/PlayerObject.h"
+#include "server/zone/objects/player/FactionStatus.h"
 #include "server/zone/managers/visibility/tasks/VisibilityDecayTask.h"
 #include "server/zone/Zone.h"
 
@@ -75,8 +76,13 @@ float VisibilityManager::calculateVisibilityIncrease(CreatureObject* creature) {
 
 	}
 
-	if (!creature->hasSkill("force_title_jedi_rank_03"))
-	visibilityIncrease = 0;
+	bool canGenerateVisibility = creature->hasSkill("force_title_jedi_rank_03");
+
+	if (!canGenerateVisibility && creature->hasSkill("force_title_jedi_rank_02") && creature->getFactionStatus() == FactionStatus::OVERT)
+		canGenerateVisibility = true;
+
+	if (!canGenerateVisibility)
+		visibilityIncrease = 0;
 
 	//info("Increasing visibility for player " + String::valueOf(creature->getObjectID()) + " with " + String::valueOf(visibilityIncrease), true);
 	return visibilityIncrease;
@@ -211,4 +217,3 @@ void VisibilityManager::loadConfiguration() {
 		error(e.getMessage());
 	}
 }
-

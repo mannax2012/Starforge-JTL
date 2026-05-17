@@ -10,10 +10,6 @@
 #include "server/zone/managers/skill/SkillModManager.h"
 #include "server/zone/packets/scene/AttributeListMessage.h"
 #include "server/zone/objects/manufactureschematic/craftingvalues/CraftingValues.h"
-#include "server/zone/objects/manufactureschematic/ManufactureSchematic.h"
-#include "server/zone/objects/draftschematic/DraftSchematic.h"
-#include "server/zone/objects/tangible/attachment/Attachment.h"
-#include "server/zone/objects/tangible/wearables/ModSortingHelper.h"
 
 
 void WearableContainerObjectImplementation::initializeTransientMembers() {
@@ -36,67 +32,18 @@ void WearableContainerObjectImplementation::fillAttributeList(AttributeListMessa
 
 void WearableContainerObjectImplementation::updateCraftingValues(CraftingValues* values, bool initialUpdate) {
 	if (initialUpdate) {
-		if(values->hasExperimentalAttribute("sockets") && values->getCurrentValue("sockets") >= 0)
+		if (values->hasExperimentalAttribute("sockets") && values->getCurrentValue("sockets") >= 0)
 			generateSockets(values);
 	}
 }
 
 void WearableContainerObjectImplementation::generateSockets(CraftingValues* craftingValues) {
-	if (socketsGenerated) {
-		return;
-	}
+	(void) craftingValues;
 
-	int skill = 0;
-	int luck = 0;
-
-	if (craftingValues != nullptr) {
-		ManagedReference<ManufactureSchematic*> manuSchematic = craftingValues->getManufactureSchematic();
-
-		if (manuSchematic != nullptr) {
-			ManagedReference<DraftSchematic*> draftSchematic = manuSchematic->getDraftSchematic();
-			ManagedReference<CreatureObject*> player = manuSchematic->getCrafter().get();
-
-			if (player != nullptr && draftSchematic != nullptr) {
-				String assemblySkill = draftSchematic->getAssemblySkill();
-
-				skill = player->getSkillMod(assemblySkill);
-
-				if (MIN_SOCKET_MOD > skill)
-					return;
-
-				luck = System::random(player->getSkillMod("luck") + player->getSkillMod("force_luck"));
-			}
-		}
-	}
-
-	skill -= MIN_SOCKET_MOD;
-	int bonusMod = 65 - skill;
-
-	if (bonusMod <= 0) {
-		bonusMod = 0;
-	} else {
-		bonusMod = System::random(bonusMod);
-	}
-
-	int skillAdjust = skill + System::random(luck) + bonusMod;
-	int maxMod = 65 + System::random(skill);
-
-	float randomSkill = System::random(skillAdjust) * 10;
-	float roll = randomSkill / (400.f + maxMod);
-
-	float generatedCount = roll * MAXSOCKETS;
-
-	if (generatedCount > MAXSOCKETS)
-		generatedCount = MAXSOCKETS;
-	else if (generatedCount > 3 && generatedCount <= 3.75f)
-		generatedCount = floor(generatedCount);
-
+	// Wearable containers (for example backpacks) should never roll sockets.
+	socketCount = 0;
 	usedSocketCount = 0;
-	socketCount = (int)generatedCount;
-
-	socketsGenerated = true;
-
-	return;
+	socketsGenerated = false;
 }
 
 void WearableContainerObjectImplementation::applySkillModsTo(CreatureObject* creature) const {

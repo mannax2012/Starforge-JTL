@@ -248,11 +248,6 @@ class TangibleObject extends SceneObject {
 	@local
 	public native void notifyInsert(TreeEntry entry);
 
-	@dirty
-	@local
-	@dereferenced
-	public native abstract Vector3 getWorldPosition();
-
 	/**
 	 * Calls the appropriate UI Listener Function
 	 * @pre { this object is locked, object is locked }
@@ -851,7 +846,7 @@ class TangibleObject extends SceneObject {
 	}
 
 	@dirty
-	public native void broadcastPvpStatusBitmask();
+	public native abstract void broadcastPvpStatusBitmask();
 
 	public native void addActiveArea(ActiveArea area);
 
@@ -980,6 +975,10 @@ class TangibleObject extends SceneObject {
 			return adk;
 		}
 		return null;
+	}
+
+	@preLocked
+	public abstract void refreshPaint() {
 	}
 
 	public abstract native void destroyObjectFromDatabase(boolean destroyContainedObjects = false);

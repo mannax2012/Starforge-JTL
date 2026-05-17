@@ -37,6 +37,7 @@
 #include "server/zone/objects/ship/ai/events/ShipAiBehaviorEvent.h"
 #include "server/zone/objects/ship/ai/events/DespawnAiShipOnNoPlayersInRange.h"
 #include "server/zone/objects/ship/ai/events/DespawnShipAgentTask.h"
+#include "server/zone/objects/ship/ai/events/DestroyDisabledShipTask.h"
 #include "templates/params/ship/ShipFlag.h"
 #include "templates/params/creature/ObjectFlag.h"
 #include "server/zone/objects/ship/ai/events/RotationLookupTable.h"
@@ -56,10 +57,11 @@
 #include "server/zone/objects/creature/conversation/ConversationObserver.h"
 #include "server/zone/managers/player/PlayerManager.h"
 #include "server/zone/managers/faction/FactionManager.h"
+#include "server/zone/objects/ship/transform/ShipObjectTransform.h"
+#include "server/zone/objects/ship/ai/SquadronObserver.h"
 
 
 // #define DEBUG_SHIP_AI
-// #define DEBUG_FINDNEXTPOSITION
 // #define DEBUG_SHIP_DESPAWN
 // #define DEBUG_SHIP_AI_CLIENT_MESSAGES
 
@@ -247,10 +249,6 @@ void ShipAiAgentImplementation::loadTemplateData(ShipAgentTemplate* agentTemp) {
 
 	setPvpStatusBitmask(templatePvpStatusBitmask, false);
 
-	if (getPvpStatusBitmask() == 0) {
-		closeobjects = nullptr;
-	}
-
 	// Handles special flags for differnt AI Template bitmasks (ESCORT, FOLLOW etc)
 	shipBitmask = agentTemplate->getShipBitmask();
 
@@ -321,7 +319,7 @@ void ShipAiAgentImplementation::loadTemplateData(ShipAgentTemplate* agentTemp) {
 		if (pilotData != nullptr) {
 			float speedRotationFactorMin = pilotData->getSpeedRotationFactorMin();
 			float speedRotationFactorOptimal = pilotData->getSpeedRotationFactorOptimal();
-			float speedRotationFactorMax = pilotData->getSpeedRotationFactorMin();
+			float speedRotationFactorMax = pilotData->getSpeedRotationFactorMax();
 			float slideDamp = pilotData->getSlideDamp();
 			float engineSpeed = pilotData->getEngineSpeed();
 			float engineAccel = pilotData->getEngineAccel();
@@ -348,6 +346,8 @@ void ShipAiAgentImplementation::loadTemplateData(ShipAgentTemplate* agentTemp) {
 			setEngineRollAccelerationRate(engineRollAccel, false);
 		}
 	}
+
+	setCargoString(agentTemplate->getCargoString());
 }
 
 void ShipAiAgentImplementation::initializeTransientMembers() {
@@ -375,39 +375,40 @@ void ShipAiAgentImplementation::initializeTransientMembers() {
 
 	setShipAiTemplate();
 
-	initializeTransform(getPosition(), *getDirection());
-
 	cooldownTimerMap = new CooldownTimerMap();
 
 	setHyperspacing(false);
 
 	missileLockTime = 0;
 
-	lastDeltaTime = 0.f;
-	deltaTime = 0.f;
-
 	nextBehaviorInterval = BEHAVIORINTERVALMIN;
 
 	updateZoneTime = 0;
-	doRecoveryTime = 0;
+	serverSyncCount = 0;
+
+	movementState = OBLIVIOUS;
+	movementCount = 0;
+	movementTime = 0;
 }
 
 void ShipAiAgentImplementation::notifyInsertToZone(Zone* zone) {
+	if (zone == nullptr) {
+		return;
+	}
+
 	// Schedule space agents to activate
 	Reference<ShipAiAgent*> agentRef = asShipAiAgent();
 
 	int randomTime = 500;
 
-	if (zone != nullptr) {
-		auto zoneServer = zone->getZoneServer();
+	auto zoneServer = zone->getZoneServer();
 
-		if (zoneServer == nullptr) {
-			return;
-		}
+	if (zoneServer == nullptr) {
+		return;
+	}
 
-		if (zoneServer->isServerLoading()) {
-			randomTime = (System::random(120) + 120) * 1000;
-		}
+	if (zoneServer->isServerLoading()) {
+		randomTime = (System::random(120) + 120) * 1000;
 	}
 
 	Core::getTaskManager()->scheduleTask([agentRef] () {
@@ -420,7 +421,19 @@ void ShipAiAgentImplementation::notifyInsertToZone(Zone* zone) {
 		agentRef->activateAiBehavior();
 	}, "activateShipAiLambda", randomTime);
 
+	if (getUniqueID() == 0) {
+		initializeUniqueID(true);
+	}
+
 	ShipObjectImplementation::notifyInsertToZone(zone);
+}
+
+void ShipAiAgentImplementation::notifyRemoveFromZone() {
+	if (getUniqueID() != 0) {
+		dropUniqueID(false);
+	}
+
+	ShipObjectImplementation::notifyRemoveFromZone();
 }
 
 void ShipAiAgentImplementation::notifyInsert(TreeEntry* entry) {
@@ -508,6 +521,7 @@ void ShipAiAgentImplementation::notifyDespawn() {
 	wipeBlackboard();
 
 	clearPatrolPoints();
+	clearFixedPatrolPoints();
 
 	ManagedReference<SceneObject*> home = homeObject.get();
 
@@ -522,23 +536,43 @@ void ShipAiAgentImplementation::notifyDespawn() {
 		notifyObservers(ObserverEventType::SHIPAGENTDESPAWNED);
 	}
 
-	// Drop Squadron Observer when implemented
-	if (getObserverCount(ObserverEventType::SQUADRON) > 0) {
-		SortedVector<ManagedReference<Observer*> > observers = getObservers(ObserverEventType::SQUADRON);
+	// Clear the squadron observer
+	if (squadron != nullptr) {
+		Locker squadronLock(squadron, asShipAiAgent());
 
-		for (int i = 0; i < observers.size(); i++) {
-			/*SquadObserver* squadObserver = cast<SquadObserver*>(observers.get(i).get());
+		squadron->dropSquadronShip(asShipAiAgent());
 
-			if (squadObserver != nullptr) {
-				dropObserver(ObserverEventType::SQUAD, squadObserver);
-			}
-			*/
-		}
+		squadronLock.release();
+
+		squadron = nullptr;
+
+#ifdef DEBUG_SHIP_DESPAWN
+		info(true) << getDisplayedName() << " ID: " << getObjectID() << " notifying squadron and setting reference null";
+#endif // DEBUG_SHIP_DESPAWN
 	}
 
 #ifdef DEBUG_SHIP_DESPAWN
-	info(true) << getDisplayedName() << " ID: " << getObjectID() << " notifyDespawn complete - Reference Count: " << getReferenceCount();
+	info(true) << getDisplayedName() << " ID: " << getObjectID() << " notifyDespawn complete - Reference Count: " << getReferenceCount() << endl;
 #endif // DEBUG_SHIP_DESPAWN
+}
+
+void ShipAiAgentImplementation::destroyObjectFromWorld(bool sendSelfDestroy) {
+	numberOfPlayersInRange.set(0);
+
+	ShipObjectImplementation::destroyObjectFromWorld(sendSelfDestroy);
+
+	// Schedule despawn notify
+	Reference<ShipAiAgent*> agentRef = asShipAiAgent();
+
+	Core::getTaskManager()->scheduleTask([agentRef] () {
+		if (agentRef == nullptr) {
+			return;
+		}
+
+		Locker lock(agentRef);
+
+		agentRef->notifyDespawn();
+	}, "shipAgentDespawnNotify", 500);
 }
 
 /*
@@ -563,7 +597,6 @@ void ShipAiAgentImplementation::activateAiBehavior(bool reschedule) {
 
 	if (zoneServer == nullptr || zoneServer->isServerShuttingDown()) {
 		cancelBehaviorEvent();
-		cancelRecovery();
 
 		return;
 	}
@@ -591,19 +624,21 @@ void ShipAiAgentImplementation::activateAiBehavior(bool reschedule) {
 		}
 	}
 
-	int iterate = behaviorIntervalIterator.get() % 1000;
-	int timeLast = behaviorIntervalSchedule.get();
-	int timeNow = System::getMiliTime() % 1000;
+	uint64 miliTime = System::getMiliTime();
+	uint64 nextInterval = getNextBehaviorInterval();
+	uint64 deltaTime = miliTime - updateZoneTime;
 
-	if (timeNow <= timeLast) {
-		iterate += 1;
-	} else {
-		iterate = 0;
+	if (deltaTime >= UPDATEZONEINTERVAL) {
+		bool lightUpdate = serverSyncCount != 0;
+		serverSyncCount = (serverSyncCount + 1) % SERVERSYNCCOUNTMAX;
+		updateZoneTime = miliTime;
+
+		updateZone(lightUpdate, false);
+		removeOutOfRangeObjects();
+		doRecovery(deltaTime);
 	}
 
-	nextBehaviorInterval = getNextBehaviorInterval() + iterate;
-	behaviorIntervalIterator.set(iterate);
-	behaviorIntervalSchedule.set(timeNow);
+	nextBehaviorInterval = nextInterval;
 }
 
 void ShipAiAgentImplementation::cancelBehaviorEvent() {
@@ -639,6 +674,7 @@ void ShipAiAgentImplementation::runBehaviorTree() {
 
 #ifdef DEBUG_SHIP_AI
 		if (peekBlackboard("aiDebug") && readBlackboard("aiDebug") == true) {
+			printf("\n\n\n");
 			info(true) << getDisplayedName() << " - ID: " << getObjectID() << " runBehaviorTree -- called";
 		}
 #endif // DEBUG_SHIP_AI
@@ -647,7 +683,6 @@ void ShipAiAgentImplementation::runBehaviorTree() {
 
 		if (zoneServer == nullptr || zoneServer->isServerShuttingDown()) {
 			cancelBehaviorEvent();
-			cancelRecovery();
 
 			setFollowShipObject(nullptr);
 			setTargetShipObject(nullptr);
@@ -680,7 +715,6 @@ void ShipAiAgentImplementation::runBehaviorTree() {
 		activateAiBehavior(true);
 	} catch (Exception& ex) {
 		cancelBehaviorEvent();
-		cancelRecovery();
 
 		handleException(ex, __FUNCTION__);
 	}
@@ -774,12 +808,11 @@ void ShipAiAgentImplementation::setMovementState(int state) {
 
 	movementCount = 0;
 	movementState = state;
+	movementTime = System::getMiliTime();
 }
 
-void ShipAiAgentImplementation::setNextPathPosition(ShipObject* targetShip) {
-	SpacePatrolPoint nextPoint = targetShip->getPosition();
-
-	patrolPoints.add(nextPoint);
+uint64 ShipAiAgentImplementation::getMovementDeltaTime() {
+	return Math::max(System::getMiliTime() - movementTime, 0ull);
 }
 
 SpacePatrolPoint ShipAiAgentImplementation::getNextPosition() {
@@ -799,574 +832,350 @@ SpacePatrolPoint ShipAiAgentImplementation::getFinalPosition() {
 }
 
 bool ShipAiAgentImplementation::isInRangePosition(const Vector3& position, float radius) {
-	const Vector3 thisPosition = getPosition();
-	return thisPosition.squaredDistanceTo(position) < (radius * radius);
+	const auto& sPosition = getPosition();
+	return sPosition.squaredDistanceTo(position) <= Math::sqr(radius);
 }
 
-SpacePatrolPoint ShipAiAgentImplementation::getNextFollowPosition(ShipObject* followShip) {
+void ShipAiAgentImplementation::addPatrolPoint(const SpacePatrolPoint& patrolPoint) {
+	Locker tLock(&targetMutex);
+
+	int patrolMax = Math::max(getPatrolSizeMax() - 1, 0);
+
+	if (patrolPoints.size() >= patrolMax) {
+		patrolPoints.removeRange(0, patrolPoints.size() - patrolMax);
+	}
+
+	patrolPoints.add(patrolPoint);
+}
+
+void ShipAiAgentImplementation::setNextFollowPosition() {
+	auto followShip = getFollowShipObject().get();
+
 	if (followShip == nullptr) {
-		return getPosition();
+		return;
 	}
 
-	setNextPathPosition(followShip);
-
-	const Vector3& targetPosition = followShip->getPosition();
-	const Vector3& targetPrevious = followShip->getPreviousPosition();
-
-	SpacePatrolPoint nextPoint = (((targetPosition - targetPrevious) * 5.f) + targetPosition);
-
-	return nextPoint;
+	SpacePatrolPoint point = getInterceptPosition(followShip, currentSpeed, Components::CHASSIS);
+	addPatrolPoint(point);
 }
 
-SpacePatrolPoint ShipAiAgentImplementation::getNextAttackPosition(ShipObject* targetShip) {
+void ShipAiAgentImplementation::setNextSquadronPosition() {
+	if (squadron == nullptr || squadron->getSquadronIndex(asShipAiAgent()) == -1) {
+		return;
+	}
+
+	Locker squadronLock(squadron, asShipAiAgent());
+
+	SpacePatrolPoint point = squadron->getPosition(asShipAiAgent());
+
+	squadronLock.release();
+
+	patrolPoints.removeAll();
+	patrolPoints.add(point);
+}
+
+void ShipAiAgentImplementation::setNextAttackPosition() {
+	auto targetShip = getTargetShipObject().get();
+
 	if (targetShip == nullptr) {
-		return getPosition();
+		return;
 	}
 
-	Vector3 iPosition = getInterceptPosition(targetShip, DEFAULT_PROJECTILE_SPEED, Components::CHASSIS);
-
-	return SpacePatrolPoint(iPosition);
+	SpacePatrolPoint point = getInterceptPosition(targetShip, DEFAULT_PROJECTILE_SPEED, Components::CHASSIS);
+	addPatrolPoint(point);
 }
 
-SpacePatrolPoint ShipAiAgentImplementation::getNextEvadePosition() {
-	const Vector3& sPosition = getWorldPosition();
-	const Vector3& hPosition = getHomePosition();
+void ShipAiAgentImplementation::setNextEvadePosition() {
+	auto targetShip = getTargetShipObject().get();
 
-	Vector3 homeDirection = hPosition - sPosition;
-	float homeDistance = qNormalize(homeDirection);
-	float homeAnchor = Math::clamp(0.f, homeDistance / MAX_ATTACK_DISTANCE, 1.f);
-	float evadeDistance = (getActualMaxSpeed() * MAX_EVADE_DURATION) + getMaxDistance();
+	if (targetShip == nullptr || getFinalPosition().isEvadePoint()) {
+		return;
+	}
 
-	Vector3 inverseDirection = currentDirection * -1.f;
-	Vector3 evadeDirection = (inverseDirection * (1.f - homeAnchor)) + (homeDirection * homeAnchor);
-	Vector3 evadePosition = (evadeDirection * evadeDistance) + sPosition;
+	const auto& tPosition = targetShip->getPosition();
+	const auto& hPosition = getHomePosition();
+	const auto& sPosition = getPosition();
 
-	return SpacePatrolPoint(evadePosition);
+	Vector3 hVelocity = hPosition - sPosition;
+	float hDistance = SpaceMath::qNormalize(hVelocity);
+
+	Vector3 tVelocity = sPosition - tPosition;
+	float tDistance = SpaceMath::qNormalize(tVelocity);
+
+	float tDuration = tDistance / Math::max(getActualMaxSpeed(), 1.f);
+	tDuration = Math::max(1.f, MAX_EVADE_DURATION - tDuration);
+
+	float eDistance = getActualMaxSpeed() * tDuration;
+	float hAnchor = Math::min(hDistance / (float)MAX_ATTACK_DISTANCE, 1.f);
+
+	Vector3 eDirection = Math::linearInterpolate(tVelocity, hVelocity, hAnchor);
+	SpaceMath::qNormalize(eDirection);
+
+	SpacePatrolPoint point = (eDirection * eDistance) + sPosition;
+	point.setEvadePoint(true);
+	addPatrolPoint(point);
+}
+
+void ShipAiAgentImplementation::setNextLeashPosition() {
+	auto homePosition = getHomePosition();
+
+	if (homeLocation.getCoordinates().getPoint() != homePosition) {
+		homeLocation.setPosition(homePosition.getX(), homePosition.getZ(), homePosition.getY());
+	}
+
+	bool inRange = isInRangePosition(homePosition, getMaxDistance());
+	homeLocation.setReached(inRange);
+
+	SpacePatrolPoint point = homePosition;
+	point.setReached(inRange);
+	addPatrolPoint(point);
 }
 
 Vector3 ShipAiAgentImplementation::getInterceptPosition(ShipObject* target, float speed, int slot, int targetSlot) {
-	Vector3 sPosition = getWorldPosition();
+	Vector3 sLocal = Vector3::ZERO;
+	Vector3 tLocal = Vector3::ZERO;
 
 	if (slot != Components::CHASSIS) {
-		const Matrix4& sRotation = *getConjugateMatrix();
 		auto data = ShipManager::instance()->getCollisionData(asShipAiAgent());
 
 		if (data != nullptr) {
-			const auto& slotName = Components::shipComponentSlotToString(slot);
-			const auto& hardpoints = data->getHardpoints(slotName);
+			const auto& hardpoints = data->getHardpoints(slot);
 
 			if (hardpoints.size() > 0) {
+				const auto& sRotation = *getConjugateMatrix();
 				const auto& hardpoint = hardpoints.get(0);
 				const auto& hPosition = hardpoint.getSphere().getCenter();
 
-				Vector3 localPoint = hPosition * sRotation;
-				sPosition = Vector3(localPoint.getX(), localPoint.getZ(), localPoint.getY()) + sPosition;
+				sLocal = SpaceMath::getGlobalVector(hPosition, sRotation);
 			}
 		}
 	}
-
-	const Matrix4& tRotation = *target->getConjugateMatrix();
-	Vector3 tPosition = target->getWorldPosition();
 
 	if (targetSlot != Components::CHASSIS) {
 		auto data = ShipManager::instance()->getCollisionData(target);
 
 		if (data != nullptr) {
-			const auto& slotName = Components::shipComponentSlotToString(targetSlot);
-			const auto& hardpoints = data->getHardpoints(slotName);
+			const auto& hardpoints = data->getHardpoints(targetSlot);
 
 			if (hardpoints.size() > 0) {
+				const auto& tRotation = *target->getConjugateMatrix();
 				const auto& hardpoint = hardpoints.get(0);
 				const auto& hPosition = hardpoint.getSphere().getCenter();
 
-				Vector3 localPoint = hPosition * tRotation;
-				tPosition = Vector3(localPoint.getX(), localPoint.getZ(), localPoint.getY()) + tPosition;
+				tLocal = SpaceMath::getGlobalVector(hPosition, tRotation);
 			}
 		}
 	}
 
-	Vector3 deltaT = Vector3(tRotation[2][0], tRotation[2][2], tRotation[2][1]);
-	Vector3 deltaV = tPosition - sPosition;
+	const auto& sTransform = getCurrentTransform();
+	const auto& tTransform = target->getCurrentTransform();
 
-	float vRange = qNormalize(deltaV);
-	float tSpeed = target->getCurrentSpeed();
-	float vTime = Math::clamp(0.f, vRange / speed, 5.f);
+	Vector3 velocity = tLocal - sLocal;
+	float distance = SpaceMath::qNormalize(velocity);
+	float time = distance / Math::max(speed, 1.f);
 
 	if (slot == Components::CHASSIS) {
-		vTime += Math::clamp(0.f, getDirectionTime(deltaV), 5.f);
+		const auto& sVelocity = sTransform.getVelocity();
+		time += SpaceMath::getVelocityTime(velocity, sVelocity, getActualYawRate(), getActualPitchRate());
 	}
 
-	return (deltaT * tSpeed * vTime) + tPosition;
+	time = Math::clamp(0.f, time, 2.f);
+	return SpaceMath::predictTransform(tTransform, time) + tLocal;
+}
+
+int ShipAiAgentImplementation::getTransformType() {
+	switch (movementState) {
+		case ShipAiAgent::OBLIVIOUS:
+		case ShipAiAgent::WATCHING:
+		case ShipAiAgent::PATROLLING: {
+			if (shipBitmask & ShipFlag::ESCORT) {
+				return SpaceTransformType::FAST;
+			}
+
+			return SpaceTransformType::SLOW;
+		}
+		case ShipAiAgent::ATTACKING:
+		case ShipAiAgent::EVADING:
+		case ShipAiAgent::FLEEING: {
+			return SpaceTransformType::FAST;
+		}
+		case ShipAiAgent::LEASHING:
+		case ShipAiAgent::PATHING_HOME:
+		case ShipAiAgent::FOLLOWING:
+		case ShipAiAgent::FOLLOW_FORMATION:
+		default: {
+			return SpaceTransformType::AUTO;
+		}
+	}
+}
+
+int ShipAiAgentImplementation::getPatrolSizeMax() {
+	switch (movementState) {
+		case ShipAiAgent::WATCHING:
+		case ShipAiAgent::PATROLLING: {
+			return PATROLPOINTS_MAX;
+		}
+		case ShipAiAgent::ATTACKING: {
+			return (shipBitmask & ShipFlag::TURRETSHIP) ? 4 : 2;
+		}
+		case ShipAiAgent::OBLIVIOUS:
+		case ShipAiAgent::EVADING:
+		case ShipAiAgent::FLEEING:
+		case ShipAiAgent::LEASHING:
+		case ShipAiAgent::PATHING_HOME:
+		case ShipAiAgent::FOLLOWING:
+		case ShipAiAgent::FOLLOW_FORMATION:
+		default: {
+			return 1;
+		}
+	}
 }
 
 int ShipAiAgentImplementation::setDestination() {
-	// info("setDestination start", true);
-
-	unsigned int stateCopy = getMovementState();
-
-#ifdef DEBUG_SHIP_AI
-	if (peekBlackboard("aiDebug") && readBlackboard("aiDebug") == true) {
-		info(true) << getDisplayedName() << " - ID: " << getObjectID() << "  setDestination - stateCopy: " << stateCopy << "  Patrol Point Size:" << getPatrolPointSize();
-	}
-#endif // DEBUG_SHIP_AI
-
-	// info(true) << getDisplayedName() << " - ID: " << getObjectID() << "  setDestination - stateCopy: " << stateCopy << "  Patrol Point Size:" << getPatrolPointSize();
-
-	if (patrolPoints.size() > 20) {
+	if (patrolPoints.size() > PATROLPOINTS_MAX) {
 		info() << "Patrol points have overflowed. Total points: " << patrolPoints.size();
 		clearPatrolPoints();
 	}
-
-	switch (stateCopy) {
-	case ShipAiAgent::OBLIVIOUS: {
-		break;
+/*
+	if (isSquadronMember() && isSquadronTransform()) {
+		setNextSquadronPosition();
+		setSquadronTransform();
+		return patrolPoints.size();
 	}
-	case ShipAiAgent::FOLLOWING: {
-		ManagedReference<ShipObject*> followCopy = getFollowShipObject().get();
-
-		if (followCopy == nullptr) {
+*/
+	switch (movementState) {
+		case ShipAiAgent::OBLIVIOUS:
+		case ShipAiAgent::WATCHING:
+		case ShipAiAgent::PATROLLING: {
 			break;
 		}
-
-		clearPatrolPoints();
-
-		patrolPoints.add(getNextFollowPosition(followCopy));
-		break;
-	}
-	case ShipAiAgent::WATCHING:
-	case ShipAiAgent::PATROLLING: {
-		if (getOptionsBitmask() & OptionBitmask::WINGS_OPEN) {
-			clearOptionBit(OptionBitmask::WINGS_OPEN, true);
+		case ShipAiAgent::FOLLOWING:
+		case ShipAiAgent::FOLLOW_FORMATION: {
+			setNextFollowPosition();
+			break;
 		}
-
-		if (patrolPoints.size() <= 1) {
-			const SpacePatrolPoint finalPosition = getFinalPosition();
-
-			if (finalPosition.isReached()) {
-				clearPatrolPoints();
+		case ShipAiAgent::ATTACKING: {
+			setNextAttackPosition();
+			break;
+		}
+		case ShipAiAgent::EVADING: {
+			setNextEvadePosition();
+			break;
+		}
+		case ShipAiAgent::FLEEING:
+		case ShipAiAgent::LEASHING:
+		case ShipAiAgent::PATHING_HOME: {
+			if (homeLocation.isReached()) {
+				setMovementState(ShipAiAgent::PATROLLING);
 			}
-		}
 
-		break;
-	}
-	case ShipAiAgent::ATTACKING: {
-		ManagedReference<ShipObject*> targetShip = getTargetShipObject().get();
-
-		if (targetShip == nullptr) {
+			setNextLeashPosition();
 			break;
 		}
-
-		clearPatrolPoints();
-
-		if (!(getOptionsBitmask() & OptionBitmask::WINGS_OPEN)) {
-			setOptionBit(OptionBitmask::WINGS_OPEN, true);
-		}
-
-		patrolPoints.add(getNextAttackPosition(targetShip));
-		break;
-	}
-	case ShipAiAgent::FLEEING:
-	case ShipAiAgent::LEASHING:{
-		clearPatrolPoints();
-
-		if (!homeLocation.isInRange(asShipAiAgent(), getMaxDistance())) {
-			homeLocation.setReached(false);
-
-			patrolPoints.add(homeLocation);
-		} else {
-			homeLocation.setReached(true);
-
-			setMovementState(ShipAiAgent::PATROLLING);
-		}
-
-		break;
-	}
-	case ShipAiAgent::EVADING: {
-		// We have no evade point, set one
-		if (getPatrolPointSize() == 0) {
-			SpacePatrolPoint evadePoint = getNextEvadePosition();
-			evadePoint.setEvadePoint(true);
-
-			patrolPoints.add(evadePoint);
-			break;
-		}
-
-		// we have at least one patrol point, if it is not and evade point, clear all points and set one
-		const SpacePatrolPoint finalPoint = getFinalPosition();
-
-		if (!finalPoint.isEvadePoint()) {
-			clearPatrolPoints();
-
-			SpacePatrolPoint evadePoint = getNextEvadePosition();
-			evadePoint.setEvadePoint(true);
-
-			patrolPoints.add(evadePoint);
-		}
-
-		if (!(getOptionsBitmask() & OptionBitmask::WINGS_OPEN)) {
-			setOptionBit(OptionBitmask::WINGS_OPEN, true);
-		}
-
-		break;
-	}
-	case ShipAiAgent::PATHING_HOME: {
-		clearPatrolPoints();
-
-		patrolPoints.add(homeLocation);
-	}
-	default: {
-		break;
-	}
 	};
 
+	setNextTransform();
+	return patrolPoints.size();
+}
+
+void ShipAiAgentImplementation::setNextTransform() {
+	if (squadron != nullptr && (isSquadronTransform() || isSquadronLeader())) {
+		return setSquadronTransform();
+	}
+
+	Vector3 position = getNextPosition().getWorldPosition();
+	float speed = getNextSpeed();
+	int type = getTransformType();
+
+	shipTransform.setNextTransform(position, speed, type);
+	movementCount += 1;
+}
+
+void ShipAiAgentImplementation::setSquadronTransform() {
+	if (squadron == nullptr) {
+		return;
+	}
+
+	Locker squadronLock(squadron, asShipAiAgent());
+
+	if (squadron->getSquadronIndex(asShipAiAgent()) == -1) {
+		return;
+	}
+
+	Vector3 position = squadron->getPosition(asShipAiAgent());
+	float speed = squadron->getSpeed(asShipAiAgent());
+	int type = getTransformType();
+
+	if (isSquadronMember()) {
+		type = SpaceTransformType::FORM;
+	}
+
+	shipTransform.setNextTransform(position, speed, type);
 	movementCount += 1;
 
-#ifdef DEBUG_SHIP_AI
-	if (peekBlackboard("aiDebug") && readBlackboard("aiDebug") == true) {
-		info(true) << getDisplayedName() << " - ID: " << getObjectID() << " setDestination end -- patrol point size: " << getPatrolPointSize();
-	}
-#endif // DEBUG_SHIP_AI
+	if (isSquadronLeader()){
+		squadron->updateSquadron();
 
-	return getPatrolPointSize();
-}
-
-Quaternion ShipAiAgentImplementation::radiansToQuaterion(float yaw, float pitch, float roll) {
-	yaw = getRotationRate(-yaw + M_PI_2);
-
-	bool usePrecision = getBoundingRadius() >= 128.f || movementState == ShipAiAgent::ATTACKING;
-
-	if (usePrecision) {
-		int degY = Math::rad2deg(yaw);
-		int degP = Math::rad2deg(pitch);
-		int degR = Math::rad2deg(roll);
-
-		Quaternion qDirection;
-		qDirection.rotate(Vector3::UNIT_Z, -degR);
-		qDirection.rotate(Vector3::UNIT_X, -degP);
-		qDirection.rotate(Vector3::UNIT_Y, degY);
-		qDirection.normalize();
-
-		return qDirection;
-	}
-
-	return RotationLookupTable::instance()->getDirection(yaw, pitch, roll);
-}
-
-Vector3 ShipAiAgentImplementation::radiansToUnitVector(float yaw, float pitch) {
-	float cosY = cos(yaw);
-	float sinY = sin(yaw);
-	float cosP = cos(pitch);
-	float sinP = sin(pitch);
-
-	Vector3 thrustV(cosY * cosP, sinY * cosP, sinP);
-	qNormalize(thrustV);
-
-	return thrustV;
-}
-
-Quaternion ShipAiAgentImplementation::unitVectorToQuaternion() {
-	return radiansToQuaterion(currentRotation.getX(), currentRotation.getY(), currentRotation.getZ());
-}
-
-Vector3 ShipAiAgentImplementation::unitVectorToRotation() {
-	return Vector3(atan2(currentDirection.getY(),currentDirection.getX()), asin(currentDirection.getZ()), 0.f);
-}
-
-Vector3 ShipAiAgentImplementation::matrixToUnitVector() {
-	return Vector3(conjugateMatrix[2][0], conjugateMatrix[2][2], conjugateMatrix[2][1]);
-}
-
-float ShipAiAgentImplementation::getRotationRate(float thisRadians, float lastRadians) {
-	float radians = thisRadians - lastRadians;
-
-	if (radians > M_PI) {
-		return radians - (M_PI * 2.f);
-	}
-
-	if (radians < -M_PI) {
-		return radians + (M_PI * 2.f);
-	}
-
-	return radians;
-}
-
-float ShipAiAgentImplementation::getMaxThrottle() {
-	switch (movementState) {
-	case ShipAiAgent::OBLIVIOUS:
-		return 0.8f;
-	case ShipAiAgent::WATCHING:
-		return 0.5f;
-	case ShipAiAgent::FOLLOWING:
-		return 1.0f;
-	case ShipAiAgent::PATROLLING:
-		return 0.5f;
-	case ShipAiAgent::ATTACKING:
-		return 1.0f;
-	case ShipAiAgent::FLEEING:
-	case ShipAiAgent::LEASHING:
-	case ShipAiAgent::EVADING:
-		return 1.0f;
-	case ShipAiAgent::PATHING_HOME:
-	case ShipAiAgent::FOLLOW_FORMATION:
-	default:
-		return 0.75f;
+#ifdef DEBUG_SHIP_AI_CLIENT_MESSAGES
+		sendDebugPath();
+#endif // DEBUG_SHIP_AI_CLIENT_MESSAGES
 	}
 }
 
-float ShipAiAgentImplementation::getMinThrottle() {
-	switch (movementState) {
-	case ShipAiAgent::OBLIVIOUS:
-		return 0.4f;
-	case ShipAiAgent::WATCHING:
-		return 0.25f;
-	case ShipAiAgent::FOLLOWING:
-		return 0.25f;
-	case ShipAiAgent::PATROLLING:
-		return 0.25f;
-	case ShipAiAgent::ATTACKING:
-		return 0.5f;
-	case ShipAiAgent::FLEEING:
-	case ShipAiAgent::LEASHING:
-	case ShipAiAgent::EVADING:
-		return 0.5f;
-	case ShipAiAgent::PATHING_HOME:
-	case ShipAiAgent::FOLLOW_FORMATION:
-	default:
-		return 0.5f;
-	}
-}
+float ShipAiAgentImplementation::getNextSpeed() {
+	float speed = getActualMaxSpeed();
 
-float ShipAiAgentImplementation::qInvSqrt(float x) {
-	float xHalf = 0.5f * x;
-	int32_t i = 0;
-
-	memcpy(&i, &x, sizeof(int32_t));
-	i = 1597463007 - (i >> 1);
-	memcpy(&x, &i, sizeof(float));
-	x = x * (1.5f - xHalf * x * x);
-
-	return x;
-}
-
-float ShipAiAgentImplementation::qSqrt(float x) {
-	return x <= FLT_EPSILON  ? 0.f : 1.f / qInvSqrt(x);
-}
-
-float ShipAiAgentImplementation::qNormalize(Vector3& vector) {
-	float sqrLength = vector.squaredLength();
-	float invLength = qInvSqrt(sqrLength);
-
-	if (invLength == 0) {
-		vector = Vector3::ZERO;
-	} else {
-		vector = vector * invLength;
+	if (escortSpeed > 0.f) {
+		speed = getEscortSpeed();
 	}
 
-	return invLength <= FLT_EPSILON ? 0.f : 1.f / invLength;
+	return speed;
+}
+
+float ShipAiAgentImplementation::calculateActualMaxSpeed() {
+	float engineSpeed = 0.f;
+
+	if (isComponentInstalled(Components::ENGINE)) {
+		engineSpeed = getEngineMaxSpeed() * calculateActualComponentEfficiency(Components::ENGINE);
+	}
+
+	float boosterSpeed = 0.f;
+
+	if (isComponentInstalled(Components::BOOSTER) && isBoosterActive()) {
+		boosterSpeed = getBoosterMaxSpeed() * calculateActualComponentEfficiency(Components::BOOSTER);
+	}
+
+	float chassisSpeed = getChassisSpeed();
+	float wingsOpenSpeed = getWingsOpenSpeed();
+
+	if (hasShipWings() && (getOptionsBitmask() & OptionBitmask::WINGS_OPEN) && wingsOpenSpeed > 0.f) {
+		auto chassisData = ShipManager::instance()->getChassisData(chassisDataName);
+
+		if (chassisData != nullptr) {
+			chassisSpeed *= wingsOpenSpeed;
+		}
+	}
+
+	engineSpeed = Math::max(engineSpeed, getEscortSpeed());
+
+	return Math::clamp(0.f, ((engineSpeed + boosterSpeed) * chassisSpeed), 512.f);
 }
 
 bool ShipAiAgentImplementation::setDisabledEngineSpeed() {
-	lastSpeed = currentSpeed;
-	currentSpeed = 0.f;
-
-	if (lastSpeed > 0.f) {
-		updateZone(false, false);
-		broadcastTransform(nextStepPosition.getWorldPosition());
+	if (currentSpeed > 0.f) {
+		shipTransform.setNextTransform(getPosition(), 0.f);
 	}
 
+	shipTransform.freezeRotation();
 	clearPatrolPoints();
+
+	// info(true) << "setDisabledEngineSpeed -- scheduling destroy disabled for: " << getDisplayedName();
+	scheduleDestroyDisabled();
 
 	return true;
 }
 
-bool ShipAiAgentImplementation::isTargetForward() {
-	auto targetShip = getTargetShipObject().get();
-	if (targetShip == nullptr) {
-		return false;
-	}
-
-	const Vector3& sPosition = getPosition();
-	const Vector3& tPosition = targetShip->getPosition();
-
-	return sPosition.dotProduct(tPosition) >= 0.75f;
-}
-
-void ShipAiAgentImplementation::setNextSpeed() {
-	float speedActual = getActualMaxSpeed();
-	float speedMin = Math::max(speedActual * getMinThrottle(), 0.f);
-	float speedMax = Math::max(speedActual * getMaxThrottle(), speedMin);
-
-	if (escortSpeed > 0.f) {
-		speedMin = Math::min(speedMin, escortSpeed);
-		speedMax = Math::min(speedMax, escortSpeed);
-	}
-
-	const Vector3& currentPosition = getWorldPosition();
-	const Vector3& nextPosition = getFinalPosition().getWorldPosition();
-
-	float distanceSqr = Math::max(currentPosition.squaredDistanceTo(nextPosition) - Math::sqr(getMaxDistance()), 0.f);
-	float speedIdeal = Math::min(speedActual * getSpeedRotationFactorOptimal(), speedMax);
-	float speed = speedMin;
-
-	if (distanceSqr > 0.f || currentSpeed > 0.f) {
-		float decelRate = getActualDecelerationRate();
-		float accelRate = getActualAccelerationRate();
-		float decelDistSqr = Math::sqr((speedMax * speedMax) / decelRate);
-
-		if (decelDistSqr > distanceSqr) {
-			float throttle = qSqrt(distanceSqr / decelDistSqr);
-			speed = ((speedMax - speedMin) * throttle) + speedMin;
-		} else {
-			float throttle = Math::clamp(0.f, 1.f - getRotationTime(nextRotation), 1.f);
-			speed = ((speedMax - speedIdeal) * throttle) + speedIdeal;
-		}
-
-		speed = Math::clamp(-decelRate * deltaTime, speed - currentSpeed, accelRate * deltaTime) + currentSpeed;
-	}
-
-	lastSpeed = currentSpeed;
-	currentSpeed = Math::clamp(speedMin, ceil(speed), speedMax);
-
-	if (currentSpeed != lastSpeed) {
-		updateSpeedRotationValues(false);
-	}
-}
-
-float ShipAiAgentImplementation::getRotationTime(const Vector3& rotationVector) {
-	float nextY = fabs(getRotationRate(rotationVector.getX(), currentRotation.getX()));
-	float nextP = fabs(getRotationRate(rotationVector.getY(), currentRotation.getY()));
-
-	if (nextY <= 0.001f && nextP <= 0.001f) {
-		return 0.f;
-	}
-
-	float maxY  = getActualYawRate();
-	float maxP = getActualPitchRate();
-
-	if (maxY > 0.f && nextY >= nextP) {
-		return nextY / maxY;
-	}
-
-	if (maxP > 0.f) {
-		return nextP / maxP;
-	}
-
-	return 0.f;
-}
-
-float ShipAiAgentImplementation::getDirectionTime(const Vector3& directionVector) {
-	auto rotation = Vector3(atan2(directionVector.getY(),directionVector.getX()), asin(directionVector.getZ()), 0.f);
-
-	return getRotationTime(rotation);
-}
-
-void ShipAiAgentImplementation::setNextDirection() {
-	const Vector3& currentPosition = getPosition();
-	const Vector3& nextPosition = getNextPosition().getWorldPosition();
-
-	if (currentPosition == nextPosition) {
-		return;
-	}
-
-	Vector3 deltaV = nextPosition - currentPosition;
-	qNormalize(deltaV);
-
-	if (deltaV != nextDirection) {
-		float nextY = atan2(nextDirection.getY(), nextDirection.getX());
-		float nextP = asin(nextDirection.getZ());
-
-		nextDirection = deltaV;
-		nextRotation = Vector3(nextY, nextP, 0.f);
-	}
-
-	Vector3 thrustV = nextDirection;
-	Vector3 thrustR = nextRotation;
-
-	if (currentDirection.dotProduct(nextDirection) <= 0.999f || currentRotation.dotProduct(nextRotation) <= 0.999f) {
-		float rollDamp = Math::clamp(0.f, 1.f - (getBoundingRadius() / 128.f), 1.f);
-		float rollMax = M_PI_2 * rollDamp;
-
-		Vector3 accel = Vector3(getActualYawAccelerationRate(), getActualPitchAccelerationRate(), getActualRollAccelerationRate() * rollDamp) * deltaTime;
-		Vector3 actual = Vector3(getActualYawRate(), getActualPitchRate(), getActualRollRate() * rollDamp) * deltaTime;
-		Vector3 delta;
-		Vector3 rate;
-
-		for (int axis = 0; axis < 3; ++axis) {
-			delta[axis] = getRotationRate(nextRotation[axis], currentRotation[axis]);
-			float lastDelta = getRotationRate(currentRotation[axis], lastRotation[axis]);
-
-			if (axis == 2 && fabs(delta[axis]) < fabs(delta[0])) {
-				delta[axis] = -delta[0];
-			}
-
-			float thisDelta = Math::clamp(lastDelta - accel[axis], delta[axis], lastDelta + accel[axis]);
-			rate[axis] = getRotationRate(Math::clamp(-actual[axis], thisDelta, actual[axis])) + currentRotation[axis];
-
-			if (axis == 2) {
-				rate[axis] = Math::clamp(-rollMax, rate[axis], rollMax);
-			}
-		}
-
-		if (rate != Vector3::ZERO) {
-			auto direction = radiansToQuaterion(rate.getX(), rate.getY(), rate.getZ());
-			setDirection(direction);
-			setRotationMatrix(direction);
-
-			auto unitVector = radiansToUnitVector(rate.getX(), rate.getY());
-			float velocity = Math::clamp(0.f, currentSpeed / VELOCITY_MAX, 1.f);
-			float slipRate = Math::clamp(0.f, getSlip() * velocity, 1.f);
-
-			if (slipRate > 0.f) {
-				unitVector = Math::linearInterpolate(currentDirection, unitVector, 1.f - slipRate);
-			}
-
-			thrustV = unitVector;
-			thrustR = rate;
-		}
-	}
-
-	lastRotation = currentRotation;
-	currentRotation = thrustR;
-
-	lastDirection = currentDirection;
-	currentDirection = thrustV;
-}
-
-void ShipAiAgentImplementation::setNextPosition() {
-	if (currentSpeed == 0.f || currentDirection == Vector3::ZERO) {
-		return;
-	}
-
-	const Vector3& currentPosition = getPosition();
-
-	currentDirection.setX(Math::clamp(-1.f, currentDirection.getX(), 1.f));
-	currentDirection.setY(Math::clamp(-1.f, currentDirection.getY(), 1.f));
-	currentDirection.setZ(Math::clamp(-1.f, currentDirection.getZ(), 1.f));
-
-	Vector3 thrustV = (currentDirection * currentSpeed * deltaTime) + currentPosition;
-
-	thrustV.setX(Math::clamp(-7999.f, thrustV.getX(), 7999.f));
-	thrustV.setY(Math::clamp(-7999.f, thrustV.getY(), 7999.f));
-	thrustV.setZ(Math::clamp(-7999.f, thrustV.getZ(), 7999.f));
-
-	if (thrustV == currentPosition) {
-		return;
-	}
-
-	nextStepPosition = SpacePatrolPoint(thrustV);
-}
-
 bool ShipAiAgentImplementation::findNextPosition(int maxDistance) {
-	int64 timeNow = System::getMiliTime();
-	int64 deltaTime = timeNow - updateZoneTime;
-
-	if (deltaTime >= UPDATEZONEINTERVAL) {
-		updateZoneTime = timeNow;
-
-		updateZone(false, false);
-		removeOutOfRangeObjects();
-	}
-
 	if (getPatrolPointSize() <= 0) {
 		return false;
 	}
@@ -1376,55 +1185,41 @@ bool ShipAiAgentImplementation::findNextPosition(int maxDistance) {
 }
 
 void ShipAiAgentImplementation::updateTransform(bool lightUpdate) {
-	if (lightUpdate && numberOfPlayersInRange < 1) {
+	bool notifyClient = numberOfPlayersInRange >= 1;
+
+	if (lightUpdate && !notifyClient) {
 		return;
 	}
 
-	int64 timeNow = System::getMiliTime();
-	int64 deltaTime = timeNow - doRecoveryTime;
-
-	if (deltaTime >= DORECOVERYINTERVAL) {
-		doRecoveryTime = timeNow;
-		doRecovery(deltaTime);
-	}
-
-	setDeltaTime();
-	setNextSpeed();
-	setNextDirection();
-	setNextPosition();
-
 #ifdef DEBUG_SHIP_AI_CLIENT_MESSAGES
 	sendDebugMessage();
-	sendDebugPath();
-#endif
 
-	const Vector3& position = nextStepPosition.getWorldPosition();
+	if (squadron == nullptr) {
+		sendDebugPath();
+	}
+#endif // DEBUG_SHIP_AI_CLIENT_MESSAGES
 
-	setPosition(position);
-	broadcastTransform(position);
-}
-
-void ShipAiAgentImplementation::setDeltaTime() {
-	long timeSync = (0xFFFFFFFF) & System::getMiliTime();
-	int deltaSync = Math::max(timeSync - syncStamp, 0ull);
-
-	lastDeltaTime = deltaTime;
-	deltaTime = Math::clamp(0.1f, deltaSync * 0.001f, 2.f);
-	syncStamp = timeSync;
+	shipTransform.updateTransform(asShipObject(), lightUpdate, notifyClient);
 }
 
 int ShipAiAgentImplementation::getNextBehaviorInterval() {
+	bool notifyClient = numberOfPlayersInRange >= 1;
+
+	if (!notifyClient) {
+		return BEHAVIORINTERVALMAX;
+	}
+
 	switch (movementState) {
+		case ShipAiAgent::ATTACKING:
+		case ShipAiAgent::EVADING: {
+			return BEHAVIORINTERVALMIN;
+		}
 		case ShipAiAgent::OBLIVIOUS:
 		case ShipAiAgent::WATCHING:
 		case ShipAiAgent::FOLLOWING:
-		case ShipAiAgent::PATROLLING: {
-			return BEHAVIORINTERVALMAX;
-		}
-		case ShipAiAgent::ATTACKING:
+		case ShipAiAgent::PATROLLING:
 		case ShipAiAgent::FLEEING:
 		case ShipAiAgent::LEASHING:
-		case ShipAiAgent::EVADING:
 		case ShipAiAgent::PATHING_HOME:
 		case ShipAiAgent::FOLLOW_FORMATION:
 		default: {
@@ -1442,26 +1237,6 @@ bool ShipAiAgentImplementation::generatePatrol(int totalPoints, float distance, 
 		return false;
 	}
 
-	uint32 savedState = getMovementState();
-
-	if (savedState == ShipAiAgent::LEASHING) {
-		return false;
-	}
-
-	if (savedState != ShipAiAgent::PATROLLING && savedState != ShipAiAgent::WATCHING) {
-		clearPatrolPoints();
-		setMovementState(ShipAiAgent::PATROLLING);
-	}
-
-	/* ShipFlag.h
-		GUARD_PATROL - For ships that patrol a specific area in a spherical pattern where they will have a min range and max range to stay within
-			used for ships in patrol around a point or object such as a space station.
-		RANDOM_PATROL - Default method for patrolling. Randomly generates points around its home location.
-		FIXED_PATROL - For ships that have specific set of patrol points assigned to them and will only navigate to those points.
-		SQUADRON_PATROL - For ships that are in a squadron, this will be used to create and assign them to an observer as well as the behaviors needed to operate in the squadron.
-		SQUADRON_FOLLOW - Similar to above, but for ships that have to follow another ship while in a squadron.
-	*/
-
 	Locker locker(&targetMutex);
 
 	const Vector3& homePosition = getHomePosition();
@@ -1476,17 +1251,17 @@ bool ShipAiAgentImplementation::generatePatrol(int totalPoints, float distance, 
 		}
 
 		const auto zoneNameHash = zone->getZoneName().hashCode();
-		int totalPoints = fixedPatrolPoints.size();
+		int fixedPointCount = fixedPatrolPoints.size();
 
 		// Add patrol points from the vector selected at spawn
-		for (int i = 0; i < totalPoints; i++) {
+		for (int i = 0; i < fixedPointCount; i++) {
 			const uint32 pointHash = fixedPatrolPoints.get(i);
 			SpacePatrolPoint patrolPoint = shipAgentTempMan->getSpacePatrolPoint(zoneNameHash, pointHash);
 
 			patrolCopy.add(patrolPoint);
 		}
 
-		patrolPoints.removeAll(totalPoints, totalPoints);
+		patrolPoints.removeAll(fixedPointCount, fixedPointCount);
 		patrolPoints.addAll(patrolCopy);
 	} else if (shipBitmask & ShipFlag::GUARD_PATROL) {
 		float minimumGuardPatrol = getMinimumGuardPatrol();
@@ -1502,7 +1277,7 @@ bool ShipAiAgentImplementation::generatePatrol(int totalPoints, float distance, 
 		float radiusMin = distance * 0.1f;
 
 		patrolPosition = ShipAiPatrolPathFinder::getRandomPosition(homePosition, radiusMin, radiusMax);
-		float patrolRadius = distance - qSqrt((homePosition - patrolPosition).squaredLength());
+		float patrolRadius = distance - SpaceMath::qSqrt((homePosition - patrolPosition).squaredLength());
 
 		switch (pathShape) {
 			case ShipAiPatrolPathFinder::PathShape::SPHERE: {
@@ -1524,27 +1299,50 @@ bool ShipAiAgentImplementation::generatePatrol(int totalPoints, float distance, 
 }
 
 void ShipAiAgentImplementation::updatePatrolPoints() {
-	float inRangeDistance = Math::sqr(getMaxDistance());
+	const auto& homePosition = getHomePosition();
 
-	// Fixed patrol point ships move from point to point
-	if (isFixedPatrolShipAgent() && (getMovementState() == ShipAiAgent::PATROLLING)) {
-		const auto& nextPosition = patrolPoints.get(0).getWorldPosition();
-		const auto& thisPosition = getPosition();
-
-		if (thisPosition.squaredDistanceTo(nextPosition) < inRangeDistance) {
-			patrolPoints.remove(0);
-		}
-
-		return;
+	if (homeLocation.getWorldPosition() != homePosition) {
+		homeLocation.setPosition(homePosition.getX(), homePosition.getZ(), homePosition.getY());
 	}
 
-	for (int i = patrolPoints.size(); -1 < --i;) {
-		const auto& nextPosition = patrolPoints.get(i).getWorldPosition();
-		const auto& thisPosition = getPosition();
+	int transformType = getTransformType();
 
-		if (thisPosition.squaredDistanceTo(nextPosition) <= inRangeDistance) {
-			patrolPoints.removeRange(0, i+1);
+	// info(true) << "ShipAiAgentImplementation::updatePatrolPoints() -- Movement State: " << getMovementState() << " Transform Type: " << transformType << " Patrol Points Size: " << patrolPoints.size();
+
+	switch (transformType) {
+		case SpaceTransformType::SLOW:
+		case SpaceTransformType::DOCK: {
+			if (patrolPoints.size() >= 1) {
+				const auto& nextPosition = patrolPoints.get(0).getWorldPosition();
+				const auto& thisPosition = getPosition();
+
+				if (thisPosition.squaredDistanceTo(nextPosition) < Math::sqr(getMaxDistance())) {
+					patrolPoints.remove(0);
+
+					int movementState = getMovementState();
+
+					if ((movementState == PATROLLING || movementState == WATCHING) && hasSinglePatrolRotation() && patrolPoints.size() < 1) {
+						notifyObservers(ObserverEventType::DESTINATIONREACHED);
+					}
+				}
+			}
+
 			break;
+		}
+		case SpaceTransformType::AUTO:
+		case SpaceTransformType::FAST:
+		default: {
+			float distanceMaxSqr = Math::sqr(getMaxDistance());
+			const auto& thisPosition = getPosition();
+
+			for (int i = patrolPoints.size(); -1 < --i;) {
+				const auto& nextPosition = patrolPoints.get(i).getWorldPosition();
+
+				if (thisPosition.squaredDistanceTo(nextPosition) <= distanceMaxSqr) {
+					patrolPoints.removeRange(0, i+1);
+					break;
+				}
+			}
 		}
 	}
 }
@@ -1563,77 +1361,6 @@ void ShipAiAgentImplementation::leash() {
 	eraseBlackboard("targetShipProspect");
 
 	homeLocation.setReached(false);
-}
-
-void ShipAiAgentImplementation::broadcastTransform(const Vector3& position) {
-	if (numberOfPlayersInRange < 1) {
-		return;
-	}
-
-	auto shipCov = getCloseObjects();
-
-	if (shipCov == nullptr) {
-		return;
-	}
-
-	if (currentSpeed == lastSpeed && currentRotation == lastRotation && movementCount % 5) {
-		return;
-	}
-
-	const Vector3& currentPosition = getPosition();
-
-	PackedVelocity velocity;
-	PackedRotationRate rateY;
-	PackedRotationRate rateP;
-	PackedRotationRate rateR;
-
-	if (currentSpeed > 0.f) {
-		Vector3 deltaV = currentDirection * currentSpeed;
-		velocity.set(Vector3(deltaV.getX(), deltaV.getZ(), deltaV.getY()));
-
-		float rT = 1.f / Math::clamp(0.1f, (deltaTime + lastDeltaTime) * 0.5f, 10.f) * 0.5f;
-		float rY = -getRotationRate(currentRotation.getX(), lastRotation.getX()) * rT;
-		float rP = -getRotationRate(currentRotation.getX(), lastRotation.getX()) * rT;
-		float rR = getRotationRate(currentRotation.getX(), lastRotation.getX()) * rT;
-
-		rateY.set(rY);
-		rateP.set(rP);
-		rateR.set(rR);
-	}
-
-	SortedVector<ManagedReference<TreeEntry*>> closeObjects;
-	shipCov->safeCopyReceiversTo(closeObjects, CloseObjectsVector::PLAYERTYPE);
-
-	for (int i = 0; i < closeObjects.size(); ++i) {
-		auto playerEntry = closeObjects.get(i).castTo<SceneObject*>();
-
-		if (playerEntry == nullptr) {
-			continue;
-		}
-
-		int updateFreq = Math::clamp(1.f, 20.f / calculatePixelHeight(playerEntry->getWorldPosition()), 5.f);
-
-		if (movementCount % updateFreq) {
-			continue;
-		}
-
-		uint32 syncStamp = playerEntry->getSyncStamp();
-
-		auto data = new ShipUpdateTransformMessage(asShipObject(), currentPosition, velocity, rateY, rateP, rateR, syncStamp);
-		playerEntry->sendMessage(data);
-	}
-}
-
-float ShipAiAgentImplementation::calculatePixelHeight(const Vector3& position) {
-	static constexpr float SCREEN_HEIGHT = 1080.f;
-	static constexpr float SCREEN_FOV = 70.f * (M_PI / 180.f);
-	static constexpr float INVERSE_FOV = (1.f / SCREEN_FOV) * SCREEN_HEIGHT;
-
-	float distance = qSqrt(getWorldPosition().squaredDistanceTo(position));
-	float radius = getBoundingRadius();
-	float angle = atan2(radius, distance) * 2.f;
-
-	return Math::max(angle * INVERSE_FOV, 1.f);
 }
 
 /*
@@ -1719,7 +1446,7 @@ bool ShipAiAgentImplementation::fireProjectileAtTarget(ShipObject* targetShip, c
 
 	uint32 weaponIndex = slot - Components::WEAPON_START;
 	Vector3 difference = targetPosition - position;
-	Vector3 direction = matrixToUnitVector();
+	Vector3 direction = shipTransform.getCurrentTransform().getVelocity();
 
 	float radius = Math::clamp(32.f, targetShip->getBoundingRadius(), 256.f);
 	float range = Math::clamp(256.f, projectileData->getRange(), 1024.f);
@@ -1741,8 +1468,11 @@ bool ShipAiAgentImplementation::fireMissileAtTarget(ShipObject* targetShip, cons
 		return false;
 	}
 
+	const Vector3& currentRotation = shipTransform.getCurrentTransform().getRotation();
+	const Vector3& currentDirection = shipTransform.getCurrentTransform().getVelocity();
 	const Vector3& position = getWorldPosition();
 	const Vector3& targetPosition = targetShip->getWorldPosition();
+
 	float distanceSqr = position.squaredDistanceTo(targetPosition);
 	float distanceMax =  Math::sqr(projectileData->getRange());
 
@@ -1752,7 +1482,7 @@ bool ShipAiAgentImplementation::fireMissileAtTarget(ShipObject* targetShip, cons
 	}
 
 	Vector3 targetDirection = targetPosition - position;
-	float targetDistance = qNormalize(targetDirection);
+	float targetDistance = SpaceMath::qNormalize(targetDirection);
 
 	float targetY = atan2(targetDirection.getY(), targetDirection.getX());
 	float targetP = asin(targetDirection.getZ());
@@ -1767,8 +1497,7 @@ bool ShipAiAgentImplementation::fireMissileAtTarget(ShipObject* targetShip, cons
 		return false;
 	}
 
-	float deltaBase = fabs(DEFAULT_PROJECTILE_REFIRE - (BEHAVIORINTERVAL * 0.001f));
-	missileLockTime += deltaBase + deltaTime;
+	missileLockTime += DEFAULT_PROJECTILE_REFIRE;
 
 	if (missileLockTime < missileData->getTargetAquisitionTime()) {
 		return false;
@@ -1830,17 +1559,14 @@ bool ShipAiAgentImplementation::fireTurretAtTarget(ShipObject* targetShip, const
 	const Vector3& targetPosition = getInterceptPosition(targetShip, projectileData->getSpeed(), slot, targetSlot);
 	const Vector3& hardpointPosition = hardpoint.getSphere().getCenter();
 
-	Vector3 turretGlobal = (hardpointPosition * shipRotation);
-	turretGlobal = Vector3(turretGlobal.getX(), turretGlobal.getZ(), turretGlobal.getY()) + shipPosition;
-
+	Vector3 turretGlobal = SpaceMath::getGlobalVector(hardpointPosition, conjugateMatrix) + shipPosition;
 	Vector3 targetGlobal = targetPosition - turretGlobal;
 
 	if (targetGlobal.squaredLength() > projectileData->getRange() * projectileData->getRange()) {
 		return false;
 	}
 
-	Vector3 targetLocal = targetGlobal;
-	targetLocal = Vector3(targetLocal.getX(), targetLocal.getZ(), targetLocal.getY()) * shipRotation;
+	Vector3 targetLocal = SpaceMath::getLocalVector(targetGlobal, rotationMatrix);
 
 	const Matrix4* hardpointRotation = hardpoint.getRotation();
 
@@ -1871,7 +1597,7 @@ bool ShipAiAgentImplementation::fireTurretAtTarget(ShipObject* targetShip, const
 	float randomZ = 1.f + ((System::frandom(2.f) - 1.f) * accuracy);
 
 	targetGlobal *= Vector3(randomX, randomY, randomZ);
-	qNormalize(targetGlobal);
+	SpaceMath::qNormalize(targetGlobal);
 
 	auto projectile = new ShipProjectile(asShipAiAgent(), slot - Components::WEAPON_START, projectileData->getIndex(), 0, turretGlobal, targetGlobal * 7800.f, 500, 500, 1.f, System::getMiliTime());
 	projectile->readProjectileData(projectileData);
@@ -1906,7 +1632,6 @@ void ShipAiAgentImplementation::setDefender(ShipObject* defender) {
 	TangibleObjectImplementation::setDefender(defender);
 
 	setTargetShipObject(defender);
-	setMovementState(ShipAiAgent::ATTACKING);
 
 	defender->addDefender(asShipAiAgent());
 
@@ -1950,19 +1675,16 @@ bool ShipAiAgentImplementation::isPlayerFactionAlly(CreatureObject* player) {
 		return false;
 	}
 
-	auto ghost = player->getPlayerObject();
+	uint32 thisAgentFaction = getShipFaction();
 
-	if (ghost == nullptr) {
+	auto playerShip = cast<ShipObject*>(player->getRootParent());
+
+	if (playerShip == nullptr) {
 		return false;
 	}
 
-	int pilotSquadron = ghost->getPilotSquadron();
-	int pilotTier = ghost->getPilotTier();
+	uint32 playerFactionHash = playerShip->getShipFaction();
 
-	uint32 playerFactionHash = FactionManager::instance()->getSpaceFactionBySquadron(pilotSquadron, pilotTier);
-	uint32 thisAgentFaction = getShipFaction();
-
-	// Player is ally faction
 	if (playerFactionHash > 0 && (playerFactionHash == thisAgentFaction || alliedFactions.contains(playerFactionHash))) {
 		return true;
 	}
@@ -1975,19 +1697,15 @@ bool ShipAiAgentImplementation::isPlayerFactionEnemy(CreatureObject* player) {
 		return false;
 	}
 
-	auto ghost = player->getPlayerObject();
+	auto playerShip = cast<ShipObject*>(player->getRootParent());
 
-	if (ghost == nullptr) {
+	if (playerShip == nullptr) {
 		return false;
 	}
 
-	int pilotSquadron = ghost->getPilotSquadron();
-	int pilotTier = ghost->getPilotTier();
+	auto targetSpaceFaction = playerShip->getShipFaction();
 
-	uint32 playerFactionHash = FactionManager::instance()->getSpaceFactionBySquadron(pilotSquadron, pilotTier);
-
-	// Player is enemy faction
-	if (playerFactionHash > 0 && enemyFactions.contains(playerFactionHash)) {
+	if (targetSpaceFaction > 0 && enemyFactions.contains(targetSpaceFaction)) {
 		return true;
 	}
 
@@ -2030,6 +1748,28 @@ void ShipAiAgentImplementation::removeSpaceFactionEnemy(uint32 factionHash) {
 	broadcastPvpStatusBitmask();
 }
 
+void ShipAiAgentImplementation::swapSpaceFactionAssociations() {
+	auto tempAllies = alliedFactions;
+
+	alliedFactions.removeAll();
+
+	for (int i = enemyFactions.size() - 1; i >= 0 ; --i) {
+		alliedFactions.add(enemyFactions.get(i));
+
+		// info(true) << "Adding new allied faction: " << enemyFactions.get(i) << " alliedFactions Size: " << alliedFactions.size();
+
+		enemyFactions.removeElementAt(i);
+	}
+
+	for (int i = tempAllies.size() - 1; i >= 0 ; --i) {
+		enemyFactions.add(tempAllies.get(i));
+
+		// info(true) << "Adding new enemy faction: " << tempAllies.get(i) << " enemyFactions Size: " << enemyFactions.size();
+
+		enemyFactions.removeElementAt(i);
+	}
+}
+
 bool ShipAiAgentImplementation::isAggressiveTo(TangibleObject* target) {
 	if (target == nullptr || getObjectID() == target->getObjectID())
 		return false;
@@ -2063,85 +1803,13 @@ bool ShipAiAgentImplementation::isAggressive(TangibleObject* target) {
 		return false;
 	}
 
-	bool targetIsShipAgent = target->isShipAiAgent();
-	bool targetIsPlayer = target->isPlayerShip();
+	uint32 targetSpaceFaction = targetShip->getShipFaction();
 
-	/* Space Faction Check differentiate from ground checks
-
-	// Get factions
-	uint32 thisFaction = getFaction();
-	uint32 targetFaction = target->getFaction();
-
-	// GCW Faction Checks -- Both the agent and attcking CreO have GCW Factions and they are different
-	if (thisFaction != 0 && targetFaction != 0) {
-		// Same factions, non-aggressive
-		if (thisFaction == targetFaction)
-			return false;
-
-		// Target is an AiAgent
-		if (targetIsShipAgent) {
-			return true;
-		// Target is a player ship
-		} else {
-			// Faction checks against the ships owner
-			auto shipOwner = targetShip->getOwner().get();
-
-			if (shipOwner == nullptr) {
-				return false;
-			}
-
-			bool covertOvert = ConfigManager::instance()->useCovertOvertSystem();
-
-			if (covertOvert) {
-				PlayerObject* ghost = shipOwner->getPlayerObject();
-
-				if (ghost == nullptr)
-					return false;
-
-				uint32 targetStatus = shipOwner->getFactionStatus();
-				bool gcwTef = ghost->hasGcwTef();
-
-				if (!gcwTef && targetStatus == FactionStatus::COVERT)
-					return false;
-
-				if (targetStatus == FactionStatus::OVERT || gcwTef) {
-					return true;
-				}
-			} else {
-				// this is the same thing, but ensures that if the target is a player, that they aren't on leave
-				if (shipOwner->getFactionStatus() != FactionStatus::ONLEAVE) {
-					return true;
-				}
-			}
-		}
-	}
-	*/
-
-	uint32 spaceFaction = getShipFaction();
-
-	if (targetIsShipAgent) {
-		auto targetAgent = target->asShipAiAgent();
-
-		if (targetAgent != nullptr) {
-			auto targetSpaceFaction = targetAgent->getShipFaction();
-
-			if (targetSpaceFaction > 0 && enemyFactions.contains(targetSpaceFaction)) {
-				return true;
-			}
-		}
-	} else if (targetIsPlayer && spaceFaction > 0) {
-		auto shipOwner = targetShip->getOwner().get();
-
-		if (shipOwner == nullptr) {
-			return false;
-		}
-
-		if (isPlayerFactionEnemy(shipOwner)) {
-			return true;
-		}
+	if (targetSpaceFaction > 0 && enemyFactions.contains(targetSpaceFaction)) {
+		return true;
 	}
 
-	// ShipAgent is not aggressive due to faction or standing, remaining aggressive check based on pvpStatusBitmask
+	// ShipAgent is not aggressive due to faction, remaining aggressive check based on pvpStatusBitmask
 	return (pvpStatusBitmask & ObjectFlag::AGGRESSIVE) || isEnemyShip(target->getObjectID());
 }
 
@@ -2166,49 +1834,52 @@ bool ShipAiAgentImplementation::isAttackableBy(TangibleObject* attackerTano) {
 		return false;
 	}
 
-	// info(true) << "ShipAiAgentImplementation::isAttackableBy TangibleObject Check -- Ship Agent: " << getDisplayedName() << " by attackerTano = " << attackerTano->getDisplayedName();
-
 	if (attackerTano->isCreatureObject()) {
 		return isAttackableBy(attackerTano->asCreatureObject());
-	} else if (attackerTano->isPlayerShip()) {
-		auto attackerShip = attackerTano->asShipObject();
+	}
 
-		if (attackerShip != nullptr) {
-			auto owner = attackerShip->getOwner().get();
+	// info(true) << "ShipAiAgentImplementation::isAttackableBy TangibleObject Check -- Ship Agent: " << getDisplayedName() << " by attackerTano = " << attackerTano->getDisplayedName();
 
-			if (owner != nullptr) {
-				return isAttackableBy(owner);
-			}
+	auto attackerShip = attackerTano->asShipObject();
+
+	if (attackerShip == nullptr) {
+		return false;
+	}
+
+	if (isMissionShip() && attackerShip->isPlayerShip()) {
+		auto zoneServer = getZoneServer();
+
+		if (zoneServer == nullptr) {
+			return false;
 		}
-	} else if (attackerTano->isShipAiAgent()) {
-		auto attackerAgent = attackerTano->asShipAiAgent();
 
-		if (attackerAgent != nullptr) {
-			auto attackerSpaceFaction = attackerAgent->getShipFaction();
+		auto missionOwner = cast<CreatureObject*>(zoneServer->getObject(missionOwnerID).get());
 
-			if (attackerSpaceFaction > 0 && alliedFactions.contains(attackerSpaceFaction) && !enemyFactions.contains(attackerSpaceFaction)) {
+		if (missionOwner == nullptr) {
+			return false;
+		}
+
+		auto attackerOwner = attackerShip->getOwner().get();
+
+		if (attackerOwner == nullptr) {
+			return false;
+		}
+
+		// If attacker is not the mission owner, check if attacker is grouped with the mission owner.
+		if (attackerOwner != missionOwner) {
+			auto group = missionOwner->getGroup();
+
+			if (group == nullptr || !group->hasMember(attackerOwner)) {
 				return false;
 			}
 		}
 	}
 
-	/*
-	// Get factions
-	uint32 thisFaction = getShipFaction();
-	uint32 shipFaction = attackerTano->getFaction();
+	auto attackerSpaceFaction = attackerShip->getShipFaction();
 
-	if (thisFaction != 0 || shipFaction != 0) {
-		if (thisFaction == shipFaction) {
-			return false;
-		}
-
-		if (thisFaction == 0 && shipFaction != 0) {
-			return false;
-		}
+	if (attackerSpaceFaction > 0 && alliedFactions.contains(attackerSpaceFaction) && !enemyFactions.contains(attackerSpaceFaction)) {
+		return false;
 	}
-	*/
-
-	// info(true) << "ShipAiAgentImplementation::isAttackableBy TangibleObject Check returned true";
 
 	return true;
 }
@@ -2224,13 +1895,23 @@ bool ShipAiAgentImplementation::isAttackableBy(CreatureObject* attacker) {
 
 	// info(true) << "ShipAiAgentImplementation::isAttackableBy Creature Check -- ShipAgent: " << getDisplayedName() << " by attacker = " << attacker->getDisplayedName() " Agent Space Faction: " << getShipFactionString();
 
-	if (attacker->isPlayerCreature() && isPlayerFactionAlly(attacker)) {
+	if (!attacker->isPlayerCreature()) {
 		return false;
 	}
 
-	// info(true) << "ShipAiAgentImplementation::isAttackableBy Creature Check returned true";
+	auto rootParent = attacker->getRootParent();
 
-	return true;
+	if (rootParent == nullptr || !rootParent->isShipObject()) {
+		return false;
+	}
+
+	auto playerShip = rootParent->asShipObject();
+
+	if (playerShip == nullptr) {
+		return false;
+	}
+
+	return isAttackableBy(playerShip);
 }
 
 bool ShipAiAgentImplementation::validateTarget() {
@@ -2341,6 +2022,24 @@ void ShipAiAgentImplementation::scheduleDespawn(int timeToDespawn, bool force) {
 	}
 }
 
+void ShipAiAgentImplementation::scheduleDestroyDisabled() {
+	Reference<DestroyDisabledShipTask*> destroyTask = getPendingTask("destroy_disabled").castTo<DestroyDisabledShipTask*>();
+
+	if (destroyTask != nullptr) {
+		return;
+	}
+
+	destroyTask = new DestroyDisabledShipTask(asShipAiAgent());
+
+	if (destroyTask == nullptr) {
+		error() << "ShipAiAgent failed to create a destroy disabled task." << __FILE__ << ":" << __LINE__ << ":" << __FUNCTION__ << ": " << *_this.getReferenceUnsafeStaticCast();
+		return;
+	}
+
+	// info(true) << "scheduleDestroyDisabled -- task scheduled (300s) for: " << getDisplayedName();
+	addPendingTask("destroy_disabled", destroyTask, 300000);
+}
+
 void ShipAiAgentImplementation::setWait(int wait) {
 	cooldownTimerMap->updateToCurrentAndAddMili("waitTimer", wait);
 }
@@ -2408,28 +2107,16 @@ void ShipAiAgentImplementation::removeShipFlag(uint32 flag) {
 		shipBitmask &= ~flag;
 }
 
+bool ShipAiAgentImplementation::isDisabledInvulnerable() {
+	return shipBitmask & ShipFlag::DISABLED_INVULNERABLE;
+}
+
 void ShipAiAgentImplementation::addFixedPatrolPoint(uint32 pointHash) {
 	fixedPatrolPoints.add(pointHash);
 }
 
-void ShipAiAgentImplementation::initializeTransform(const Vector3& position, const Quaternion& direction) {
-	initializePosition(position);
-	nextStepPosition = SpacePatrolPoint(position);
-
-	setDirection(direction);
-	setRotationMatrix(direction);
-
-	lastDirection = matrixToUnitVector();
-	currentDirection = lastDirection;
-
-	lastRotation = unitVectorToRotation();
-	currentRotation = lastRotation;
-
-	lastSpeed = 0.f;
-	currentSpeed = 0.f;
-
-	lastDeltaTime = 0.f;
-	deltaTime = 0.f;
+void ShipAiAgentImplementation::clearFixedPatrolPoints() {
+	fixedPatrolPoints.removeAll();
 }
 
 Vector3 ShipAiAgentImplementation::getHomePosition() {
@@ -2440,38 +2127,6 @@ Vector3 ShipAiAgentImplementation::getHomePosition() {
 	}
 
 	return homeLocation.getWorldPosition();
-}
-
-Vector3 ShipAiAgentImplementation::getNextStepPosition() {
-	return nextStepPosition.getWorldPosition();
-}
-
-Vector3 ShipAiAgentImplementation::getNextDirectionVector() const {
-	return nextDirection;
-}
-
-Vector3 ShipAiAgentImplementation::getCurrentDirectionVector() const {
-	return currentDirection;
-}
-
-Vector3 ShipAiAgentImplementation::getLastDirectionVector() const {
-	return lastDirection;
-}
-
-Vector3 ShipAiAgentImplementation::getNextRotationVector() const {
-	return nextRotation;
-}
-
-Vector3 ShipAiAgentImplementation::getCurrentRotationVector() const {
-	return currentRotation;
-}
-
-Vector3 ShipAiAgentImplementation::getLastRotationVector() const {
-	return lastRotation;
-}
-
-float ShipAiAgentImplementation::getLastSpeed() const {
-	return lastSpeed;
 }
 
 String ShipAiAgentImplementation::getShipAgentTemplateName() {
@@ -2490,6 +2145,29 @@ float ShipAiAgentImplementation::getOutOfRangeDistance(uint64 specialRangeID) {
 	return ZoneServer::SPACECLOSEOBJECTRANGE;
 }
 
+float ShipAiAgentImplementation::getInRangeDistance(bool lightUpdate) {
+	if (!lightUpdate) {
+		return getOutOfRangeDistance();
+	}
+
+	return ZoneServer::SPACECLOSEOBJECTRANGE;
+}
+
+void ShipAiAgentImplementation::updateZone(bool lightUpdate, bool sendPackets) {
+	SceneObjectImplementation::updateZone(lightUpdate, sendPackets);
+}
+
+void ShipAiAgentImplementation::doRecovery(int mselapsed) {
+	bool lightUpdate = serverSyncCount != 0;
+	bool notifyClient = numberOfPlayersInRange >= 1;
+
+	if (lightUpdate && !notifyClient) {
+		return;
+	}
+
+	ShipObjectImplementation::doRecovery(mselapsed);
+}
+
 String ShipAiAgentImplementation::getLootTable() {
 	return lootTable;
 }
@@ -2500,6 +2178,10 @@ bool ShipAiAgentImplementation::checkLineOfSight(SceneObject* obj) {
 
 bool ShipAiAgentImplementation::isFixedPatrolShipAgent() const {
 	return (shipBitmask & ShipFlag::FIXED_PATROL);
+}
+
+bool ShipAiAgentImplementation::hasSinglePatrolRotation() const {
+	return (shipBitmask & ShipFlag::SINGLE_PATROL_ROTATION);
 }
 
 bool ShipAiAgentImplementation::sendConversationStartTo(SceneObject* playerSceneO) {
@@ -2593,7 +2275,136 @@ void ShipAiAgentImplementation::tauntPlayer(CreatureObject* player, const String
 	if (task != nullptr) {
 		player->addPendingTask("SpaceCommTimer", task, 10 * 1000);
 	}
+
+	if (!player->isGrouped()) {
+		return;
+	}
+
+	auto group = player->getGroup();
+
+	if (group == nullptr) {
+		return;
+	}
+
+	for (int i = 0; i < group->getGroupSize(); i++) {
+		auto groupMember = group->getGroupMember(i);
+
+		if (groupMember == nullptr || groupMember->getObjectID() == player->getObjectID()) {
+			continue;
+		}
+
+		if (!groupMember->isPilotingShip() && !groupMember->isInShipStation()) {
+			continue;
+		}
+
+		auto conversationScreen = new ConversationScreen(tauntMessage, true);
+
+		if (conversationScreen != nullptr) {
+			conversationScreen->sendTo(groupMember, asShipAiAgent());
+		}
+
+		auto task = new SpaceCommTimerTask(groupMember, getObjectID());
+
+		if (task != nullptr) {
+			groupMember->addPendingTask("SpaceCommTimer", task, 10 * 1000);
+		}
+	}
 }
+
+void ShipAiAgentImplementation::createSquadron(int formationType) {
+	if (squadron != nullptr) {
+		Locker squadronLock(squadron, asShipAiAgent());
+
+		squadron->dropSquadronShip(asShipAiAgent());
+
+		squadronLock.release();
+
+		squadron = nullptr;
+	}
+
+	squadron = new SquadronObserver(asShipAiAgent(), formationType);
+}
+
+void ShipAiAgentImplementation::assignToSquadron(ShipAiAgent* squadronAgent) {
+	if (squadronAgent == nullptr) {
+		return;
+	}
+
+	squadron = squadronAgent->getSquadron();
+
+	if (squadron == nullptr) {
+		return;
+	}
+
+	Locker cLock(squadron, asShipAiAgent());
+
+	squadron->addSquadronShip(asShipAiAgent());
+}
+
+void ShipAiAgentImplementation::dropFromSquadron() {
+	if (squadron == nullptr) {
+		return;
+	}
+
+	Locker squadronLock(squadron, asShipAiAgent());
+
+	squadron->dropSquadronShip(asShipAiAgent());
+
+	squadronLock.release();
+
+	squadron = nullptr;
+}
+
+bool ShipAiAgentImplementation::isSquadronLeader() {
+	if (squadron == nullptr) {
+		return false;
+	}
+
+	Locker squadronLock(squadron, asShipAiAgent());
+
+	return squadron->isSquadronLeader(asShipAiAgent());
+}
+
+bool ShipAiAgentImplementation::isSquadronMember() {
+	if (squadron == nullptr) {
+		return false;
+	}
+
+	Locker squadronLock(squadron, asShipAiAgent());
+
+	return squadron->isSquadronMember(asShipAiAgent());
+}
+
+bool ShipAiAgentImplementation::isSquadronTransform() {
+	switch (movementState) {
+		case ShipAiAgent::OBLIVIOUS:
+		case ShipAiAgent::WATCHING:
+		case ShipAiAgent::PATROLLING: {
+			return true;
+		}
+		case ShipAiAgent::ATTACKING:
+		case ShipAiAgent::FLEEING:
+		case ShipAiAgent::LEASHING:
+		case ShipAiAgent::EVADING:
+		case ShipAiAgent::PATHING_HOME:
+		case ShipAiAgent::FOLLOWING:
+		case ShipAiAgent::FOLLOW_FORMATION:
+		default: {
+			return false;
+		}
+	}
+}
+
+int ShipAiAgentImplementation::getSquadronSize() {
+	if (squadron == nullptr) {
+		return 0;
+	}
+
+	Locker squadronLock(squadron, asShipAiAgent());
+
+	return squadron->getSquadronSize();
+}
+
 
 void ShipAiAgentImplementation::handleException(const Exception& ex, const String& context) {
 	auto numExceptions = SpaceAiMap::instance()->countExceptions.increment();
@@ -2661,19 +2472,10 @@ void ShipAiAgentImplementation::sendDebugMessage() {
 
 	StringBuffer msg;
 
-	const Vector3& currentPosition = getPosition();
-	Vector3 nextPosition = nextStepPosition.getWorldPosition();
-
-	float yawMax  = getActualYawRate() * deltaTime;
-	float pitchMax = getActualPitchRate() * deltaTime;
-	float rollMax = getActualRollRate() * deltaTime;
-
-	float yawRate  = getRotationRate(currentRotation.getX(), lastRotation.getX());
-	float pitchRate = getRotationRate(currentRotation.getY(), lastRotation.getY());
-	float rollRate = getRotationRate(currentRotation.getZ(), lastRotation.getZ());
-
-	float velocity = Math::clamp(0.f, currentSpeed / VELOCITY_MAX, 1.f);
-	float slipRate = Math::clamp(0.f, getSlip() * velocity, 1.f);
+	const auto& homePosition = getHomePosition();
+	const auto& currentPosition = getPosition();
+	const auto& nextPosition = getNextPosition().getWorldPosition();
+	const auto& finalPosition = getFinalPosition().getWorldPosition();
 
 	String movementString = "";
 
@@ -2690,28 +2492,15 @@ void ShipAiAgentImplementation::sendDebugMessage() {
 		case ShipAiAgent::FOLLOW_FORMATION:	movementString = "FOLLOW_FORMATION"; break;
 	}
 
-	Locker sLock(asShipObject());
-	auto targetVector = getTargetVector();
-
-	msg << "ShipAiAgent:	  " << getDisplayedName() << endl
-		<< " movementState:   " << movementString <<  endl
-		<< " movementCount:   " << movementCount << endl
-		<< " deltaTime:       " << deltaTime * 1000.f << endl
-		<< " targetVector:	  " << (targetVector ? targetVector->size() : 0) << endl
-		<< " patrolPoints:	  " << patrolPoints.size() << endl
-		<< " thisPosition:	  " << currentPosition.getX() << " " << currentPosition.getY() << " " << currentPosition.getZ() << endl
-		<< " nextPosition:	  " << nextPosition.getX() << " " << nextPosition.getY() << " " << nextPosition.getZ() << endl
-		<< " lastDirection:   " << lastDirection.getX() << " " << lastDirection.getY() << " " << lastDirection.getZ() << endl
-		<< " thisDirection:   " << currentDirection.getX() << " " << currentDirection.getY() << " " << currentDirection.getZ() << endl
-		<< " lastRotation:	  " << lastRotation.getX() << " " << lastRotation.getY() << " " << lastRotation.getZ() << endl
-		<< " thisRotation:	  " << currentRotation.getX() << " " << currentRotation.getY() << " " << currentRotation.getZ() << endl
-		<< " yawPercent       " << (int)round((yawRate / yawMax) * 100.f) << "%" << endl
-		<< " pitchPercent     " << (int)round((pitchRate / pitchMax) * 100.f) << "%" << endl
-		<< " rollPercent      " << (int)round((rollRate / rollMax) * 100.f) << "%" << endl
-		<< " slipRate:	      " << slipRate << endl
-		<< " rotationRate:    " << calculateSpeedRotationFactor() << endl
-		<< " currentSpeed:	  " << currentSpeed << endl
-		<< " lastSpeed:	      " << lastSpeed << endl
+	msg << "ShipAiAgent:	   " << getDisplayedName() << endl
+		<< "  movementState:   " << movementString <<  endl
+		<< "  movementCount:   " << movementCount << endl
+		<< "  homePosition:	   " << homePosition.toString() << endl
+		<< "  currentPosition: " << currentPosition.toString() << endl
+		<< "  nextPosition:	   " << nextPosition.toString() << endl
+		<< "  patrolPoints:	   " << patrolPoints.size() << endl
+		<< "  speed:           " << getCurrentSpeed() << " / " << getActualMaxSpeed() << endl
+		<< shipTransform.toDebugString() << endl
 		<< "--------------------------------";
 
 	ChatSystemMessage* smsg = new ChatSystemMessage(msg.toString());
@@ -2721,17 +2510,14 @@ void ShipAiAgentImplementation::sendDebugMessage() {
 
 void ShipAiAgentImplementation::sendDebugPath() {
 #ifdef DEBUG_SHIP_AI_CLIENT_MESSAGES
-	if (!peekBlackboard("aiDebugPathMessage") || readBlackboard("aiDebugPathMessage") == false) {
-		return;
-	}
 
 	auto data = ShipManager::instance()->getCollisionData(asShipObject());
+
 	if (data == nullptr) {
 		return;
 	}
 
-	const Vector3& homePosition = homeLocation.getWorldPosition();
-	const Vector3& nextPosition = nextStepPosition.getWorldPosition();
+	const Vector3& nextPosition = shipTransform.getNextTransform().getPosition();
 	const Vector3& position = getPosition();
 	const Matrix4& rotation = *getConjugateMatrix();
 
@@ -2740,26 +2526,28 @@ void ShipAiAgentImplementation::sendDebugPath() {
 
 	auto path = new CreateClientPathMessage();
 
-	path->addCoordinate(position);
-	path->drawBoundingSphere(position, rotation, Sphere(Vector3::ZERO, inRangeDistance));
-	path->addCoordinate(position);
+	//path->addCoordinate(position);
+	//path->drawBoundingSphere(position, rotation, Sphere(Vector3::ZERO, inRangeDistance));
+	//path->addCoordinate(position);
 
-	Vector3 velocity = ((radius + currentSpeed) * currentDirection) + position;
+	const auto& currentVelocity = shipTransform.getCurrentTransform().getVelocity();
+	float currentSpeed = shipTransform.getCurrentTransform().getSpeed();
+	Vector3 velocity = (currentVelocity * currentSpeed) + position;
 
 	path->addCoordinate(position);
 	path->addCoordinate(velocity);
 	path->addCoordinate(position);
 
 	if (data->getVolumeType() == ShipCollisionData::CollisionVolumeType::SPHERE) {
-		path->drawBoundingSphere(nextPosition, rotation, data->getChassisSphere());
+		path->drawBoundingSphere(position, rotation, data->getChassisSphere());
 	}
 
 	if (data->getVolumeType() == ShipCollisionData::CollisionVolumeType::MESH) {
-		path->drawBoundingSphere(nextPosition, rotation, data->getBoundingSphere());
+		path->drawBoundingSphere(position, rotation, data->getBoundingSphere());
 	}
 
 	if (data->getVolumeType() == ShipCollisionData::CollisionVolumeType::BOX) {
-		path->drawBoundingBox(nextPosition, rotation, data->getChassisBox());
+		path->drawBoundingBox(position, rotation, data->getChassisBox());
 	}
 
 	path->addCoordinate(nextPosition);

@@ -35,6 +35,7 @@
 #include "server/zone/objects/player/FactionStatus.h"
 #include "server/zone/managers/visibility/VisibilityManager.h"
 #include "server/zone/objects/building/BuildingObject.h"
+#include "server/zone/managers/director/DirectorManager.h"
 
 namespace {
 bool hasDirectionalMissionSelection(PlayerObject* ghost) {
@@ -518,6 +519,26 @@ void MissionManagerImplementation::removeMission(MissionObject* mission, Creatur
 	}
 }
 
+void MissionManagerImplementation::handleMissionFail(MissionObject* mission, CreatureObject* player) {
+	if (mission == nullptr || player == nullptr) {
+		return;
+	}
+
+	ManagedReference<PlayerObject*> ghost = player->getPlayerObject();
+
+	if (ghost != nullptr) {
+		// Space Missions
+		uint32 questCRC = mission->getQuestCRC();
+
+		if (questCRC > 0) {
+			ghost->clearJournalQuest(questCRC, false);
+		}
+	}
+
+	mission->abort();
+	removeMission(mission, player);
+}
+
 void MissionManagerImplementation::handleMissionAbort(MissionObject* mission, CreatureObject* player, bool questMessage) {
 	if (player->isIncapacitated()) {
 		player->sendSystemMessage("You cannot abort a mission while incapacitated.");
@@ -528,6 +549,9 @@ void MissionManagerImplementation::handleMissionAbort(MissionObject* mission, Cr
 		player->sendSystemMessage("You cannot abort a mission while in combat.");
 		return;
 	}
+
+	auto questType = mission->getQuestType();
+	auto questName = mission->getQuestName();
 
 	ManagedReference<PlayerObject*> ghost = player->getPlayerObject();
 
@@ -544,7 +568,7 @@ void MissionManagerImplementation::handleMissionAbort(MissionObject* mission, Cr
 			ghost->clearJournalQuest(questCRC, false);
 
 			if (questMessage) {
-				String questString = "@spacequest/" + mission->getQuestType() + "/" + mission->getQuestName() + ":title";
+				String questString = "@spacequest/" + questType + "/" + questName + ":title";
 
 				StringIdChatParameter spaceAbort("space/quest", "quest_aborted");
 				spaceAbort.setTO(questString);
@@ -557,6 +581,19 @@ void MissionManagerImplementation::handleMissionAbort(MissionObject* mission, Cr
 	}
 
 	mission->abort();
+
+	// JTL Mission Abort to clear lua quest data
+	if (!questType.isEmpty()) {
+		Lua* lua = DirectorManager::instance()->getLuaInstance();
+
+		if (lua != nullptr) {
+			Reference<LuaFunction*> abortSpaceMission = lua->createFunction(questType + "_" + questName, "failQuest", 0);
+
+			*abortSpaceMission << player;
+			*abortSpaceMission << "false";
+			abortSpaceMission->callFunction();
+		}
+	}
 
 	removeMission(mission, player);
 }
@@ -951,6 +988,7 @@ void MissionManagerImplementation::randomizeGenericDestroyMission(CreatureObject
 	mission->setMissionNumber(randTexts);
 
 	mission->setStartPosition(startPos.getX(), startPos.getY(), zone->getZoneName());
+	mission->setEndPosition(startPos.getX(), startPos.getY(), zone->getZoneName());
 	mission->setCreatorName(nm->makeCreatureName());
 
 	mission->setMissionTargetName("@lair_n:" + lairTemplateObject->getName());
@@ -1530,6 +1568,7 @@ void MissionManagerImplementation::randomizeGenericEntertainerMission(CreatureOb
 	mission->setCreatorName(nm->makeCreatureName());
 
 	mission->setStartPosition(target->getPositionX(), target->getPositionY(), zone->getZoneName());
+	mission->setEndPosition(target->getPositionX(), target->getPositionY(), zone->getZoneName());
 
 	if (missionType == MissionTypes::DANCER) {
 		mission->setMissionTargetName("@ui_mission:dancer_tab");
@@ -1632,6 +1671,7 @@ void MissionManagerImplementation::randomizeGenericHuntingMission(CreatureObject
 	mission->setCreatorName(creatorName);
 
 	mission->setStartPosition(player->getPositionX(), player->getPositionY(), playerZone->getZoneName());
+	mission->setEndPosition(player->getPositionX(), player->getPositionY(), playerZone->getZoneName());
 
 	mission->setMissionTargetName(creatureTemplate->getObjectName());
 	mission->setTargetTemplate(sharedTemplate);
@@ -1697,6 +1737,7 @@ void MissionManagerImplementation::randomizeGenericReconMission(CreatureObject* 
 	mission->setTargetTemplate(TemplateManager::instance()->getTemplate(STRING_HASHCODE("object/tangible/mission/mission_recon_target.iff")));
 
 	mission->setStartPosition(position.getX(), position.getY(), playerZone->getZoneName());
+	mission->setEndPosition(position.getX(), position.getY(), playerZone->getZoneName());
 
 	int reward = position.distanceTo(player->getWorldPosition()) / 5;
 

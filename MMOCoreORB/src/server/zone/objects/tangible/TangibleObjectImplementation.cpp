@@ -159,8 +159,6 @@ void TangibleObjectImplementation::destroyObjectFromDatabase(bool destroyContain
 }
 
 void TangibleObjectImplementation::sendBaselinesTo(SceneObject* player) {
-	debug("sending tano baselines");
-
 	TangibleObject* thisPointer = asTangibleObject();
 
 	BaseMessage* tano3 = new TangibleObjectMessage3(thisPointer);
@@ -286,6 +284,26 @@ void TangibleObjectImplementation::setFactionStatus(int status) {
 		*/
 
 		ghost->updateInRangeBuildingPermissions();
+	} else if (isPlayerShip()) {
+		ShipObject* ship = asShipObject();
+
+		if (ship == nullptr)
+			return;
+
+		uint32 pvpStatusBitmask = ship->getPvpStatusBitmask();
+		uint32 oldStatusBitmask = pvpStatusBitmask;
+
+		if (factionStatus == FactionStatus::OVERT) {
+				pvpStatusBitmask |= ObjectFlag::OVERT;
+		} else {
+				pvpStatusBitmask &= ~ObjectFlag::OVERT;
+		}
+
+		if (pvpStatusBitmask != oldStatusBitmask) {
+			ship->setPvpStatusBitmask(pvpStatusBitmask);
+		}
+
+		ship->broadcastPvpStatusBitmask();
 	}
 
 	notifyObservers(ObserverEventType::FACTIONCHANGED);
@@ -329,7 +347,7 @@ void TangibleObjectImplementation::sendPvpStatusTo(CreatureObject* player) {
 	bool isShipAgent = isShipAiAgent();
 
 	// Handle enemy flagging for Rebel/Imperial
-	if (((isAiAgent() && !isPet() && (thisFactionStatus >= FactionStatus::COVERT)) || isShipAgent || (isShipObject() && !isShipAgent)) && (thisFaction > 0) && (playerFaction > 0) && (thisFaction != playerFaction)) {
+	if ((isAiAgent() && !isPet() && (thisFactionStatus >= FactionStatus::COVERT)) && (thisFaction > 0) && (playerFaction > 0) && (thisFaction != playerFaction)) {
 		if (ConfigManager::instance()->useCovertOvertSystem()) {
 			PlayerObject* ghost = player->getPlayerObject();
 
@@ -356,6 +374,8 @@ void TangibleObjectImplementation::sendPvpStatusTo(CreatureObject* player) {
 				newPvpStatusBitmask |= ObjectFlag::ENEMY;
 			}
 		}
+	} else if (isShipObject() && attackable && aggressive) {
+		newPvpStatusBitmask |= ObjectFlag::ENEMY;
 	}
 
 	BaseMessage* pvp = new UpdatePVPStatusMessage(asTangibleObject(), player, newPvpStatusBitmask);
@@ -1533,8 +1553,9 @@ void TangibleObjectImplementation::sendTo(SceneObject* player, bool doClose, boo
 }
 
 void TangibleObjectImplementation::notifyInsert(TreeEntry* object) {
-	if (object == nullptr)
+	if (object == nullptr) {
 		return;
+	}
 
 	SceneObjectImplementation::notifyInsert(object);
 
@@ -1544,23 +1565,11 @@ void TangibleObjectImplementation::notifyInsert(TreeEntry* object) {
 
 	auto sceneO = static_cast<SceneObject*>(object);
 
-	if (sceneO == nullptr || !sceneO->isPlayerCreature()) {
+	if (sceneO == nullptr || !sceneO->isPlayerCreature() || getObjectID() == sceneO->getParentID() || hasObjectInSlottedContainer(sceneO)) {
 		return;
 	}
 
 	sendTo(sceneO, true, false);
-}
-
-Vector3 TangibleObjectImplementation::getWorldPosition() {
-	auto root = getRootParent();
-
-	if (root != nullptr && root->isPobShip()) {
-		updateWorldPosition(false);
-	}
-
-	auto currentWorld = worldCoordinates.getPosition();
-
-	return currentWorld;
 }
 
 bool TangibleObjectImplementation::isCityStreetLamp() const {

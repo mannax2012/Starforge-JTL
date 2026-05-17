@@ -23,6 +23,9 @@ class VehicleControlDevice extends ControlDevice {
 	}
 
 	@preLocked
+	public native void notifyLoadFromDatabase();
+
+	@preLocked
 	@arg1preLocked
 	public native void storeObject(CreatureObject player, boolean force = false);
 
@@ -58,7 +61,7 @@ class VehicleControlDevice extends ControlDevice {
 				return 1;
 			} else {
 				if (super.status == 1 && !controlledObject.isInQuadTree()) {
-					this.generateObject(player);
+					this.storeObject(player, true);
 				} else {
 					this.storeObject(player);
 				}

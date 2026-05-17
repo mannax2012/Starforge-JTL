@@ -33,7 +33,8 @@ void ShipCounterMeasureComponentImplementation::updateCraftingValues(CraftingVal
 	ComponentImplementation::updateCraftingValues(values, firstUpdate);
 
 	for (int i = 0; i < values->getTotalExperimentalAttributes(); ++i) {
-		auto attribute = values->getAttribute(i);
+		const auto& attribute = values->getAttribute(i);
+		const auto& group = values->getAttributeGroup(attribute);
 		auto value = values->getCurrentValue(attribute);
 
 		if (attribute == "fltmineffectiveness") {
@@ -43,9 +44,13 @@ void ShipCounterMeasureComponentImplementation::updateCraftingValues(CraftingVal
 		} else if (attribute == "fltrefirerate" || attribute == "refire_rate") {
 			refireRate = value * 0.001f;
 		} else if (attribute == "fltmaxammo" || attribute == "ammo") {
-			useCount = Math::max(value, 1.f);
+			setUseCount((int)Math::max(value, 1.f));
 		} else if (attribute == "energy_per_shot") {
 			energyPerShot = Math::max(value, 0.f);
+		}
+
+		if (firstUpdate && group == "misc") {
+			values->setHidden(attribute);
 		}
 	}
 }

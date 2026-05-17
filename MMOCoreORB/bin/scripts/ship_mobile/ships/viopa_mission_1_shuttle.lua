@@ -24,7 +24,7 @@ viopa_mission_1_shuttle = ShipAgent:new {
 	tauntDieChance = 0.1,
 
 	pvpBitmask = ATTACKABLE,
-	shipBitmask = NONE,
+	shipBitmask = TURRETSHIP,
 	optionsBitmask = AIENABLED,
 
 	customShipAiMap = "",
@@ -32,6 +32,8 @@ viopa_mission_1_shuttle = ShipAgent:new {
 	conversationTemplate = "",
 	conversationMobile = "",
 	conversationMessage = "", --Too Far Message
+
+	cargoString = "imperial_data",
 }
 
 ShipAgentTemplates:addShipAgentTemplate(viopa_mission_1_shuttle, "viopa_mission_1_shuttle")

@@ -37,7 +37,7 @@ public:
 
 		assert(child != nullptr);
 
-		if (agent->peekBlackboard("allyTarget")) {
+		if (agent->peekBlackboard("allyProspect")) {
 			ManagedReference<SceneObject*> currAlly = agent->readBlackboard("allyProspect").get<ManagedReference<SceneObject*> >().get();
 			if (currAlly != nullptr && currAlly->isCreatureObject()) {
 				if (isInvalidTarget(currAlly->asCreatureObject(), agent)) {

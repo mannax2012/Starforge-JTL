@@ -62,28 +62,18 @@ void PlayerVehicleBuffImplementation::deactivate(bool removeModifiers) {
 }
 
 void PlayerVehicleBuffImplementation::updateRiderSpeeds() {
-
 	ManagedReference<CreatureObject*> vehicle = creature.get();
-	ManagedReference<CreatureObject*> rider = vehicle->getSlottedObject("rider").castTo<CreatureObject*>();
 
-	if (rider == nullptr) // Our rider is gone
+	if (vehicle == nullptr) {
 		return;
+	}
 
-	Core::getTaskManager()->executeTask([=] () {
-		Locker riderLock(rider);
-		Locker crossLock(vehicle, rider);
-
-		if (!rider->isRidingMount()) // dismount will reset the player's speed for us, do nothing
+	Core::getTaskManager()->executeTask([vehicle] () {
+		if (vehicle == nullptr) {
 			return;
-
-		// Speed hack buffer
-		SpeedMultiplierModChanges* changeBuffer = rider->getSpeedMultiplierModChanges();
-		const int bufferSize = changeBuffer->size();
-
-		// Drop old change off the buffer
-		if (bufferSize > 5) {
-			changeBuffer->remove(0);
 		}
+
+		Locker lock(vehicle);
 
 		// get vehicle speed
 		float newSpeed = vehicle->getRunSpeed();
@@ -100,11 +90,20 @@ void PlayerVehicleBuffImplementation::updateRiderSpeeds() {
 		}
 
 		// add speed multiplier mod for existing buffs
-		if(vehicle->getSpeedMultiplierMod() != 0){
+		if (vehicle->getSpeedMultiplierMod() != 0) {
 			newSpeed *= vehicle->getSpeedMultiplierMod();
-		}else{
-			rider->sendSystemMessage("Debug - vehicle->getSpeedMultiplierMod(): " + String::valueOf(vehicle->getSpeedMultiplierMod()));
 		}
+
+		// Update Vehicles Speed
+		vehicle->setRunSpeed(newSpeed);
+
+		ManagedReference<CreatureObject*> rider = vehicle->getSlottedObject("rider").castTo<CreatureObject*>();
+
+		if (rider == nullptr || !rider->isRidingMount()) {
+			return;
+		}
+
+		Locker rideClock(rider, vehicle);
 
 		// Force Sensitive SkillMods
 		if (vehicle->isVehicleObject()) {
@@ -112,15 +111,11 @@ void PlayerVehicleBuffImplementation::updateRiderSpeeds() {
 			newTurn += rider->getSkillMod("force_vehicle_control");
 		}
 
-		// Add a fake "skillmod" change
-		changeBuffer->add(SpeedModChange(newSpeed / 10));
-
-		// Update riders speed to match mount speed
-		rider->setSpeedMultiplierMod(vehicle->getRunSpeed() / 10);
-		rider->setRunSpeed(newSpeed);
+		rider->setSpeedMultiplierMod(newSpeed / 10, true, true);
 		rider->setTurnScale(newTurn, true);
 		rider->setAccelerationMultiplierMod(newAccel, true);
-		rider->sendSystemMessage("Debug - newSpeed: " + String::valueOf(newSpeed));
+		rider->updateSpeedAndAccelerationMods();
+		rider->updateRunSpeed();
 		rider->updateToDatabase();
 	}, "UpdateRiderSpeedsLambda");
 }

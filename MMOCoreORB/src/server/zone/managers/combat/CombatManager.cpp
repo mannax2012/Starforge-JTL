@@ -718,27 +718,36 @@ void CombatManager::broadcastCombatAction(CreatureObject* attacker, WeaponObject
 		return;
 	}
 
+	String effect = "";
 	DefenderHitList* hitList = targetDefenders.get(0);
 
 	if (hitList != nullptr && weapon != nullptr) {
 		TangibleObject* defenderObject = hitList->getDefender();
 
 		if (defenderObject != nullptr) {
-			const String& animation = data.getCommand()->getAnimation(attacker, defenderObject, weapon, hitList->getHitLocation(), hitList->getInitialDamage());
-
 			uint32 animationCRC = 0;
+			auto combatCommand = data.getCommand();
 
-			if (!animation.isEmpty()) {
-				animationCRC = animation.hashCode();
+			if (combatCommand != nullptr) {
+				const String& animation = combatCommand->getAnimation(attacker, defenderObject, weapon, hitList->getHitLocation(), hitList->getInitialDamage());
+
+				if (!animation.isEmpty()) {
+					animationCRC = animation.hashCode();
+				}
+
+				effect = combatCommand->getEffectString();
 			}
 
-			if (animationCRC != 0) {
+			if (animationCRC > 0) {
 				uint64 weaponID = weapon->getObjectID();
 
-				CombatAction* combatAction = new CombatAction(attacker, targetDefenders, animationCRC, data.getTrails(), weaponID);
-				attacker->broadcastMessage(combatAction, true);
+				auto combatAction = new CombatAction(attacker, targetDefenders, animationCRC, data.getTrails(), weaponID);
+
+				if (combatAction != nullptr) {
+					attacker->broadcastMessage(combatAction, true);
+				}
 			} else {
-				attacker->error("animationCRC is 0 for " + data.getCommandName());
+				attacker->error() << "animationCRC is 0 for " << data.getCommandName();
 			}
 		}
 	}
@@ -746,8 +755,6 @@ void CombatManager::broadcastCombatAction(CreatureObject* attacker, WeaponObject
 	if (data.changesAttackerPosture()) {
 		attacker->updatePostures(false);
 	}
-
-	const String& effect = data.getCommand()->getEffectString();
 
 	if (!effect.isEmpty()) {
 		attacker->playEffect(effect);
@@ -2833,7 +2840,10 @@ float CombatManager::doObjectDetonation(TangibleObject* attackerTanO, CreatureOb
 
 				armor->inflictDamage(armor, 0, damage * 0.2, true, true);
 			}
+		}
 
+		// Handle spill over damage for all pools
+		if (defender->isCreatureObject() && !defender->isVehicleObject()) {
 			// Calculate Spill over
 			int numSpillOverPools = 2;
 			float spillMultPerPool = (0.0834f * numSpillOverPools);
@@ -2844,7 +2854,7 @@ float CombatManager::doObjectDetonation(TangibleObject* attackerTanO, CreatureOb
 			// subtract spill damage from total damage
 			damage -= spilledDamage;
 
-			 // Split the spill over damage between the pools damaged
+			// Split the spill over damage between the pools damaged
 			int spillDamagePerPool = (int)(spilledDamage / numSpillOverPools);
 			int spillOverRemainder = (spilledDamage % numSpillOverPools) + spillDamagePerPool;
 			int spillToApply = (numSpillOverPools-- > 1 ? spillDamagePerPool : spillOverRemainder);
@@ -2969,7 +2979,7 @@ void CombatManager::showHitLocationFlyText(CreatureObject* attacker, CreatureObj
 // Special Attack Cost
 
 bool CombatManager::applySpecialAttackCost(CreatureObject* attacker, WeaponObject* weapon, const CreatureAttackData& data, WeaponObject* offHand) const {
-	if (attacker->isAiAgent() || data.isForceAttack())
+	if (data.isForceAttack())
 		return true;
 
 	float force = weapon->getForceCost() * data.getForceCostMultiplier();
@@ -3010,28 +3020,26 @@ bool CombatManager::applySpecialAttackCost(CreatureObject* attacker, WeaponObjec
 			return false;
 		}
 	}
-/*
-	health = attacker->calculateCostAdjustment(CreatureAttribute::STRENGTH, health);
-	action = attacker->calculateCostAdjustment(CreatureAttribute::QUICKNESS, action);
-	mind = attacker->calculateCostAdjustment(CreatureAttribute::FOCUS, mind);
-*/
-	if (attacker->getHAM(CreatureAttribute::HEALTH) <= health)
+	// Combat resource costs are now paid from action only so the attacker-side
+	// resource model matches the health-only combat damage model.
+	float totalActionCost = health + action + mind;
+
+	// Many creature-only special attacks run on natural/unarmed weapons that do
+	// not carry player-style HAM attack cost data. Give AI specials a fallback
+	// action cost so template attacks like poison/disease/area specials still
+	// consume action and throttle correctly.
+	if (attacker->isAiAgent() && totalActionCost <= 0.f && !data.isStateOnlyAttack()) {
+		float fallbackMultiplier = data.getHealthCostMultiplier() + data.getActionCostMultiplier() + data.getMindCostMultiplier();
+		int wieldCount = (data.isDualWieldAttack() && offHand != nullptr) ? 2 : 1;
+
+		totalActionCost = 100.f * fallbackMultiplier * wieldCount;
+	}
+
+	if (attacker->getHAM(CreatureAttribute::ACTION) <= totalActionCost)
 		return false;
 
-	if (attacker->getHAM(CreatureAttribute::ACTION) <= action)
-		return false;
-
-	if (attacker->getHAM(CreatureAttribute::MIND) <= mind)
-		return false;
-
-	if (health > 0)
-		attacker->inflictDamage(attacker, CreatureAttribute::ACTION, health, true, true, true);
-
-	if (action > 0)
-		attacker->inflictDamage(attacker, CreatureAttribute::ACTION, action, true, true, true);
-
-	if (mind > 0)
-		attacker->inflictDamage(attacker, CreatureAttribute::ACTION, mind, true, true, true);
+	if (totalActionCost > 0)
+		attacker->inflictDamage(attacker, CreatureAttribute::ACTION, totalActionCost, true, true, true);
 
 	return true;
 }

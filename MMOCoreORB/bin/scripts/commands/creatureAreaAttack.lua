@@ -51,7 +51,7 @@ CreatureAreaAttackCommand = {
 	animType = GENERATE_INTENSITY,
 
 	healthCostMultiplier = 0,
-	actionCostMultiplier = 0,
+	actionCostMultiplier = 1.5,
 	mindCostMultiplier = 0,
 
 	areaRange = 25,
@@ -60,4 +60,3 @@ CreatureAreaAttackCommand = {
 }
 
 AddCommand(CreatureAreaAttackCommand)
-

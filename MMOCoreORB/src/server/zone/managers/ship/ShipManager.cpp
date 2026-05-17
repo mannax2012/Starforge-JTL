@@ -49,9 +49,6 @@ ShipManager::ShipManager() : Logger("ShipManager") {
 
 	lua->registerFunction("includeFile", includeFile);
 	lua->registerFunction("addShipSpawnGroup", addShipSpawnGroup);
-
-	updateTransformTask = new ShipAiAgentUpdateTransformTask(this);
-	updateTransformTask->schedule(60000);
 }
 
 void ShipManager::initialize() {
@@ -984,10 +981,13 @@ int ShipManager::notifyDestruction(ShipObject* destructorShip, ShipAiAgent* dest
 		return 1;
 	}
 
+	if (destructorShip == nullptr) {
+		destructorShip = destructedShip;
+	}
+
 	// info(true) << "ShipManager::notifyDestruction -- called for: " << destructedShip->getDisplayedName() << " Attacker: " << destructorShip->getDisplayedName();
 
 	destructedShip->cancelBehaviorEvent();
-	destructedShip->cancelRecovery();
 
 	destructedShip->wipeBlackboard();
 	destructedShip->clearRunningChain();
@@ -1039,32 +1039,10 @@ int ShipManager::notifyDestruction(ShipObject* destructorShip, ShipAiAgent* dest
 			highestShip->awardLootItems(destructedShip, randomPayout);
 		}
 
-		// Quest Kill Observers
-		SortedVector<ManagedReference<Observer* > > observers = destructedShip->getObservers(ObserverEventType::QUESTKILL);
+		// Notify SHIPDESTROYED observer
+		destructedShip->notifyObservers(ObserverEventType::SHIPDESTROYED, destructorShip, destructedShip->getSquadronSize());
 
-		if (observers.size() > 0) {
-			for (int i = 0; i < copyThreatMap.size(); ++i) {
-				TangibleObject* attacker = copyThreatMap.elementAt(i).getKey();
-
-				if (attacker == nullptr || !attacker->isPlayerShip())
-					continue;
-
-				auto attackerShip = attacker->asShipObject();
-
-				if (attackerShip == nullptr || !attackerShip->isPlayerShip()) {
-					continue;
-				}
-
-				auto pilot = attackerShip->getPilot();
-
-				if (pilot == nullptr) {
-					continue;
-				}
-
-				pilot->notifyObservers(ObserverEventType::QUESTKILL, destructedShip);
-			}
-		}
-
+		// Notify DESTROYEDSHIP Observers, used for players killing non-mission spawned shipAgents
 		ManagedReference<ShipObject*> playerShip = copyThreatMap.getHighestDamageGroupShip();
 
 		if (playerShip != nullptr) {
@@ -1089,6 +1067,7 @@ int ShipManager::notifyDestruction(ShipObject* destructorShip, ShipAiAgent* dest
 					}
 				} else {
 					Locker locker(pilot, destructedShip);
+
 					pilot->notifyObservers(ObserverEventType::DESTROYEDSHIP, destructedShip);
 				}
 			}

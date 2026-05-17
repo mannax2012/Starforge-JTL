@@ -55,7 +55,7 @@ void MissionObjectiveImplementation::activate() {
 		int64 timeElapsed = missionStartTime.miliDifference();
 		int64 missionDuration = MISSIONDURATION;
 
-		if (mission->getTypeCRC() == MissionTypes::BOUNTY) {
+		if (MissionTypes::isBountyType(mission->getTypeCRC())) {
 			missionDuration = ConfigManager::instance()->getInt("Core3.MissionManager.BountyExpirationTime", MISSIONDURATION);
 		}
 
@@ -266,7 +266,7 @@ void MissionObjectiveImplementation::awardReward() {
 #endif
 				Vector3 memberPosition = groupMember->getWorldPosition();
 
-				if (mission->getTypeCRC() == MissionTypes::BOUNTY) {
+				if (MissionTypes::isBountyType(mission->getTypeCRC())) {
 					memberPosition.setZ(0);
 				}
 
@@ -385,15 +385,24 @@ void MissionObjectiveImplementation::awardReward() {
 }
 
 Vector3 MissionObjectiveImplementation::getEndPosition() {
-	ManagedReference<MissionObject* > mission = this->mission.get();
+	Vector3 missionEndPoint(0.f, 0.f, 0.f);
 
-	Vector3 missionEndPoint;
-	if (mission != nullptr) {
-		missionEndPoint.setX(mission->getEndPositionX());
-		missionEndPoint.setY(mission->getEndPositionY());
-		TerrainManager* terrain = getPlayerOwner()->getZone()->getPlanetManager()->getTerrainManager();
-		missionEndPoint.setZ(terrain->getHeight(missionEndPoint.getX(), missionEndPoint.getY()));
+	auto missionStrong = this->mission.get();
+
+	if (missionStrong == nullptr) {
+		return missionEndPoint;
 	}
+
+	missionEndPoint.setX(missionStrong->getEndPositionX());
+	missionEndPoint.setY(missionStrong->getEndPositionY());
+
+	auto zone = missionStrong->getZone();
+
+	if (zone == nullptr) {
+		return missionEndPoint;
+	}
+
+	missionEndPoint.setZ(zone->getHeight(missionEndPoint.getX(), missionEndPoint.getY()));
 
 	return missionEndPoint;
 }

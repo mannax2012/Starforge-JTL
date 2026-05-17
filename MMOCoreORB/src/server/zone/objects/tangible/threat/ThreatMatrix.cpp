@@ -10,6 +10,19 @@
 #include "ThreatStates.h"
 #include "server/zone/objects/tangible/TangibleObject.h"
 
+namespace {
+uint64 composeThreatKey(uint32 magnitude, TangibleObject* threat) {
+	uint64 objectID = threat != nullptr ? threat->getObjectID() : 0;
+	uint64 tieBreaker = (uint32)(objectID ^ (objectID >> 32));
+
+	return (((uint64)magnitude) << 32) | tieBreaker;
+}
+
+uint32 extractThreatMagnitude(uint64 key) {
+	return (uint32)(key >> 32);
+}
+}
+
 ThreatMatrix::ThreatMatrix() : damageMap(1, 0), aggroMap(1, 0), healMap(1, 0) {
 	tauntThreat = nullptr;
 	focusedThreat = nullptr;
@@ -52,20 +65,22 @@ void ThreatMatrix::clear() {
 
 void ThreatMatrix::add(TangibleObject* threat, ThreatMapEntry* entry) {
 	// Get Total Damage
-	uint32 totalDamage = entry->getTotalDamage() - entry->getNonAggroDamage();
+	uint32 totalDamage = entry->getEffectiveDamageThreat();
 
 	/// We don't want to add someone who hasn't done
 	/// and damage to this
 	if (totalDamage > 0)
-		damageMap.put(totalDamage, threat);
+		damageMap.put(composeThreatKey(totalDamage, threat), threat);
 
 	/// Anyone with an entry should be in this map
-	if (entry->getAggroMod() > 0)
-		aggroMap.put(entry->getAggroMod(), threat);
+	uint32 effectiveAggro = entry->getEffectiveAggroMod();
+	if (effectiveAggro > 0)
+		aggroMap.put(composeThreatKey(effectiveAggro, threat), threat);
 
 	/// Only healers should be in this map
-	if (entry->getHeal() > 0)
-		healMap.put(entry->getHeal(), threat);
+	uint32 effectiveHeal = entry->getEffectiveHeal();
+	if (effectiveHeal > 0)
+		healMap.put(composeThreatKey(effectiveHeal, threat), threat);
 
 	if (entry->hasState(ThreatStates::TAUNTED)) {
 		tauntThreat = threat;
@@ -86,25 +101,43 @@ TangibleObject* ThreatMatrix::getLargestThreat() {
 		returnThreat = focusedThreat;
 
 	} else {
-		Vector<TangibleObject*> targetSelection;
-		if (damageMap.size() > 0) {
-			targetSelection.add(damageMap.elementAt(damageMap.size() - 1).getValue());
-			targetSelection.add(damageMap.elementAt(damageMap.size() - 1).getValue());
-			targetSelection.add(damageMap.elementAt(System::random(damageMap.size() - 1)).getValue());
-		}
+		VectorMap<uint64, int> candidateScores;
+		VectorMap<uint64, ManagedReference<TangibleObject*>> candidates;
 
-		if (aggroMap.size() > 0) {
-			targetSelection.add(aggroMap.elementAt(aggroMap.size() - 1).getValue());
-			targetSelection.add(aggroMap.elementAt(aggroMap.size() - 1).getValue());
-			targetSelection.add(aggroMap.elementAt(System::random(aggroMap.size() - 1)).getValue());
-		}
+		auto scoreCandidate = [&candidateScores, &candidates](TangibleObject* target, int weight) {
+			if (target == nullptr)
+				return;
 
-		if (healMap.size() > 0) {
-			targetSelection.add(healMap.elementAt(healMap.size() - 1).getValue());
-		}
+			uint64 objectID = target->getObjectID();
+			int idx = candidateScores.find(objectID);
 
-		if (targetSelection.size() > 0)
-			returnThreat = targetSelection.get(System::random(targetSelection.size() - 1));
+			if (idx == -1) {
+				candidateScores.put(objectID, weight);
+				candidates.put(objectID, target);
+			} else {
+				candidateScores.get(idx) += weight;
+			}
+		};
+
+		if (damageMap.size() > 0)
+			scoreCandidate(damageMap.elementAt(damageMap.size() - 1).getValue(), 6);
+
+		if (aggroMap.size() > 0)
+			scoreCandidate(aggroMap.elementAt(aggroMap.size() - 1).getValue(), 5);
+
+		if (healMap.size() > 0)
+			scoreCandidate(healMap.elementAt(healMap.size() - 1).getValue(), 3);
+
+		int bestScore = -1;
+
+		for (int i = 0; i < candidateScores.size(); ++i) {
+			int score = candidateScores.elementAt(i).getValue();
+
+			if (score > bestScore) {
+				bestScore = score;
+				returnThreat = candidates.get(i);
+			}
+		}
 	}
 
 #ifdef DEBUG
@@ -135,17 +168,17 @@ void ThreatMatrix::print() {
 
 	System::out << "************* DamageMap ***************" << endl;
 	for (int i = 0; i < damageMap.size(); ++i) {
-		System::out << "DamageMap[" << i << "] " << damageMap.elementAt(i).getValue()->getObjectID() << " " << damageMap.elementAt(i).getKey() << endl;
+		System::out << "DamageMap[" << i << "] " << damageMap.elementAt(i).getValue()->getObjectID() << " " << extractThreatMagnitude(damageMap.elementAt(i).getKey()) << endl;
 	}
 
 	System::out << "************* AggroMap ***************" << endl;
 	for (int i = 0; i < aggroMap.size(); ++i) {
-		System::out << "AggroMap[" << i << "] " << aggroMap.elementAt(i).getValue()->getObjectID() << " " << aggroMap.elementAt(i).getKey() << endl;
+		System::out << "AggroMap[" << i << "] " << aggroMap.elementAt(i).getValue()->getObjectID() << " " << extractThreatMagnitude(aggroMap.elementAt(i).getKey()) << endl;
 	}
 
 	System::out << "************* HealMap ***************" << endl;
 	for (int i = 0; i < healMap.size(); ++i) {
-		System::out << "HealMap[" << i << "] " << healMap.elementAt(i).getValue()->getObjectID() << " " << healMap.elementAt(i).getKey() << endl;
+		System::out << "HealMap[" << i << "] " << healMap.elementAt(i).getValue()->getObjectID() << " " << extractThreatMagnitude(healMap.elementAt(i).getKey()) << endl;
 	}
 	System::out << "*************************************" << endl;
 }

@@ -46,6 +46,9 @@ CreatureAreaDiseaseCommand = {
         combatSpam = "attack",
         animation = "creature_attack_special_1", 
 	animType = GENERATE_INTENSITY,
+	healthCostMultiplier = 0,
+	actionCostMultiplier = 2.0,
+	mindCostMultiplier = 0,
 	dotEffects = {
 	  DotEffect( 
 		DISEASED, 
@@ -64,4 +67,3 @@ CreatureAreaDiseaseCommand = {
 }
 
 AddCommand(CreatureAreaDiseaseCommand)
-

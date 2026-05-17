@@ -42,7 +42,7 @@ class AuctionManager extends ManagedService implements Logger {
 	public final static int ITEMSPERPAGE = 100;
 
 	public final static int VENDOREXPIREPERIOD = 63072000; // Seconds - 2 years
-	public final static int COMMODITYEXPIREPERIOD = 15768000; // Seconds - 6 months
+	public final static int COMMODITYEXPIREPERIOD = 63072000; // Seconds - 2 years
 
 	// Location Types
 	public final static int LT_GALAXY = 0;
@@ -171,4 +171,3 @@ class AuctionManager extends ManagedService implements Logger {
 		return zoneServer;
 	}
 }
-

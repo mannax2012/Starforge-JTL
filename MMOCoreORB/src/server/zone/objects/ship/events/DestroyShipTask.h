@@ -57,13 +57,6 @@ public:
 				ship->broadcastMessage(msg, false);
 
 				if (pilot == nullptr && ship->getPersistenceLevel() == 0) {
-					auto shipAgent = ship->asShipAiAgent();
-
-					if (shipAgent != nullptr) {
-						// Clean up the ship agent
-						shipAgent->scheduleDespawn(2, true); // In seconds
-					}
-
 					ship->destroyObjectFromWorld(true);
 					ship->destroyObjectFromDatabase(true);
 				} else {
@@ -88,6 +81,8 @@ public:
 
 				ship->setDirection(1,0,0,0);
 				ship->setPosition(stationPosition.getX(), stationPosition.getZ(), stationPosition.getY());
+
+				ship->resetShipFaction();
 
 				Vector<BasePacket*> messages;
 				messages.add(new DataTransform(ship));

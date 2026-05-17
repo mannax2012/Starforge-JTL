@@ -5,6 +5,8 @@
 #ifndef GETVETERANREWARDTIMECOMMAND_H_
 #define GETVETERANREWARDTIMECOMMAND_H_
 
+#include "conf/ConfigManager.h"
+
 class GetVeteranRewardTimeCommand : public QueueCommand {
 public:
 	GetVeteranRewardTimeCommand(const String& name, ZoneProcessServer* server) : QueueCommand(name, server) {
@@ -60,10 +62,9 @@ public:
 
 			player->sendSystemMessage(timeMsg);
 
-			// Handle JTL Reward message
-			if (eligibleMilestone >= 180) {
-				StringIdChatParameter yachtMsg("veteran_new", "announcement_180day_jtl"); // "Congratulations!  You have earned the 180-day Jump to Lightspeed Veteran Reward, the Sorosuub Luxury Yacht!  You can claim this reward for every character on your account."
-				player->sendSystemMessage(yachtMsg);
+			// Call out the yacht now that it sits on its own 30-day tier.
+			if (eligibleMilestone == 30 && ConfigManager::instance()->isJtlEnabled()) {
+				player->sendSystemMessage("You are eligible for the 30-day Jump to Lightspeed veteran reward, the Sorosuub Luxury Yacht.");
 			}
 		} else {
 			player->sendSystemMessage("@veteran:not_eligible"); // You are not currently eligible for a veteran reward.
