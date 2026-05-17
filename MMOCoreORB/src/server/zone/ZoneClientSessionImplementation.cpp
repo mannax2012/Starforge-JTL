@@ -314,7 +314,7 @@ void ZoneClientSessionImplementation::error(const String& msg) {
 }
 
 String ZoneClientSessionImplementation::getAddress() const {
-	return session != nullptr ? session->getFullIPAddress() : "";
+	return session != nullptr ? session->ServiceClient::getAddress().getFullIPAddress() : "";
 }
 
 String ZoneClientSessionImplementation::getIPAddress() const {
