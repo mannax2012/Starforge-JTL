@@ -323,15 +323,11 @@ String ZoneClientSessionImplementation::getIPAddress() const {
 
 void ZoneClientSessionImplementation::setIPAddress(const String& newIP) {
 	ipAddress = newIP;
-
-	if (session != nullptr) {
-		session->setIPAddress(newIP);
-	}
 }
 
 uint16 ZoneClientSessionImplementation::getPort() const {
 	if (session != nullptr) {
-		return session->getAddress().getPort();
+		return session->ServiceClient::getAddress().getPort();
 	}
 	return 0;
 }
