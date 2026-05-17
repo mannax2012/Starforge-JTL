@@ -216,7 +216,7 @@ class VehicleObject extends CreatureObject {
 		if (!creature || isDestroyed())
 			return false;
 
-		if (object.getZone() != getZone())
+		if (object.getZoneUnsafe() != getZoneUnsafe())
 			return false;
 
 		return creature.isAttackableBy(object);
