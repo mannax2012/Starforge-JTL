@@ -3658,6 +3658,19 @@ bool CreatureObjectImplementation::isAttackableBy(CreatureObject* creature, bool
 	if (isInvisible() || isEventPerk())
 		return false;
 
+	if (creature->getLocalZone() == nullptr || getLocalZone() == nullptr) {
+		if (isVehicleObject() || creature->isVehicleObject()) {
+			error() << "CreatureObjectImplementation::isAttackableBy unzoned participant -- targetOID=" << getObjectID()
+				<< " targetLocalZone=" << getLocalZone()
+				<< " attackerOID=" << creature->getObjectID()
+				<< " attackerLocalZone=" << creature->getLocalZone()
+				<< " targetVehicle=" << isVehicleObject()
+				<< " attackerVehicle=" << creature->isVehicleObject();
+		}
+
+		return false;
+	}
+
 	// info(true) << "CreatureObjectImplementation::isAttackableBy Creature Check -- " << getDisplayedName() << " ID: " << getObjectID() << " by attacking Creature: " << creature->getDisplayedName() << " ID: " << creature->getObjectID();
 
 	if (!bypassDeadCheck && isDead()) {
