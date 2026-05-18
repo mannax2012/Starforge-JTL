@@ -476,7 +476,7 @@ int PlayerObjectImplementation::calculateBhReward() {
 	int frsRank = getFrsData()->getRank();
 
 	if (frsRank > 0)
-		reward += frsRank * 100000; // +100k per frs rank
+		reward += frsRank * 250000; // +250k per FRS rank
 
 	if (reward < minReward)
 		reward = minReward;
@@ -2619,11 +2619,54 @@ void PlayerObjectImplementation::reload(ZoneClientSession* client) {
 
 	creature->setMovementCounter(0);
 
-	if (creature->isRidingMount() && creature->getParent() == nullptr) {
+	auto mountedParent = creature->getParent().get();
+	auto transferZone = creature->getLocalZone();
+
+	if (creature->isRidingMount() && mountedParent == nullptr) {
+		creature->error() << "PlayerObjectImplementation::reload clearing mount state -- playerOID=" << creature->getObjectID()
+			<< " playerParentID=" << creature->getParentID()
+			<< " localZone=" << creature->getLocalZone();
 		creature->clearState(CreatureState::RIDINGMOUNT);
+	} else if (mountedParent != nullptr && mountedParent->isVehicleObject()) {
+		if (!creature->isRidingMount() || creature->getLocalZone() == nullptr || mountedParent->getParentID() != 0 || mountedParent->getLocalZone() == nullptr) {
+			creature->error() << "PlayerObjectImplementation::reload mounted vehicle state -- playerOID=" << creature->getObjectID()
+				<< " riding=" << creature->isRidingMount()
+				<< " playerParentID=" << creature->getParentID()
+				<< " vehicleOID=" << mountedParent->getObjectID()
+				<< " vehicleParentID=" << mountedParent->getParentID()
+				<< " playerLocalZone=" << creature->getLocalZone()
+				<< " vehicleLocalZone=" << mountedParent->getLocalZone();
+
+			// Recover by detaching from the persisted mount and keeping the last cached world position.
+			Vector3 cachedWorldPosition = creature->getWorldPosition();
+			auto vehicle = mountedParent->asCreatureObject();
+
+			if (vehicle != nullptr) {
+				vehicle->clearState(CreatureState::MOUNTEDCREATURE);
+			}
+
+			creature->clearState(CreatureState::RIDINGMOUNT);
+			creature->setParent(nullptr);
+			creature->setPosition(cachedWorldPosition.getX(), cachedWorldPosition.getZ(), cachedWorldPosition.getY());
+
+			updateLastValidatedPosition();
+			mountedParent = nullptr;
+			transferZone = creature->getLocalZone();
+		}
 	}
 
-	creature->getZone()->transferObject(creature, -1, true);
+	if (transferZone == nullptr && mountedParent != nullptr) {
+		transferZone = mountedParent->getLocalZone();
+	}
+
+	if (transferZone == nullptr) {
+		creature->error() << "PlayerObjectImplementation::reload aborting transfer -- playerOID=" << creature->getObjectID()
+			<< " playerParentID=" << creature->getParentID()
+			<< " mountedParent=" << mountedParent;
+		return;
+	}
+
+	transferZone->transferObject(creature, -1, true);
 }
 
 void PlayerObjectImplementation::disconnect(bool closeClient, bool doLock) {
