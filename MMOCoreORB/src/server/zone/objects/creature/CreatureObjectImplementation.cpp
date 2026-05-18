@@ -3578,6 +3578,19 @@ bool CreatureObjectImplementation::isAttackableBy(TangibleObject* object, bool b
 	if (object == nullptr || asCreatureObject() == object)
 		return false;
 
+	if (object->getLocalZone() == nullptr || getLocalZone() == nullptr) {
+		if (isVehicleObject() || object->isCreatureObject()) {
+			error() << "CreatureObjectImplementation::isAttackableBy unzoned tangible participant -- targetOID=" << getObjectID()
+				<< " targetLocalZone=" << getLocalZone()
+				<< " attackerOID=" << object->getObjectID()
+				<< " attackerLocalZone=" << object->getLocalZone()
+				<< " targetVehicle=" << isVehicleObject()
+				<< " attackerCreature=" << object->isCreatureObject();
+		}
+
+		return false;
+	}
+
 	// info(true) << "CreatureObjectImplementation::isAttackableBy TangibleObject Check -- Object ID = " << getObjectID() << " by attacking TanO ID = " << object->getObjectID();
 
 	// Vehicle object, check against owner
