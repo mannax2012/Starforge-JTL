@@ -247,7 +247,7 @@ class VehicleObject extends CreatureObject {
 		vehicleZone = getZoneUnsafe();
 
 		if (attackerZone != vehicleZone) {
-			if (vehicleZone == null || (getParentID() != 0 && attackerZone == null)) {
+			if (!vehicleZone || (getParentID() != 0 && !attackerZone)) {
 				error() << "VehicleObject::isAttackableBy zone mismatch -- oid=" << getObjectID()
 					<< " parentID=" << getParentID()
 					<< " attacker=" << object.getObjectID()
