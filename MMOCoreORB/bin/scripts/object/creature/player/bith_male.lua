@@ -60,6 +60,7 @@ object_creature_player_bith_male = object_creature_player_shared_bith_male:new {
 		
 	},
 	defaultLanguage = 1,
+	species = 66,
 	startingItems = { },
 	startingSkills = { "species_bith", "social_language_basic_comprehend", "social_language_basic_speak" }
 }

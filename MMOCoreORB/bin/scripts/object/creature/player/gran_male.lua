@@ -60,6 +60,7 @@ object_creature_player_gran_male = object_creature_player_shared_gran_male:new {
 		
 	},
 	defaultLanguage = 1,
+	species = 54,
 	startingItems = { },
 	startingSkills = { "species_gran", "social_language_basic_comprehend", "social_language_basic_speak" }
 }

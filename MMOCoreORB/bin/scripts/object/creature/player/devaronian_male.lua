@@ -60,6 +60,7 @@ object_creature_player_devaronian_male = object_creature_player_shared_devaronia
 		
 	},
 	defaultLanguage = 1,
+	species = 53,
 	startingItems = { },
 	startingSkills = { "species_devaronian", "social_language_basic_comprehend", "social_language_basic_speak" }
 }

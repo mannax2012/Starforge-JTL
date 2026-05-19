@@ -60,6 +60,7 @@ object_creature_player_nikto_male = object_creature_player_shared_nikto_male:new
 		
 	},
 	defaultLanguage = 1,
+	species = 57,
 	startingItems = { },
 	startingSkills = { "species_nikto", "social_language_basic_comprehend", "social_language_basic_speak" }
 }

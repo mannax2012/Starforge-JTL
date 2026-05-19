@@ -60,6 +60,7 @@ object_creature_player_ishi_tib_male = object_creature_player_shared_ishi_tib_ma
 		
 	},
 	defaultLanguage = 1,
+	species = 55,
 	startingItems = { },
 	startingSkills = { "species_ishi_tib", "social_language_basic_comprehend", "social_language_basic_speak" }
 }

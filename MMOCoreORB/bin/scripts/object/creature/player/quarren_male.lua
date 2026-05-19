@@ -60,6 +60,7 @@ object_creature_player_quarren_male = object_creature_player_shared_quarren_male
 		
 	},
 	defaultLanguage = 1,
+	species = 58,
 	startingItems = { },
 	startingSkills = { "species_quarren", "social_language_basic_comprehend", "social_language_basic_speak" }
 }

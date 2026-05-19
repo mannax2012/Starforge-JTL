@@ -60,6 +60,7 @@ object_creature_player_aqualish_male = object_creature_player_shared_aqualish_ma
 		
 	},
 	defaultLanguage = 1,
+	species = 31,
 	startingItems = { },
 	startingSkills = { "species_aqualish", "social_language_basic_comprehend", "social_language_basic_speak" }
 }
