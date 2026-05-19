@@ -68,6 +68,24 @@ function Glowing:isFrsKnight(pPlayer)
 	return (jediState == 4 or jediState == 8) and frsRank >= 0
 end
 
+function Glowing:getVisibilityStatusMessage(pPlayer)
+	local pGhost = CreatureObject(pPlayer):getPlayerObject()
+
+	if (pGhost == nil) then
+		return nil
+	end
+
+	local visibility = PlayerObject(pGhost):getVisibility()
+
+	if visibility >= BOUNTY_VIS_CAP then
+		return "Every shadowport in the galaxy is whispering your name. You are on the bounty boards."
+	elseif visibility >= BOUNTY_TERMINAL_VIS_THRESHOLD then
+		return "Word from the underworld is you are likely wanted."
+	else
+		return "The bounty boards are quiet for now. Your trail has not drawn enough notice."
+	end
+end
+
 -- Event handler for the BADGEAWARDED event.
 -- @param pPlayer pointer to the creature object of the player who was awarded with a badge.
 -- @param pPlayer2 pointer to the creature object of the player who was awarded with a badge.
@@ -111,23 +129,10 @@ end
 -- @param pPlayer pointer to the creature object of the player who performed the command
 function Glowing:checkForceStatusCommand(pPlayer)
 	if self:isFrsKnight(pPlayer) then
-		local pGhost = CreatureObject(pPlayer):getPlayerObject()
+		local visibilityStatus = self:getVisibilityStatusMessage(pPlayer)
 
-		if (pGhost == nil) then
-			return
-		end
-
-		local visibility = PlayerObject(pGhost):getVisibility()
-		local visDebug = math.floor(visibility + 0.5)
-
-		CreatureObject(pPlayer):sendSystemMessage("DEBUG: Current visibility is " .. visDebug .. ".")
-
-		if visibility >= BOUNTY_VIS_CAP then
-			CreatureObject(pPlayer):sendSystemMessage("Every shadowport in the galaxy is whispering your name. You are on the bounty boards.")
-		elseif visibility >= BOUNTY_TERMINAL_VIS_THRESHOLD then
-			CreatureObject(pPlayer):sendSystemMessage("Word from the underworld is you are likely wanted.")
-		else
-			CreatureObject(pPlayer):sendSystemMessage("The bounty boards are quiet for now. Your trail has not drawn enough notice.")
+		if (visibilityStatus ~= nil) then
+			CreatureObject(pPlayer):sendSystemMessage(visibilityStatus)
 		end
 
 		return

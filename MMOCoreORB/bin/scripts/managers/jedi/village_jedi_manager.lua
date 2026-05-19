@@ -43,6 +43,42 @@ function VillageJediManager:checkForceStatusCommand(pPlayer)
 		return
 	end
 
+	if (JediTrials:isOnPadawanTrials(pPlayer)) then
+		local currentTrial = JediTrials:getPadawanTrialName(pPlayer)
+		local trialLocation = JediTrials:getReadableTrialLocation(pPlayer)
+		local trialStatus = JediTrials:getPadawanTrialStatus(pPlayer)
+		local completedTrials = JediTrials:getTrialsCompleted(pPlayer)
+		local visibilityStatus = Glowing:getVisibilityStatusMessage(pPlayer)
+
+		CreatureObject(pPlayer):sendSystemMessage("Padawan Trials: " .. completedTrials .. "/" .. #padawanTrialQuests .. " completed.")
+		CreatureObject(pPlayer):sendSystemMessage("Current Padawan Trial: " .. currentTrial)
+		CreatureObject(pPlayer):sendSystemMessage("Padawan Trial Location: " .. trialLocation)
+		CreatureObject(pPlayer):sendSystemMessage("Padawan Trial Status: " .. trialStatus)
+
+		if (visibilityStatus ~= nil) then
+			CreatureObject(pPlayer):sendSystemMessage("Bounty Visibility: " .. visibilityStatus)
+		end
+
+		return
+	end
+
+	if (JediTrials:isOnKnightTrials(pPlayer)) then
+		local currentTrial = JediTrials:getKnightTrialName(pPlayer)
+		local trialStatus = JediTrials:getKnightTrialStatus(pPlayer)
+		local completedTrials = JediTrials:getTrialsCompleted(pPlayer)
+		local visibilityStatus = Glowing:getVisibilityStatusMessage(pPlayer)
+
+		CreatureObject(pPlayer):sendSystemMessage("Knight Trials: " .. completedTrials .. "/" .. #knightTrialQuests .. " completed.")
+		CreatureObject(pPlayer):sendSystemMessage("Current Knight Trial: " .. currentTrial)
+		CreatureObject(pPlayer):sendSystemMessage("Knight Trial Status: " .. trialStatus)
+
+		if (visibilityStatus ~= nil) then
+			CreatureObject(pPlayer):sendSystemMessage("Bounty Visibility: " .. visibilityStatus)
+		end
+
+		return
+	end
+
 	Glowing:checkForceStatusCommand(pPlayer)
 end
 

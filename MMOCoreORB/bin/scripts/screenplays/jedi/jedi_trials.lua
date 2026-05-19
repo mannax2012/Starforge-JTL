@@ -60,6 +60,218 @@ function JediTrials:isOnKnightTrials(pPlayer)
 	return tonumber(readScreenPlayData(pPlayer, "KnightTrials", "startedTrials")) == 1 and tonumber(readScreenPlayData(pPlayer, "KnightTrials", "completedTrials")) ~= 1
 end
 
+function JediTrials:getReadableTrialName(trialName)
+	if (trialName == nil or trialName == "") then
+		return "Unknown"
+	end
+
+	local readableName = string.gsub(trialName, "_", " ")
+
+	return string.gsub(readableName, "(%a)([%w']*)", function(first, rest)
+		return string.upper(first) .. string.lower(rest)
+	end)
+end
+
+function JediTrials:getPadawanTrialName(pPlayer)
+	local trialNumber = self:getCurrentTrial(pPlayer)
+
+	if (trialNumber == nil or trialNumber < 1) then
+		return "Unknown"
+	end
+
+	local trialData = padawanTrialQuests[trialNumber]
+
+	if (trialData == nil) then
+		return "Unknown (" .. trialNumber .. ")"
+	end
+
+	return self:getReadableTrialName(trialData.trialName)
+end
+
+function JediTrials:getReadableTrialLocation(pPlayer)
+	local planetData = self:getTrialPlanetAndCity(pPlayer)
+
+	if (planetData == nil) then
+		return "Unknown"
+	end
+
+	local planetName = planetData[1]
+	local cityName = planetData[2]
+
+	if (planetName == nil or planetName == "") then
+		return "Unknown"
+	end
+
+	local readablePlanet = self:getReadableTrialName(planetName)
+
+	if (cityName == nil or cityName == "") then
+		return readablePlanet
+	end
+
+	local readableCity = self:getReadableTrialName(cityName)
+
+	return readablePlanet .. " (" .. readableCity .. ")"
+end
+
+function JediTrials:getKnightTrialName(pPlayer)
+	local trialNumber = self:getCurrentTrial(pPlayer)
+	local trialsCompleted = self:getTrialsCompleted(pPlayer)
+
+	if (trialNumber == nil or trialNumber < 1) then
+		if (self:isOnKnightTrials(pPlayer)) then
+			if (trialsCompleted <= 0) then
+				return "Awaiting First Trial"
+			else
+				return "Awaiting Next Trial"
+			end
+		end
+
+		return "Unknown"
+	end
+
+	local trialData = knightTrialQuests[trialNumber]
+
+	if (trialData == nil) then
+		return "Unknown (" .. trialNumber .. ")"
+	end
+
+	return self:getReadableTrialName(trialData.trialName)
+end
+
+function JediTrials:getReadableKnightTrialLocation(pPlayer)
+	if (KnightTrials ~= nil and KnightTrials.getTrialShrine ~= nil) then
+		local pShrine = KnightTrials:getTrialShrine(pPlayer)
+
+		if (pShrine ~= nil) then
+			return self:getReadableTrialName(SceneObject(pShrine):getZoneName())
+		end
+	end
+
+	return "Not Tracked"
+end
+
+function JediTrials:getKnightTrialStatus(pPlayer)
+	local trialNumber = self:getCurrentTrial(pPlayer)
+	local trialsCompleted = self:getTrialsCompleted(pPlayer)
+
+	if (trialNumber == nil or trialNumber < 1) then
+		if (trialsCompleted <= 0) then
+			return "Visit your assigned shrine to begin the first trial"
+		else
+			return "Return to your assigned shrine for the next trial"
+		end
+	end
+
+	local trialData = knightTrialQuests[trialNumber]
+
+	if (trialData == nil) then
+		return "Unknown"
+	end
+
+	if (trialData.trialType == TRIAL_COUNCIL) then
+		local councilChoice = self:getJediCouncil(pPlayer)
+
+		if (councilChoice == self.COUNCIL_LIGHT) then
+			return "Choose the Light Jedi Council at the shrine"
+		elseif (councilChoice == self.COUNCIL_DARK) then
+			return "Choose the Dark Jedi Council at the shrine"
+		end
+
+		return "Choose a Jedi Council at the shrine"
+	end
+
+	if (trialData.trialType == TRIAL_HUNT or trialData.trialType == TRIAL_HUNT_FACTION) then
+		local playerFaction = CreatureObject(pPlayer):getFaction()
+		local playerCouncil = self:getJediCouncil(pPlayer)
+
+		if ((playerFaction == FACTIONIMPERIAL and playerCouncil == self.COUNCIL_LIGHT) or (playerFaction == FACTIONREBEL and playerCouncil == self.COUNCIL_DARK)) then
+			return "Wrong faction for your chosen council; revoke faction status to continue"
+		end
+
+		local targetCount = tonumber(readScreenPlayData(pPlayer, "JediTrials", "huntTargetCount")) or 0
+		local targetGoal = tonumber(readScreenPlayData(pPlayer, "JediTrials", "huntTargetGoal")) or trialData.huntGoal or 0
+		local huntProgress = " (" .. targetCount .. "/" .. targetGoal .. ")"
+
+		if (targetCount >= targetGoal and targetGoal > 0) then
+			return "Hunt complete; return to the shrine" .. huntProgress
+		end
+
+		return "Hunt in progress" .. huntProgress
+	end
+
+	return "Unknown"
+end
+
+function JediTrials:getPadawanTrialStatus(pPlayer)
+	local trialNumber = self:getCurrentTrial(pPlayer)
+
+	if (trialNumber == nil or trialNumber < 1) then
+		return "No active trial"
+	end
+
+	local trialData = padawanTrialQuests[trialNumber]
+
+	if (trialData == nil) then
+		return "Unknown"
+	end
+
+	local playerID = SceneObject(pPlayer):getObjectID()
+	local acceptedTask = readData(playerID .. ":JediTrials:acceptedTask") == 1
+	local killedTarget = readData(playerID .. ":JediTrials:killedTarget") == 1
+	local spokeToTarget01 = readData(playerID .. ":JediTrials:spokeToTarget01") == 1
+	local spokeToTarget02 = readData(playerID .. ":JediTrials:spokeToTarget02") == 1
+
+	if (trialData.trialType == TRIAL_LIGHTSABER) then
+		local trialState = self:getTrialStateName(pPlayer, trialNumber)
+
+		if (trialState ~= nil and CreatureObject(pPlayer):hasScreenPlayState(1, trialState .. "_saber")) then
+			return "Training saber crafted; waiting on crystal tuning"
+		end
+
+		return "Waiting on training saber craft"
+	elseif (trialData.trialType == TRIAL_HUNT) then
+		local targetCount = tonumber(readScreenPlayData(pPlayer, "JediTrials", "huntTargetCount")) or 0
+		local targetGoal = tonumber(readScreenPlayData(pPlayer, "JediTrials", "huntTargetGoal")) or trialData.huntGoal or 0
+		local huntProgress = " (" .. targetCount .. "/" .. targetGoal .. ")"
+
+		if (targetCount >= targetGoal and targetGoal > 0) then
+			return "Hunt complete; return to the quest giver" .. huntProgress
+		elseif (acceptedTask) then
+			return "Hunt in progress" .. huntProgress
+		else
+			return "Waiting for hunt task acceptance" .. huntProgress
+		end
+	elseif (trialData.trialType == TRIAL_KILL) then
+		if (killedTarget) then
+			return "Target defeated; return to the quest giver"
+		elseif (acceptedTask) then
+			return "Task accepted; target still needs to be defeated"
+		else
+			return "Waiting to speak with the quest giver"
+		end
+	elseif (trialData.trialType == TRIAL_TALK) then
+		if (trialData.thirdTargetNpc ~= nil or trialData.thirdTargetLoc ~= nil) then
+			if (spokeToTarget02) then
+				return "Final contact reached; return to the quest giver"
+			elseif (spokeToTarget01) then
+				return "First contact reached; proceed to the final contact"
+			elseif (acceptedTask) then
+				return "Task accepted; first contact still needs to be found"
+			else
+				return "Waiting to speak with the quest giver"
+			end
+		elseif (spokeToTarget01) then
+			return "Contact reached; return to the quest giver"
+		elseif (acceptedTask) then
+			return "Task accepted; contact still needs to be found"
+		else
+			return "Waiting to speak with the quest giver"
+		end
+	end
+
+	return "Unknown"
+end
+
 function JediTrials:onPlayerLoggedIn(pPlayer)
 	if (CreatureObject(pPlayer):hasSkill("force_title_jedi_rank_02") and tonumber(readScreenPlayData(pPlayer, "PadawanTrials", "completedTrials")) ~= 1) then
 		writeScreenPlayData(pPlayer, "PadawanTrials", "completedTrials", 1)
