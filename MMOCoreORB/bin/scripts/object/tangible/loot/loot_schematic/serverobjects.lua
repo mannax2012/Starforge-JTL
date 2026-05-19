@@ -51,7 +51,7 @@ includeFile("tangible/loot/loot_schematic/structure/serverobjects.lua")
 
 --includeFile("tangible/loot/loot_schematic/lance_trando_pike_schematic.lua")
 --includeFile("tangible/loot/loot_schematic/baton_gaderiffi_elite_schematic.lua")
---includeFile("tangible/loot/loot_schematic/starforge_backpack_schematic.lua")
+includeFile("tangible/loot/loot_schematic/starforge_backpack_schematic.lua")
 includeFile("tangible/loot/loot_schematic/armor_clone_trooper_neutral_s01_belt_schematic.lua")
 includeFile("tangible/loot/loot_schematic/armor_clone_trooper_neutral_s01_bicep_l_schematic.lua")
 includeFile("tangible/loot/loot_schematic/armor_clone_trooper_neutral_s01_bicep_r_schematic.lua")

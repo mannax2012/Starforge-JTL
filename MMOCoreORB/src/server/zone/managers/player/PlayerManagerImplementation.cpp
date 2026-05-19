@@ -123,8 +123,110 @@
 #include "server/zone/packets/object/transform/Transform.h"
 
 #include "server/zone/managers/statistics/StatisticsManager.h"
+#include "templates/creature/PlayerCreatureTemplate.h"
 
 namespace {
+	constexpr const char* RACIAL_STARTER_FIX_SCREENPLAY = "starforge:racialStarterSkillFix";
+	constexpr uint64 RACIAL_STARTER_FIX_APPLIED = 1;
+
+	void applyMissingRacialStarterSkills(CreatureObject* creature) {
+		if (creature == nullptr || !creature->isPlayerCreature()) {
+			return;
+		}
+
+		if ((creature->getScreenPlayState(RACIAL_STARTER_FIX_SCREENPLAY) & RACIAL_STARTER_FIX_APPLIED) != 0) {
+			return;
+		}
+
+		SkillManager* skillManager = SkillManager::instance();
+
+		if (skillManager == nullptr) {
+			return;
+		}
+
+		ManagedReference<PlayerObject*> ghost = creature->getPlayerObject();
+
+		if (ghost == nullptr) {
+			return;
+		}
+
+		PlayerCreatureTemplate* playerTemplate = dynamic_cast<PlayerCreatureTemplate*>(creature->getObjectTemplate());
+
+		if (playerTemplate == nullptr) {
+			return;
+		}
+
+		const Vector<String>& startingSkills = playerTemplate->getStartingSkills();
+
+		if (startingSkills.size() == 0) {
+			return;
+		}
+
+		bool grantedAnySkills = false;
+		bool allSkillsPresent = true;
+		String racialSkillName;
+
+		for (int i = 0; i < startingSkills.size(); ++i) {
+			const String& skillName = startingSkills.get(i);
+
+			if (racialSkillName.isEmpty() && skillName.beginsWith("species_")) {
+				racialSkillName = skillName;
+			}
+
+			if (creature->hasSkill(skillName)) {
+				continue;
+			}
+
+			if (skillManager->awardSkill(skillName, creature, false, true, true)) {
+				grantedAnySkills = true;
+			}
+
+			if (!creature->hasSkill(skillName)) {
+				allSkillsPresent = false;
+			}
+		}
+
+		if (!racialSkillName.isEmpty()) {
+			if (!creature->hasSkill(racialSkillName)) {
+				allSkillsPresent = false;
+			} else {
+				Skill* racialSkill = skillManager->getSkill(racialSkillName);
+
+				if (racialSkill == nullptr) {
+					allSkillsPresent = false;
+				} else {
+					const Vector<String>* grantedAbilities = racialSkill->getAbilities();
+
+					for (int i = 0; i < grantedAbilities->size(); ++i) {
+						const String& abilityName = grantedAbilities->get(i);
+
+						if (!ghost->hasAbility(abilityName) && !creature->hasSkill(abilityName)) {
+							skillManager->addAbility(ghost, abilityName, false);
+							grantedAnySkills = true;
+						}
+
+						if (!ghost->hasAbility(abilityName) && !creature->hasSkill(abilityName)) {
+							allSkillsPresent = false;
+						}
+					}
+				}
+			}
+		}
+
+		if (!allSkillsPresent) {
+			return;
+		}
+
+		creature->setScreenPlayState(
+			RACIAL_STARTER_FIX_SCREENPLAY,
+			creature->getScreenPlayState(RACIAL_STARTER_FIX_SCREENPLAY) | RACIAL_STARTER_FIX_APPLIED
+		);
+
+		if (grantedAnySkills) {
+			creature->sendSystemMessage("Missing starter racial skills and certifications have been restored.");
+		}
+	}
+
 	bool hasClaimableVeteranRewardForMilestone(PlayerObject* ghost, const VeteranRewardList& veteranRewards, int milestone, bool jtlEnabled) {
 		if (ghost == nullptr) {
 			return false;
@@ -2731,6 +2833,8 @@ int PlayerManagerImplementation::awardExperience(CreatureObject* player, const S
 }
 
 void PlayerManagerImplementation::sendLoginMessage(CreatureObject* creature) {
+	applyMissingRacialStarterSkills(creature);
+
 	String motd = server->getLoginMessage();
 
 	ChatSystemMessage* csm = new ChatSystemMessage(UnicodeString(motd), ChatSystemMessage::DISPLAY_CHATONLY);

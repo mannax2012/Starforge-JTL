@@ -59,6 +59,7 @@ object_creature_player_bith_female = object_creature_player_shared_bith_female:n
 		{templateFile = "object/tangible/bank/character_bank.iff", x = 0, z = 0, y = 0, ox = 0, oy = 0, oz = 0, ow = 0, cellid = -1, containmentType = 4}
 	},
 	defaultLanguage = 1,
+	species = 66,
 	startingItems = { },
 	startingSkills = { "species_bith", "social_language_basic_comprehend", "social_language_basic_speak" }
 }

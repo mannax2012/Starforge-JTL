@@ -1,4 +1,5 @@
 local Logger = require("utils.logger")
+local QuestManager = require("managers.quest.quest_manager")
 
 VillageGmSui = ScreenPlay:new {
 	productionServer = false
@@ -273,6 +274,7 @@ function VillageGmSui.playerInfo(pPlayer, targetID)
 	end
 
 	local jediState = PlayerObject(pGhost):getJediState()
+	local visibilityStatus = Glowing:getVisibilityStatusMessage(pTarget)
 
 	local promptBuf = " \\#pcontrast1 " .. "Player:" .. " \\#pcontrast2 " .. SceneObject(pTarget):getCustomObjectName() .. " (" .. targetID .. ")\n"
 	promptBuf = promptBuf .. " \\#pcontrast1 " .. "Jedi State:" .. " \\#pcontrast2 " .. jediState .. "\n"
@@ -283,12 +285,23 @@ function VillageGmSui.playerInfo(pPlayer, targetID)
 	elseif (VillageJediManagerCommon.hasJediProgressionScreenPlayState(pTarget, VILLAGE_JEDI_PROGRESSION_COMPLETED_PADAWAN_TRIALS)) then
 		if (JediTrials:isOnKnightTrials(pTarget)) then
 			promptBuf = promptBuf .. "Knight Trials (" .. JediTrials:getTrialsCompleted(pTarget) .. " completed)\n"
+			promptBuf = promptBuf .. " \\#pcontrast1 " .. "Current Knight Trial:" .. " \\#pcontrast2 " .. JediTrials:getKnightTrialName(pTarget) .. "\n"
+			promptBuf = promptBuf .. " \\#pcontrast1 " .. "Knight Trial Status:" .. " \\#pcontrast2 " .. JediTrials:getKnightTrialStatus(pTarget) .. "\n"
+			if (visibilityStatus ~= nil) then
+				promptBuf = promptBuf .. " \\#pcontrast1 " .. "Bounty Visibility:" .. " \\#pcontrast2 " .. visibilityStatus .. "\n"
+			end
 		else
 			promptBuf = promptBuf.. "Padawan Trials Completed\n"
 		end
 	elseif (VillageJediManagerCommon.hasJediProgressionScreenPlayState(pTarget, VILLAGE_JEDI_PROGRESSION_DEFEATED_MELLIACHAE)) then
 		if (JediTrials:isOnPadawanTrials(pTarget)) then
 			promptBuf = promptBuf .. "Padawan Trials (" .. JediTrials:getTrialsCompleted(pTarget) .. " completed)\n"
+			promptBuf = promptBuf .. " \\#pcontrast1 " .. "Current Padawan Trial:" .. " \\#pcontrast2 " .. JediTrials:getPadawanTrialName(pTarget) .. "\n"
+			promptBuf = promptBuf .. " \\#pcontrast1 " .. "Padawan Trial Location:" .. " \\#pcontrast2 " .. JediTrials:getReadableTrialLocation(pTarget) .. "\n"
+			promptBuf = promptBuf .. " \\#pcontrast1 " .. "Padawan Trial Status:" .. " \\#pcontrast2 " .. JediTrials:getPadawanTrialStatus(pTarget) .. "\n"
+			if (visibilityStatus ~= nil) then
+				promptBuf = promptBuf .. " \\#pcontrast1 " .. "Bounty Visibility:" .. " \\#pcontrast2 " .. visibilityStatus .. "\n"
+			end
 		else
 			promptBuf = promptBuf .. "Mellichae (Defeated)\n"
 		end
@@ -511,7 +524,7 @@ function VillageGmSui.manageActiveVillageQuest(pPlayer, targetID)
 		sui.add("No current available functions for this quest", "noAvailableFunctions" .. targetID)
 	elseif (curQuest == VILLAGE_PHASE3_SARGUILLO) then
 		questGiver = "Sarguillo (Phase 3)"
-		sui.add("No current available functions for this quest", "noAvailableFunctions" .. targetID)
+		sui.add("Force complete Counterstrike", "completeSarguilloPhase3" .. targetID)
 	elseif (curQuest == VILLAGE_PHASE3_SURVEYOR) then
 		questGiver = "Surveyor (Phase 3)"
 		sui.add("No current available functions for this quest", "noAvailableFunctions" .. targetID)
@@ -594,8 +607,34 @@ function VillageGmSui:manageVillageQuestCallback(pPlayer, pSui, eventIndex, args
 		if (menuOption == "resetDageerinTaskLimit") then
 			FsSad2:setTasksSinceLastTimestamp(pTarget, 0)
 			CreatureObject(pPlayer):sendSystemMessage("Player's SAD2 task count towards limit has been reset back to 0.")
+		elseif (menuOption == "completeSarguilloPhase3") then
+			VillageGmSui:completeSarguilloPhase3(pPlayer, pTarget)
 		end
 	end
+end
+
+function VillageGmSui:completeSarguilloPhase3(pPlayer, pTarget)
+	if (pPlayer == nil or pTarget == nil) then
+		return
+	end
+
+	if (VillageJediManagerTownship:getCurrentPhase() ~= 3) then
+		CreatureObject(pPlayer):sendSystemMessage("This action is only valid during village phase 3.")
+		return
+	end
+
+	if (FsCounterStrike:isOnEscort(pTarget)) then
+		FsCounterStrike:completeQuest(pTarget, false)
+	else
+		FsCounterStrike:resetPlayer(pTarget)
+		VillageJediManagerCommon.unlockBranch(pTarget, "force_sensitive_combat_prowess_melee_accuracy")
+		QuestManager.completeQuest(pTarget, QuestManager.quests.FS_CS_QUEST_DONE)
+	end
+
+	VillageJediManagerCommon.setCompletedQuestThisPhase(pTarget)
+
+	CreatureObject(pPlayer):sendSystemMessage("Player's Sarguillo Phase 3 Counterstrike quest has been force-completed.")
+	CreatureObject(pTarget):sendSystemMessage("A GM has marked your Sarguillo Phase 3 Counterstrike quest as completed.")
 end
 
 function VillageGmSui.forceIntroSithAttackEvent(pPlayer, targetID)

@@ -60,6 +60,7 @@ object_creature_player_chiss_male = object_creature_player_shared_chiss_male:new
 		
 	},
 	defaultLanguage = 1,
+	species = 65,
 	startingItems = { },
 	startingSkills = { "species_chiss", "social_language_basic_comprehend", "social_language_basic_speak" }
 }

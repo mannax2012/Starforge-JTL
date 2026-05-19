@@ -78,7 +78,7 @@ object_weapon_melee_unarmed_unarmed_default_player = object_weapon_melee_unarmed
 		"object/creature/player/nikto_male.iff",
 		"object/creature/player/quarren_male.iff",
 		"object/creature/player/smc_female.iff",
-		"object/creature/player/weequay_male.iff"
+		"object/creature/player/weequay_male.iff",
 	},
 	
 	-- RANGEDATTACK, MELEEATTACK, FORCEATTACK, TRAPATTACK, GRENADEATTACK, HEAVYACIDBEAMATTACK,

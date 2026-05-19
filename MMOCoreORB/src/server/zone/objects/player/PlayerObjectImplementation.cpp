@@ -2343,6 +2343,16 @@ void PlayerObjectImplementation::logout(bool doLock) {
 			if (creature == nullptr)
 				return;
 
+#ifndef WITH_SWGREALMS_API
+			auto client = creature->getClient();
+
+			// Refresh the cached login session so character select can reuse it
+			// even after long play sessions.
+			if (client != nullptr) {
+				AccountManager::renewSession(client->getAccountID(), client->getSessionID(), client->getIPAddress());
+			}
+#endif
+
 			int isInSafeArea = creature->getSkillMod("private_safe_logout") || ConfigManager::instance()->getBool("Core3.PlayerObject.AlwaysSafeLogout", false);
 
 			info("creating disconnect event: isInSafeArea=" + String::valueOf(isInSafeArea), true);
@@ -2615,6 +2625,11 @@ void PlayerObjectImplementation::reload(ZoneClientSession* client) {
 	if (creature == nullptr)
 		return;
 
+	setTeleporting(true);
+	setOnLoadScreen(true);
+	updateLastValidatedPosition();
+	setClientLastMovementStamp(0);
+
 	setOnline();
 
 	creature->setMovementCounter(0);
@@ -2623,20 +2638,10 @@ void PlayerObjectImplementation::reload(ZoneClientSession* client) {
 	auto transferZone = creature->getLocalZone();
 
 	if (creature->isRidingMount() && mountedParent == nullptr) {
-		creature->error() << "PlayerObjectImplementation::reload clearing mount state -- playerOID=" << creature->getObjectID()
-			<< " playerParentID=" << creature->getParentID()
-			<< " localZone=" << creature->getLocalZone();
 		creature->clearState(CreatureState::RIDINGMOUNT);
+		savedParentID = 0;
 	} else if (mountedParent != nullptr && mountedParent->isVehicleObject()) {
 		if (!creature->isRidingMount() || creature->getLocalZone() == nullptr || mountedParent->getParentID() != 0 || mountedParent->getLocalZone() == nullptr) {
-			creature->error() << "PlayerObjectImplementation::reload mounted vehicle state -- playerOID=" << creature->getObjectID()
-				<< " riding=" << creature->isRidingMount()
-				<< " playerParentID=" << creature->getParentID()
-				<< " vehicleOID=" << mountedParent->getObjectID()
-				<< " vehicleParentID=" << mountedParent->getParentID()
-				<< " playerLocalZone=" << creature->getLocalZone()
-				<< " vehicleLocalZone=" << mountedParent->getLocalZone();
-
 			// Recover by detaching from the persisted mount and keeping the last cached world position.
 			Vector3 cachedWorldPosition = creature->getWorldPosition();
 			auto vehicle = mountedParent->asCreatureObject();
@@ -2650,6 +2655,7 @@ void PlayerObjectImplementation::reload(ZoneClientSession* client) {
 			creature->setPosition(cachedWorldPosition.getX(), cachedWorldPosition.getZ(), cachedWorldPosition.getY());
 
 			updateLastValidatedPosition();
+			savedParentID = 0;
 			mountedParent = nullptr;
 			transferZone = creature->getLocalZone();
 		}
@@ -2659,12 +2665,8 @@ void PlayerObjectImplementation::reload(ZoneClientSession* client) {
 		transferZone = mountedParent->getLocalZone();
 	}
 
-	if (transferZone == nullptr) {
-		creature->error() << "PlayerObjectImplementation::reload aborting transfer -- playerOID=" << creature->getObjectID()
-			<< " playerParentID=" << creature->getParentID()
-			<< " mountedParent=" << mountedParent;
+	if (transferZone == nullptr)
 		return;
-	}
 
 	transferZone->transferObject(creature, -1, true);
 }

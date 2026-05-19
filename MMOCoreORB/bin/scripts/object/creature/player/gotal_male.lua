@@ -60,6 +60,7 @@ object_creature_player_gotal_male = object_creature_player_shared_gotal_male:new
 		
 	},
 	defaultLanguage = 1,
+	species = 45,
 	startingItems = { },
 	startingSkills = { "species_gotal", "social_language_basic_comprehend", "social_language_basic_speak" }
 }

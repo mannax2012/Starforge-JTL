@@ -157,23 +157,16 @@ void AccountManager::loginApprovedAccount(LoginClient* client, ManagedReference<
 #endif // WITH_SWGREALMS_API
 
 #ifndef WITH_SWGREALMS_API
-	String sessionDuration = ConfigManager::instance()->getString("Core3.Login.SessionDuration", "00:15");
-	StringBuffer sessionQuery;
-	sessionQuery << "REPLACE INTO sessions (account_id, session_id, ip, expires) VALUES (";
-	sessionQuery << accountID << ", '" << sessionID << "', '" << ip << "' , ADDTIME(NOW(), '" << sessionDuration << "'));";
-#endif // !WITH_SWGREALMS_API
-
 	StringBuffer logQuery;
 	logQuery << "INSERT INTO account_log (account_id, ip_address, timestamp) VALUES (" << accountID << ", '" << ip << "', NOW());";
 
 	try {
-#ifndef WITH_SWGREALMS_API
-		ServerDatabase::instance()->executeStatement(sessionQuery);
+		renewSession(accountID, sessionID, ip);
 		ServerDatabase::instance()->executeStatement(logQuery);
-#endif // !WITH_SWGREALMS_API
 	} catch (const DatabaseException& e) {
 		client->error() << e.getMessage();
 	}
+#endif // !WITH_SWGREALMS_API
 
 	client->sendMessage(loginServer->getLoginEnumClusterMessage(account));
 	client->sendMessage(loginServer->getLoginClusterStatusMessage(account));
@@ -587,6 +580,24 @@ Reference<Account*> AccountManager::getAccount(const String& accountName, bool f
 #endif // WITH_SWGREALMS_API
 
 #ifndef WITH_SWGREALMS_API
+void AccountManager::renewSession(uint32 accountID, const String& sessionID, const String& ipAddress) {
+	if (accountID == 0 || sessionID.isEmpty() || ipAddress.isEmpty()) {
+		return;
+	}
+
+	String sessionDuration = ConfigManager::instance()->getString("Core3.Login.SessionDuration", "00:15");
+	StringBuffer sessionQuery;
+	sessionQuery << "REPLACE INTO sessions (account_id, session_id, ip, expires) VALUES (";
+	sessionQuery << accountID << ", '" << sessionID << "', '" << ipAddress << "' , ADDTIME(NOW(), '" << sessionDuration << "'));";
+
+	try {
+		ServerDatabase::instance()->executeStatement(sessionQuery);
+	} catch (const DatabaseException& e) {
+		static Logger logger("AccountManager");
+		logger.error() << e.getMessage();
+	}
+}
+
 void AccountManager::expireSession(Reference<Account*> account, const String& sessionID) {
 	if (account == nullptr || sessionID.isEmpty()) {
 		return;
