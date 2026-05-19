@@ -82,6 +82,8 @@ namespace server {
 				}
 
 #ifndef WITH_SWGREALMS_API
+				static void renewSession(uint32 accountID, const String& sessionID, const String& ipAddress);
+
 				static void expireSession(Reference<Account*> account, const String& sessionID);
 #endif
 

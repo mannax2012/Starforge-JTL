@@ -3579,15 +3579,6 @@ bool CreatureObjectImplementation::isAttackableBy(TangibleObject* object, bool b
 		return false;
 
 	if (object->getLocalZone() == nullptr || getLocalZone() == nullptr) {
-		if (isVehicleObject() || object->isCreatureObject()) {
-			error() << "CreatureObjectImplementation::isAttackableBy unzoned tangible participant -- targetOID=" << getObjectID()
-				<< " targetLocalZone=" << getLocalZone()
-				<< " attackerOID=" << object->getObjectID()
-				<< " attackerLocalZone=" << object->getLocalZone()
-				<< " targetVehicle=" << isVehicleObject()
-				<< " attackerCreature=" << object->isCreatureObject();
-		}
-
 		return false;
 	}
 
@@ -3672,15 +3663,6 @@ bool CreatureObjectImplementation::isAttackableBy(CreatureObject* creature, bool
 		return false;
 
 	if (creature->getLocalZone() == nullptr || getLocalZone() == nullptr) {
-		if (isVehicleObject() || creature->isVehicleObject()) {
-			error() << "CreatureObjectImplementation::isAttackableBy unzoned participant -- targetOID=" << getObjectID()
-				<< " targetLocalZone=" << getLocalZone()
-				<< " attackerOID=" << creature->getObjectID()
-				<< " attackerLocalZone=" << creature->getLocalZone()
-				<< " targetVehicle=" << isVehicleObject()
-				<< " attackerVehicle=" << creature->isVehicleObject();
-		}
-
 		return false;
 	}
 

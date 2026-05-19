@@ -216,29 +216,14 @@ class VehicleObject extends CreatureObject {
 		Zone vehicleZone = null;
 
 		if (object == null) {
-			error() << "VehicleObject::isAttackableBy received null attacker for oid=" << getObjectID();
 			return false;
 		}
 
 		if (!creature || isDestroyed()) {
-			if (getParentID() != 0) {
-				error() << "VehicleObject::isAttackableBy early exit -- oid=" << getObjectID()
-					<< " parentID=" << getParentID()
-					<< " linkedCreature=" << creature
-					<< " destroyed=" << isDestroyed()
-					<< " attacker=" << object.getObjectID();
-			}
-
 			return false;
 		}
 
 		if (getParentID() != 0 || getLocalZone() == null || object.getLocalZone() == null) {
-			error() << "VehicleObject::isAttackableBy pre-zone-check -- oid=" << getObjectID()
-				<< " parentID=" << getParentID()
-				<< " attacker=" << object.getObjectID()
-				<< " attackerLocalZone=" << object.getLocalZone()
-				<< " vehicleLocalZone=" << getLocalZone();
-
 			if (getLocalZone() == null || object.getLocalZone() == null)
 				return false;
 		}
@@ -247,14 +232,6 @@ class VehicleObject extends CreatureObject {
 		vehicleZone = getZoneUnsafe();
 
 		if (attackerZone != vehicleZone) {
-			if (!vehicleZone || (getParentID() != 0 && !attackerZone)) {
-				error() << "VehicleObject::isAttackableBy zone mismatch -- oid=" << getObjectID()
-					<< " parentID=" << getParentID()
-					<< " attacker=" << object.getObjectID()
-					<< " attackerZone=" << attackerZone
-					<< " vehicleZone=" << vehicleZone;
-			}
-
 			return false;
 		}
 
