@@ -269,36 +269,44 @@ static unsigned int attributeLimits[23][19] = {
 
 class Races {
 public:
+	inline static int getRaceCount() {
+		return sizeof(RaceStrs) / sizeof(RaceStrs[0]);
+	}
+
+	inline static int getAttributeLimitRaceCount() {
+		return sizeof(attributeLimits) / sizeof(attributeLimits[0]);
+	}
+
 	inline const static char* getRace(int raceid) {
-		if (raceid < 0 || raceid > 35)
+		if (raceid < 0 || raceid >= getRaceCount())
 			return "";
 
 		return RaceStrs[raceid];
 	}
 
 	inline static int getSpeciesID(int raceid) {
-		if (raceid < 0 || raceid > 35)
+		if (raceid < 0 || raceid >= getRaceCount())
 			return 0;
 
 		return TemplateSpecies[raceid];
 	}
 
 	inline const static char* getSpecies(int raceid) {
-		if (raceid < 0 || raceid > 35)
+		if (raceid < 0 || raceid >= getRaceCount())
 			return "";
 
 		return Species[raceid];
 	}
 
 	inline const static char* getGender(int raceid) {
-		if (raceid < 0 || raceid > 35)
+		if (raceid < 0 || raceid >= getRaceCount())
 			return "";
 
 		return Gender[raceid];
 	}
 
 	inline static uint32 getRaceCRC(int raceid) {
-		if (raceid < 0 || raceid > 35)
+		if (raceid < 0 || raceid >= getRaceCount())
 			return 0;
 
 		return SharedRace[raceid];
@@ -306,7 +314,7 @@ public:
 
 	inline static const char* getCompleteRace(uint32 sharedRaceCRC) {
 		int race = -1;
-		for (int i = 0; i < 36; ++i) {
+		for (int i = 0; i < getRaceCount(); ++i) {
 			if (SharedRace[i] == sharedRaceCRC) {
 				race = i;
 				break;
@@ -320,7 +328,7 @@ public:
 	}
 
 	inline static int getRaceID(const String& name) {
-    	for (int i = 0; i < 36; i++) {
+    	for (int i = 0; i < getRaceCount(); i++) {
         	if (strcmp(name.toCharArray(), CCRaceStrs[i]) == 0)
             	return i;
     	}
@@ -329,8 +337,8 @@ public:
 	}
 
 	inline static unsigned int* getAttribLimits(int raceid) {
-		if (raceid < 0 || raceid >= 23) {
-			System::out << "Races::getAttribLimits expected race ID in range [0, 22] but received invalid ID " << raceid << "\n";
+		if (raceid < 0 || raceid >= getAttributeLimitRaceCount()) {
+			System::out << "Races::getAttribLimits missing limits for race ID " << raceid << ", defaulting to human limits\n";
 			return attributeLimits[0];
 		}
 
