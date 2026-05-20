@@ -310,7 +310,7 @@ void TangibleObjectImplementation::setFactionStatus(int status) {
 }
 
 void TangibleObjectImplementation::sendPvpStatusTo(CreatureObject* player) {
-	if (player == nullptr || player->getLocalZone() == nullptr)
+	if (player == nullptr || player->getZoneUnsafe() == nullptr)
 		return;
 
 	uint32 newPvpStatusBitmask = pvpStatusBitmask;

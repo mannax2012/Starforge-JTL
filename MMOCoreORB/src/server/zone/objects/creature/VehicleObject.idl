@@ -223,15 +223,10 @@ class VehicleObject extends CreatureObject {
 			return false;
 		}
 
-		if (getParentID() != 0 || getLocalZone() == null || object.getLocalZone() == null) {
-			if (getLocalZone() == null || object.getLocalZone() == null)
-				return false;
-		}
-
 		attackerZone = object.getZoneUnsafe();
 		vehicleZone = getZoneUnsafe();
 
-		if (attackerZone != vehicleZone) {
+		if (getParentID() != 0 || !attackerZone || !vehicleZone || attackerZone != vehicleZone) {
 			return false;
 		}
 

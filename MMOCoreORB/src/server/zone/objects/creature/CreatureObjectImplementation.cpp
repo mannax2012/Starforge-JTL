@@ -3578,7 +3578,7 @@ bool CreatureObjectImplementation::isAttackableBy(TangibleObject* object, bool b
 	if (object == nullptr || asCreatureObject() == object)
 		return false;
 
-	if (object->getLocalZone() == nullptr || getLocalZone() == nullptr) {
+	if (object->getZoneUnsafe() == nullptr || getZoneUnsafe() == nullptr) {
 		return false;
 	}
 
@@ -3662,7 +3662,7 @@ bool CreatureObjectImplementation::isAttackableBy(CreatureObject* creature, bool
 	if (isInvisible() || isEventPerk())
 		return false;
 
-	if (creature->getLocalZone() == nullptr || getLocalZone() == nullptr) {
+	if (creature->getZoneUnsafe() == nullptr || getZoneUnsafe() == nullptr) {
 		return false;
 	}
 
