@@ -313,13 +313,6 @@ void TangibleObjectImplementation::sendPvpStatusTo(CreatureObject* player) {
 	if (player == nullptr || player->getLocalZone() == nullptr)
 		return;
 
-	if (player->isPlayerCreature()) {
-		PlayerObject* ghost = player->getPlayerObject();
-
-		if (ghost != nullptr && ghost->isOnLoadScreen())
-			return;
-	}
-
 	uint32 newPvpStatusBitmask = pvpStatusBitmask;
 
 	bool attackable = isAttackableBy(player);
