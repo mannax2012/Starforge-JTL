@@ -7407,7 +7407,7 @@ void PlayerManagerImplementation::unlockFRSForTesting(CreatureObject* player, in
 			"force_sensitive_enhanced_reflexes_melee_defense"
 		};
 
-	for (int i = 0; i < 6; i++) {
+	for (int i = 0; i < 4; i++) {
 		String branch = branches[i];
 		player->setScreenPlayState("VillageUnlockScreenPlay:" + branch, 2);
 		skillManager->awardSkill(branch + "_04", player, true, true, true);
