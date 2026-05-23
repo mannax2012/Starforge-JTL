@@ -64,21 +64,6 @@ void NewPlayerTerminalImplementation::enhanceCharacterNew(CreatureObject* player
 	PlayerManager* pm = player->getZoneServer()->getPlayerManager();
 
 	pm->enhanceCharacterNew(player);
-
-	ManagedReference<PlayerObject*> ghost = player->getPlayerObject();
-
-	if (ghost == nullptr)
-		return;
-
-	for (int i = 0; i < ghost->getActivePetsSize(); i++) {
-		ManagedReference<AiAgent*> pet = ghost->getActivePet(i);
-
-		if (pet != nullptr) {
-			Locker crossLocker(pet, player);
-
-			pm->enhanceCharacterNew(pet);
-		}
-	}
 }
 
 void NewPlayerTerminalImplementation::giveLanguages(CreatureObject* player) {
