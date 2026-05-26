@@ -1311,6 +1311,17 @@ bool ResourceSpawner::ghDumpAll() {
 	/* This is custom code written to export resources in a way that an additional script can easily push them to Galaxy Harvester -c0pp3r */
 	if(!scriptLoading)
 		return false;
+
+	String galaxyName = "unknown";
+
+	if (server != nullptr)
+		galaxyName = server->getGalaxyName();
+
+	if (galaxyName.toLowerCase() != "starforge") {
+		info("Skipping Galaxy Harvester dump for galaxy " + galaxyName);
+		return false;
+	}
+
 	Vector<String>* planets =  new Vector<String> ();
 	planets->add("corellia");
 	planets->add("dantooine");

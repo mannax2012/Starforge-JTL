@@ -29,6 +29,42 @@
 
 // #define DEBUG_SELECT_CHAR_CALLBACK
 
+namespace {
+	bool resolvePlayerSafeZone(ZoneServer* zoneServer, PlayerObject* ghost, Zone*& zone, float& x, float& z, float& y) {
+		if (zoneServer == nullptr || ghost == nullptr) {
+			return false;
+		}
+
+		auto assignZonePosition = [&](const String& zoneName, float posX, float posY) {
+			Zone* candidate = zoneServer->getZone(zoneName);
+
+			if (candidate == nullptr || candidate->isSpaceZone()) {
+				return false;
+			}
+
+			zone = candidate;
+			x = posX;
+			y = posY;
+			z = candidate->getHeight(posX, posY);
+			return true;
+		};
+
+		Vector3 lastLogout = ghost->getLastLogoutWorldPosition();
+
+		if (assignZonePosition(ghost->getSavedTerrainName(), lastLogout.getX(), lastLogout.getY())) {
+			return true;
+		}
+
+		Vector3 launchLocation = ghost->getSpaceLaunchLocation();
+
+		if (assignZonePosition(ghost->getSpaceLaunchZone(), launchLocation.getX(), launchLocation.getY())) {
+			return true;
+		}
+
+		return assignZonePosition("corellia", -66.f, -4711.f);
+	}
+}
+
 class SelectCharacterCallback : public MessageCallback {
 	uint64 characterID;
 public:
@@ -119,16 +155,38 @@ public:
 		"Zone: " << zoneName << endl;
 #endif // DEBUG_SELECT_CHAR_CALLBACK
 
-		if (zone == nullptr) {
-			ErrorMessage* errMsg = new ErrorMessage("Login Error", "The planet where your character was stored is disabled!", 0x0);
-			client->sendMessage(errMsg);
+		bool recoveredInvalidZone = false;
 
-			player->error() << "Player: " << player->getFirstName() << " ID: " << player->getObjectID() << " attempted to connect to Zone: " << zoneName << " which is disabled.";
+		if (zone == nullptr) {
+			float safeX = 0.f;
+			float safeZ = 0.f;
+			float safeY = 0.f;
+
+			if (!resolvePlayerSafeZone(zoneServer, ghost, zone, safeX, safeZ, safeY)) {
+				ErrorMessage* errMsg = new ErrorMessage("Login Error", "The planet where your character was stored is disabled!", 0x0);
+				client->sendMessage(errMsg);
+
+				player->error() << "Player: " << player->getFirstName() << " ID: " << player->getObjectID() << " attempted to connect to Zone: " << zoneName << " which is disabled.";
 
 #ifdef DEBUG_SELECT_CHAR_CALLBACK
-			player->info(true) << debugMsg.toString();
+				player->info(true) << debugMsg.toString();
 #endif // DEBUG_SELECT_CHAR_CALLBACK
-			return;
+				return;
+			}
+
+			player->error() << "Recovered player login from invalid zone -- Player: " << player->getFirstName()
+				<< " ID: " << player->getObjectID()
+				<< " Saved Zone: " << zoneName
+				<< " Recovery Zone: " << zone->getZoneName()
+				<< " Position: " << safeX << ", " << safeZ << ", " << safeY;
+
+			ghost->setSavedParentID(0);
+			ghost->setSavedTerrainName(zone->getZoneName());
+			player->clearState(CreatureState::RIDINGMOUNT);
+			player->initializePosition(safeX, safeZ, safeY);
+
+			zoneName = zone->getZoneName();
+			recoveredInvalidZone = true;
 		}
 
 		if (!zoneServer->getPlayerManager()->increaseOnlineCharCountIfPossible(client)) {
@@ -215,6 +273,15 @@ public:
 		// This bool signifies a player was inside of a parent but fully unloaded from the game world (not LD).
 		bool unloadedInParent = (playerParent != nullptr && currentParent == nullptr);
 		bool currentParentNull = (currentParent == nullptr);
+
+		if (recoveredInvalidZone) {
+			savedParentID = 0;
+			playerParent = nullptr;
+			currentParent = nullptr;
+			rootParent = nullptr;
+			unloadedInParent = false;
+			currentParentNull = true;
+		}
 
 		// Lets branch for Ships First, player must still be LD in the game world or they should be sent back to their launch position. - Ship, Pilot Chair, Operatios Chair, Ship Turret.
 		if (!currentParentNull && playerParent != nullptr && ((!unloadedInParent && currentParent->isValidJtlParent()) ||

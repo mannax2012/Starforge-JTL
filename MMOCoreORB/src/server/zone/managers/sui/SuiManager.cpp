@@ -715,7 +715,7 @@ void SuiManager::handleCharacterBuilderSelectItem(CreatureObject* player, SuiBox
 			player->sendMessage(cbSui->generateMessage());
 		}
 
-		player->info("[CharacterBuilder] gave player " + templatePath, true);
+		player->info("[CharacterBuilder] gave player " + player->getDisplayedName() + " " + templatePath, true);
 	}
 }
 
@@ -1456,6 +1456,6 @@ void SuiManager::handleNewPlayerSelectItem(CreatureObject* player, SuiBox* suiBo
 			player->sendMessage(cbSui->generateMessage());
 		}
 
-		player->info("[New Player Terminal] gave player " + templatePath, true);
+		player->info("[New Player Terminal] gave player " + player->getDisplayedName() + " " + templatePath, true);
 	}
 }

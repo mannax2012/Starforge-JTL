@@ -152,6 +152,9 @@ public:
 	}
 	
 	String ghDump() {
+		if (server == nullptr || server->getGalaxyName().toLowerCase() != "starforge")
+			return "Galaxy Harvester dump skipped: galaxy is not Starforge";
+
 		if(ghDumpAll())
 			return "Galaxy Harvester Output Dumped";
 		return "Error Dumping Galaxy Harvester Output";
