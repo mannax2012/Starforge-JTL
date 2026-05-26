@@ -88,6 +88,42 @@
 #include "server/login/SWGRealmsAPI.h"
 #endif // WITH_SWGREALMS_API
 
+namespace {
+	bool resolvePlayerSafeZone(ZoneServer* zoneServer, PlayerObject* ghost, Zone*& zone, float& x, float& z, float& y) {
+		if (zoneServer == nullptr || ghost == nullptr) {
+			return false;
+		}
+
+		auto assignZonePosition = [&](const String& zoneName, float posX, float posY) {
+			Zone* candidate = zoneServer->getZone(zoneName);
+
+			if (candidate == nullptr || candidate->isSpaceZone()) {
+				return false;
+			}
+
+			zone = candidate;
+			x = posX;
+			y = posY;
+			z = candidate->getHeight(posX, posY);
+			return true;
+		};
+
+		Vector3 lastLogout = ghost->getLastLogoutWorldPosition();
+
+		if (assignZonePosition(ghost->getSavedTerrainName(), lastLogout.getX(), lastLogout.getY())) {
+			return true;
+		}
+
+		Vector3 launchLocation = ghost->getSpaceLaunchLocation();
+
+		if (assignZonePosition(ghost->getSpaceLaunchZone(), launchLocation.getX(), launchLocation.getY())) {
+			return true;
+		}
+
+		return assignZonePosition("corellia", -66.f, -4711.f);
+	}
+}
+
 void PlayerObjectImplementation::initializeTransientMembers() {
 	playerLogLevel = ConfigManager::instance()->getPlayerLogLevel();
 
@@ -2634,41 +2670,36 @@ void PlayerObjectImplementation::reload(ZoneClientSession* client) {
 
 	creature->setMovementCounter(0);
 
-	auto mountedParent = creature->getParent().get();
-	auto transferZone = creature->getLocalZone();
-
-	if (creature->isRidingMount() && mountedParent == nullptr) {
+	if (creature->isRidingMount() && creature->getParent() == nullptr) {
 		creature->clearState(CreatureState::RIDINGMOUNT);
 		savedParentID = 0;
-	} else if (mountedParent != nullptr && mountedParent->isVehicleObject()) {
-		if (!creature->isRidingMount() || creature->getLocalZone() == nullptr || mountedParent->getParentID() != 0 || mountedParent->getLocalZone() == nullptr) {
-			// Recover by detaching from the persisted mount and keeping the last cached world position.
-			Vector3 cachedWorldPosition = creature->getWorldPosition();
-			auto vehicle = mountedParent->asCreatureObject();
+	}
 
-			if (vehicle != nullptr) {
-				vehicle->clearState(CreatureState::MOUNTEDCREATURE);
-			}
+	Zone* zone = creature->getZone();
 
-			creature->clearState(CreatureState::RIDINGMOUNT);
-			creature->setParent(nullptr);
-			creature->setPosition(cachedWorldPosition.getX(), cachedWorldPosition.getZ(), cachedWorldPosition.getY());
+	if (zone == nullptr) {
+		auto zoneServer = creature->getZoneServer();
+		float safeX = 0.f;
+		float safeZ = 0.f;
+		float safeY = 0.f;
 
-			updateLastValidatedPosition();
-			savedParentID = 0;
-			mountedParent = nullptr;
-			transferZone = creature->getLocalZone();
+		if (!resolvePlayerSafeZone(zoneServer, asPlayerObject(), zone, safeX, safeZ, safeY)) {
+			error() << "PlayerObjectImplementation::reload aborting transfer due to invalid zone recovery failure -- playerOID=" << creature->getObjectID()
+				<< " savedTerrainName=" << savedTerrainName;
+			return;
 		}
+
+		error() << "PlayerObjectImplementation::reload recovered player from invalid zone -- playerOID=" << creature->getObjectID()
+			<< " recoveryZone=" << zone->getZoneName()
+			<< " position=" << safeX << ", " << safeZ << ", " << safeY;
+
+		setSavedParentID(0);
+		setSavedTerrainName(zone->getZoneName());
+		creature->clearState(CreatureState::RIDINGMOUNT);
+		creature->initializePosition(safeX, safeZ, safeY);
 	}
 
-	if (transferZone == nullptr && mountedParent != nullptr) {
-		transferZone = mountedParent->getLocalZone();
-	}
-
-	if (transferZone == nullptr)
-		return;
-
-	transferZone->transferObject(creature, -1, true);
+	zone->transferObject(creature, -1, true);
 }
 
 void PlayerObjectImplementation::disconnect(bool closeClient, bool doLock) {
