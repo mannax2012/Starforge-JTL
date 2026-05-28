@@ -38,6 +38,98 @@
 #include "server/zone/managers/director/DirectorManager.h"
 
 namespace {
+constexpr int MISSION_DIFFICULTY_BRACKET_SIZE = 10;
+constexpr const char* MISSION_DIFFICULTY_CHOICE_SCREENPLAY = "mission_difficulty_choice";
+constexpr const char* MISSION_DIFFICULTY_CHOICE_VARIABLE = "levelBracketMax";
+
+struct CombatMissionDifficultyRange {
+	int combatLevel = 1;
+	int minLevel = 1;
+	int maxLevel = 6;
+	bool hasCustomBracket = false;
+	int customBracketMin = 0;
+	int customBracketMax = 0;
+};
+
+int getMissionDifficultyBracketMax(int combatLevel) {
+	combatLevel = Math::max(1, combatLevel);
+
+	return ((combatLevel - 1) / MISSION_DIFFICULTY_BRACKET_SIZE + 1) * MISSION_DIFFICULTY_BRACKET_SIZE;
+}
+
+int getMissionDifficultyBracketMin(int bracketMax) {
+	return Math::max(1, bracketMax - MISSION_DIFFICULTY_BRACKET_SIZE + 1);
+}
+
+int getCombatMissionLevel(CreatureObject* player, uint32 faction) {
+	if (player == nullptr) {
+		return 1;
+	}
+
+	int playerLevel = player->getZoneServer()->getPlayerManager()->calculatePlayerLevel(player);
+
+	if (player->isGrouped()) {
+		bool includeFactionPets = faction != Factions::FACTIONNEUTRAL || ConfigManager::instance()->includeFactionPetsForMissionDifficulty();
+		Reference<GroupObject*> group = player->getGroup();
+
+		if (group != nullptr) {
+			Locker locker(group);
+			playerLevel = group->getGroupLevel(includeFactionPets);
+		}
+	}
+
+	return Math::max(1, playerLevel);
+}
+
+bool getSelectedLowerMissionDifficultyRange(CreatureObject* player, uint32 faction, int& minLevel, int& maxLevel, bool resetInvalidSelection = false) {
+	if (player == nullptr) {
+		return false;
+	}
+
+	PlayerObject* ghost = player->getPlayerObject();
+
+	if (ghost == nullptr) {
+		return false;
+	}
+
+	String bracketData = ghost->getScreenPlayData(MISSION_DIFFICULTY_CHOICE_SCREENPLAY, MISSION_DIFFICULTY_CHOICE_VARIABLE);
+
+	if (bracketData.isEmpty()) {
+		return false;
+	}
+
+	int selectedBracketMax = Integer::valueOf(bracketData);
+	int currentBracketMax = getMissionDifficultyBracketMax(getCombatMissionLevel(player, faction));
+
+	if (selectedBracketMax < MISSION_DIFFICULTY_BRACKET_SIZE || selectedBracketMax >= currentBracketMax) {
+		if (resetInvalidSelection) {
+			ghost->deleteScreenPlayData(MISSION_DIFFICULTY_CHOICE_SCREENPLAY, MISSION_DIFFICULTY_CHOICE_VARIABLE);
+			player->sendSystemMessage("Mission difficulty has been reset to your current combat range.");
+		}
+
+		return false;
+	}
+
+	minLevel = getMissionDifficultyBracketMin(selectedBracketMax);
+	maxLevel = selectedBracketMax;
+	return true;
+}
+
+CombatMissionDifficultyRange getCombatMissionDifficultyRange(CreatureObject* player, uint32 faction, bool resetInvalidSelection = false) {
+	CombatMissionDifficultyRange range;
+	range.combatLevel = getCombatMissionLevel(player, faction);
+	range.minLevel = Math::max(1, range.combatLevel - 5);
+	range.maxLevel = range.combatLevel + 5;
+	range.hasCustomBracket = getSelectedLowerMissionDifficultyRange(player, faction, range.customBracketMin, range.customBracketMax, resetInvalidSelection);
+
+	if (range.hasCustomBracket) {
+		range.minLevel = range.customBracketMin;
+		range.maxLevel = range.customBracketMax;
+	}
+
+	return range;
+}
+
 bool hasDirectionalMissionSelection(PlayerObject* ghost) {
 	if (ghost == nullptr) {
 		return false;
@@ -46,6 +138,28 @@ bool hasDirectionalMissionSelection(PlayerObject* ghost) {
 	String dir = ghost->getScreenPlayData("mission_direction_choice", "directionChoice");
 
 	return !dir.isEmpty() && Float::valueOf(dir) > 0;
+}
+
+bool isBountyHunterNovice(CreatureObject* player) {
+	return player != nullptr && (player->hasSkill("combat_bountyhunter_novice") || player->hasSkill("combat_melee_bountyhunter_novice"));
+}
+
+bool hasBountyHunterInvestigationSkill(CreatureObject* player, int tier) {
+	if (player == nullptr)
+		return false;
+
+	String skillSuffix = String::valueOf(tier);
+
+	return player->hasSkill("combat_bountyhunter_investigation_0" + skillSuffix) ||
+			player->hasSkill("combat_melee_bountyhunter_investigation_0" + skillSuffix);
+}
+
+String getBountyCreatorLabel(bool playerTarget, const String& creatorName) {
+	if (playerTarget) {
+		return "Player Bounty - " + creatorName;
+	}
+
+	return "NPC Bounty - " + creatorName;
 }
 }
 
@@ -188,7 +302,7 @@ void MissionManagerImplementation::handleMissionListRequest(MissionTerminal* mis
 	}
 
 	if (missionTerminal->isBountyTerminal()) {
-		if (!player->hasSkill("combat_bountyhunter_novice")) {
+		if (!isBountyHunterNovice(player)) {
 			player->sendSystemMessage("@mission/mission_generic:not_bounty_hunter_terminal");
 			return;
 		}
@@ -271,20 +385,20 @@ void MissionManagerImplementation::handleMissionAccept(MissionTerminal* missionT
 		if (obj->isMissionObject()) {
 			++missionCount;
 			MissionObject* datapadMission = cast<MissionObject*>(obj);
-			if (datapadMission->getTypeCRC() == MissionTypes::BOUNTY) {
+			if (MissionTypes::isBountyType(datapadMission->getTypeCRC())) {
 				hasBountyMission = true;
 			}
 		}
 	}
 
 	//Limit to two missions (only one of them can be a bounty mission)
-	if (missionCount >= 4 || (hasBountyMission && mission->getTypeCRC() == MissionTypes::BOUNTY)) {
+	if (missionCount >= 4 || (hasBountyMission && MissionTypes::isBountyType(mission->getTypeCRC()))) {
 		StringIdChatParameter stringId("mission/mission_generic", "too_many_missions");
 		player->sendSystemMessage(stringId);
 		return;
 	}
 
-	if (mission->getTypeCRC() == MissionTypes::BOUNTY) {
+	if (MissionTypes::isBountyType(mission->getTypeCRC())) {
 		Locker listLocker(&playerBountyListMutex);
 
 		uint64 targetID = mission->getTargetObjectId();
@@ -463,6 +577,8 @@ void MissionManagerImplementation::createMissionObjectives(MissionObject* missio
 		createReconMissionObjectives(mission, missionTerminal, player);
 		break;
 	case MissionTypes::BOUNTY:
+	case MissionTypes::BOUNTY_NPC:
+	case MissionTypes::BOUNTY_PLAYER:
 		createBountyMissionObjectives(mission, missionTerminal, player);
 		break;
 	case MissionTypes::CRAFTING:
@@ -488,7 +604,7 @@ void MissionManagerImplementation::removeMission(MissionObject* mission, Creatur
 
 	uint64 targetId = 0;
 
-	if (mission->getTypeCRC() == MissionTypes::BOUNTY) {
+	if (MissionTypes::isBountyType(mission->getTypeCRC())) {
 		targetId = mission->getTargetObjectId();
 		removeBountyHunterFromPlayerBounty(targetId, player->getObjectID());
 	}
@@ -556,7 +672,7 @@ void MissionManagerImplementation::handleMissionAbort(MissionObject* mission, Cr
 	ManagedReference<PlayerObject*> ghost = player->getPlayerObject();
 
 	if (ghost != nullptr) {
-		if (mission->getTypeCRC() == MissionTypes::BOUNTY && ghost->hasBhTef()) {
+		if (MissionTypes::isBountyType(mission->getTypeCRC()) && ghost->hasBhTef()) {
 			player->sendSystemMessage("You cannot abort a bounty hunter mission this soon after being in combat with the mission target.");
 			return;
 		}
@@ -768,6 +884,8 @@ void MissionManagerImplementation::randomizeScoutTerminalMissions(CreatureObject
 void MissionManagerImplementation::randomizeBountyTerminalMissions(CreatureObject* player, int counter) {
 	SceneObject* missionBag = player->getSlottedObject("mission_bag");
 	int bagSize = missionBag->getContainerObjectsSize();
+	const int bountyMissionSlots = Math::min(10, bagSize);
+	const int npcMissionSlots = Math::min(5, bountyMissionSlots);
 
 	Vector<ManagedReference<PlayerBounty*>> potentialTargets = getPotentialPlayerBountyTargets(player);
 
@@ -779,8 +897,9 @@ void MissionManagerImplementation::randomizeBountyTerminalMissions(CreatureObjec
 		//Clear mission type before calling mission generators.
 		mission->setTypeCRC(0);
 
-		if (i < 10) {
-			randomizeGenericBountyMission(player, mission, Factions::FACTIONNEUTRAL, &potentialTargets);
+		if (i < bountyMissionSlots) {
+			bool preferPlayerTarget = i >= npcMissionSlots;
+			randomizeGenericBountyMission(player, mission, Factions::FACTIONNEUTRAL, &potentialTargets, preferPlayerTarget);
 		}
 
 		float cityBonus = 1.f + player->getSkillMod("private_spec_missions") / 100.f;
@@ -870,10 +989,23 @@ void MissionManagerImplementation::randomizeGenericDestroyMission(CreatureObject
 		return;
 	}
 
+	CombatMissionDifficultyRange difficultyRange = getCombatMissionDifficultyRange(player, faction, true);
 	int playerLevel = server->getPlayerManager()->calculatePlayerLevel(player);
 	int maxDiff = randomLairSpawn->getMaxDifficulty();
 	int minDiff = randomLairSpawn->getMinDifficulty();
-	int difficultyLevel = System::random(maxDiff - minDiff) + minDiff;
+	int rolledMinDiff = minDiff;
+	int rolledMaxDiff = maxDiff;
+
+	if (difficultyRange.hasCustomBracket) {
+		rolledMinDiff = Math::max(minDiff, difficultyRange.customBracketMin);
+		rolledMaxDiff = Math::min(maxDiff, difficultyRange.customBracketMax);
+	}
+
+	if (rolledMaxDiff < rolledMinDiff) {
+		rolledMaxDiff = rolledMinDiff;
+	}
+
+	int difficultyLevel = System::random(rolledMaxDiff - rolledMinDiff) + rolledMinDiff;
 	int difficulty = (difficultyLevel - minDiff) / ((maxDiff > (minDiff + 5) ? maxDiff - minDiff : 5) / 5);
 
 	if (difficulty == 5)
@@ -881,7 +1013,9 @@ void MissionManagerImplementation::randomizeGenericDestroyMission(CreatureObject
 
 	int diffDisplay = difficultyLevel < 5 ? 4 : difficultyLevel;
 	PlayerObject* targetGhost = player->getPlayerObject();
-	if (player->isGrouped()) {
+	if (difficultyRange.hasCustomBracket) {
+		diffDisplay = difficultyLevel < 5 ? 4 : difficultyLevel;
+	} else if (player->isGrouped()) {
 		bool includeFactionPets = faction != Factions::FACTIONNEUTRAL || ConfigManager::instance()->includeFactionPetsForMissionDifficulty();
 		Reference<GroupObject*> group = player->getGroup();
 
@@ -1122,8 +1256,8 @@ void MissionManagerImplementation::randomizeGenericSurveyMission(CreatureObject*
 	mission->setTypeCRC(MissionTypes::SURVEY);
 }
 
-void MissionManagerImplementation::randomizeGenericBountyMission(CreatureObject* player, MissionObject* mission, const uint32 faction, Vector<ManagedReference<PlayerBounty*>>* potentialTargets) {
-	if (!player->hasSkill("combat_bountyhunter_novice")) {
+void MissionManagerImplementation::randomizeGenericBountyMission(CreatureObject* player, MissionObject* mission, const uint32 faction, Vector<ManagedReference<PlayerBounty*>>* potentialTargets, bool preferPlayerTarget) {
+	if (!isBountyHunterNovice(player)) {
 		player->sendSystemMessage("@mission/mission_generic:not_bounty_hunter_terminal");
 		return;
 	}
@@ -1136,9 +1270,9 @@ void MissionManagerImplementation::randomizeGenericBountyMission(CreatureObject*
 
 	int level = 1;
 	int randomTexts = 25;
-	if (player->hasSkill("combat_bountyhunter_investigation_03")) {
+	if (hasBountyHunterInvestigationSkill(player, 3)) {
 		level = 3;
-	} else if (player->hasSkill("combat_bountyhunter_investigation_01")) {
+	} else if (hasBountyHunterInvestigationSkill(player, 1)) {
 		level = 2;
 		randomTexts = 50;
 	}
@@ -1148,7 +1282,9 @@ void MissionManagerImplementation::randomizeGenericBountyMission(CreatureObject*
 	bool playerTarget = false;
 	int size = potentialTargets->size();
 
-	if (level == 3 && size > 0) {
+	if (preferPlayerTarget) {
+		playerTarget = level == 3 && size > 0;
+	} else if (level == 3 && size > 0) {
 		int compareValue = size > 25 ? 25 : size < 5 ? 5 : size;
 		if (System::random(100) < compareValue) {
 			playerTarget = true;
@@ -1238,7 +1374,7 @@ void MissionManagerImplementation::randomizeGenericBountyMission(CreatureObject*
 				creatorName = nm->makeCreatureName();
 			}
 
-			mission->setCreatorName(creatorName);
+			mission->setCreatorName(getBountyCreatorLabel(true, creatorName));
 			mission->setMissionTitle(stfFile, "m" + String::valueOf(randTexts) + "t");
 			mission->setMissionDescription(stfFile, "m" + String::valueOf(randTexts) + "d");
 		}
@@ -1312,11 +1448,13 @@ void MissionManagerImplementation::randomizeGenericBountyMission(CreatureObject*
 			creatorName = nm->makeCreatureName();
 		}
 
-		mission->setCreatorName(creatorName);
+		mission->setCreatorName(getBountyCreatorLabel(false, creatorName));
 		mission->setMissionTitle(stfFile + diffString, "m" + String::valueOf(randTexts) + "t");
 		mission->setMissionDescription(stfFile + diffString, "m" + String::valueOf(randTexts) + "d");
 	}
 
+	// The stock client only displays known mission type CRCs in the mission browser.
+	// Keep bounty missions on the legacy bounty type so the terminal list remains visible.
 	mission->setTypeCRC(MissionTypes::BOUNTY);
 }
 
@@ -1952,28 +2090,19 @@ LairSpawn* MissionManagerImplementation::getRandomLairSpawn(CreatureObject* play
 
 	bool foundLair = false;
 	int counter = availableLairList->size();
-	int playerLevel = server->getPlayerManager()->calculatePlayerLevel(player);
-
-	if (player->isGrouped()) {
-		bool includeFactionPets = faction != Factions::FACTIONNEUTRAL || ConfigManager::instance()->includeFactionPetsForMissionDifficulty();
-		Reference<GroupObject*> group = player->getGroup();
-
-		if (group != nullptr) {
-			Locker locker(group);
-			playerLevel = group->getGroupLevel(includeFactionPets);
-		}
-	}
+	CombatMissionDifficultyRange difficultyRange = getCombatMissionDifficultyRange(player, faction, true);
 
 	LairSpawn* lairSpawn = nullptr;
 
 	//Cap the minLevel to prevent a group from being too high to get missions on a planet
-	int minLevel = Math::min(playerLevel - 5, minLevelCeiling);
+	int minLevel = difficultyRange.hasCustomBracket ? difficultyRange.minLevel : Math::min(difficultyRange.minLevel, minLevelCeiling);
+	int maxLevel = difficultyRange.maxLevel;
 
 	//Try to pick random lair within playerLevel +-5;
 	while (counter > 0 && !foundLair) {
 		LairSpawn* randomLairSpawn = availableLairList->get(System::random(availableLairList->size() - 1));
 		if (randomLairSpawn != nullptr) {
-			if (randomLairSpawn->getMinDifficulty() <= (playerLevel + 5) && randomLairSpawn->getMaxDifficulty() >= minLevel) {
+			if (randomLairSpawn->getMinDifficulty() <= maxLevel && randomLairSpawn->getMaxDifficulty() >= minLevel) {
 				if (type == MissionTypes::DESTROY) {
 					lairSpawn = randomLairSpawn;
 					foundLair = true;
@@ -1995,7 +2124,7 @@ LairSpawn* MissionManagerImplementation::getRandomLairSpawn(CreatureObject* play
 		//No random lair found, iterate through all lairs and find the first within playerLevel +-5;
 		for (int i = 0; i < availableLairList->size(); i++) {
 			LairSpawn* randomLairSpawn = availableLairList->get(i);
-			if (randomLairSpawn->getMinDifficulty() <= (playerLevel + 5) && randomLairSpawn->getMaxDifficulty() >= minLevel) {
+			if (randomLairSpawn->getMinDifficulty() <= maxLevel && randomLairSpawn->getMaxDifficulty() >= minLevel) {
 				if (type == MissionTypes::DESTROY) {
 					lairSpawn = randomLairSpawn;
 					foundLair = true;
@@ -2017,7 +2146,7 @@ LairSpawn* MissionManagerImplementation::getRandomLairSpawn(CreatureObject* play
 		//There are no lairs within playerLevel +-5, pick the first lair below playerLevel +5
 		for (int i = 0; i < availableLairList->size(); i++) {
 			LairSpawn* randomLairSpawn = availableLairList->get(i);
-			if (randomLairSpawn->getMinDifficulty() <= (playerLevel + 5)) {
+			if (randomLairSpawn->getMinDifficulty() <= maxLevel) {
 				if (type == MissionTypes::DESTROY) {
 					lairSpawn = randomLairSpawn;
 					break;
@@ -2063,7 +2192,7 @@ Reference<MissionObject*> MissionManagerImplementation::getBountyHunterMission(C
 			if (objects.get(i)->isMissionObject()) {
 				Reference<MissionObject*> mission = objects.get(i).castTo<MissionObject*>();
 
-				if (mission != nullptr && mission->getTypeCRC() == MissionTypes::BOUNTY) {
+				if (mission != nullptr && MissionTypes::isBountyType(mission->getTypeCRC())) {
 					return mission;
 				}
 			}
@@ -2110,6 +2239,17 @@ void MissionManagerImplementation::updatePlayerBountyReward(uint64 targetId, int
 
 	if (playerBountyList.contains(targetId)) {
 		playerBountyList.get(targetId)->setReward(reward);
+	}
+}
+
+void MissionManagerImplementation::increasePlayerBountyReward(uint64 targetId, int amount) {
+	Locker listLocker(&playerBountyListMutex);
+
+	if (playerBountyList.contains(targetId)) {
+		PlayerBounty* target = playerBountyList.get(targetId);
+
+		if (target != nullptr)
+			target->setReward(target->getReward() + amount);
 	}
 }
 
@@ -2404,10 +2544,16 @@ int MissionManagerImplementation::getRealBountyReward(CreatureObject* creo, Play
 		if (player == nullptr)
 			return 0;
 
-		if (player->getJediState() >= 4)
-			return 50000;
-		else
+		if (player->getJediState() >= 4) {
+			int frsRank = player->getFrsData()->getRank();
+
+			if (frsRank < 0)
+				frsRank = 0;
+
+			return 50000 + (frsRank * 100000);
+		} else {
 			return 25000;
+		}
 	}
 	return bounty->getReward();
 }

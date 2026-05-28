@@ -109,7 +109,7 @@ class MissionManager extends Observer implements Logger {
 	private native void randomizeBountyTerminalMissions(CreatureObject player, int counter);
 	private native void randomizeFactionTerminalMissions(CreatureObject player, int counter, boolean slicer, final unsigned int faction);
 
-	private native void randomizeGenericBountyMission(CreatureObject player, MissionObject mission, final unsigned int faction, Vector<PlayerBounty> potentialTargets);
+	private native void randomizeGenericBountyMission(CreatureObject player, MissionObject mission, final unsigned int faction, Vector<PlayerBounty> potentialTargets, boolean preferPlayerTarget = false);
 	private native void randomizeGenericCraftingMission(CreatureObject player, MissionObject mission, final unsigned int faction);
 	private native void randomizeGenericDeliverMission(CreatureObject player, MissionObject mission, final unsigned int faction);
 	private native void randomizeGenericDestroyMission(CreatureObject player, MissionObject mission, final unsigned int faction);
@@ -166,6 +166,7 @@ class MissionManager extends Observer implements Logger {
 	public native void addPlayerToBountyList(unsigned long targetId, int reward);
 	public native void removePlayerFromBountyList(unsigned long targetId);
 	public native void updatePlayerBountyReward(unsigned long targetId, int reward);
+	public native void increasePlayerBountyReward(unsigned long targetId, int amount);
 	public native void updatePlayerBountyOnlineStatus(unsigned long targetId, boolean status);
 	public native void completePlayerBounty(unsigned long targetId, unsigned long bountyHunter);
 	public native void failPlayerBountyMission(unsigned long bountyHunter, unsigned long targetID);
