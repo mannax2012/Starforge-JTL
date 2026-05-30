@@ -4012,6 +4012,9 @@ StructureObject* PlayerManagerImplementation::getInRangeOwnedStructure(CreatureO
 
 		ManagedReference<StructureObject*> structure = (ghost->getZoneServer()->getObject(oid)).castTo<StructureObject*>();
 
+		if (structure == nullptr)
+			continue;
+
 		Locker _slock(structure, creature);
 
 		if (creature->getZone() != structure->getZone())
