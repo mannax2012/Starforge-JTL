@@ -43,19 +43,7 @@
 
 
 --Children folder includes
-includeFile("tangible/item/bounty_hunter/serverobjects.lua")
-includeFile("tangible/item/new_player/serverobjects.lua")
-includeFile("tangible/item/plant/serverobjects.lua")
-includeFile("tangible/item/quest/serverobjects.lua")
+includeFile("draft_schematic/item/bounty_hunter/objects.lua")
 
--- Server Objects
-includeFile("tangible/item/axkva_min_entrance.lua")
-includeFile("tangible/item/yavin4_exar_kun_entry.lua")
-includeFile("tangible/item/dath_disciple_alter.lua")
-includeFile("tangible/item/dath_disciple_skull.lua")
-includeFile("tangible/item/starforge_token_generic.lua")
-includeFile("tangible/item/con_drinking_glass_01.lua")
-includeFile("tangible/item/droid_customization.lua")
-includeFile("tangible/item/loot_credit_chip.lua")
-includeFile("tangible/item/lytus_family_artefact.lua")
-includeFile("tangible/item/vehicle_customization.lua")
+includeFile("draft_schematic/item/bounty_hunter/item_bh_plasma_battery.lua")
+includeFile("draft_schematic/item/bounty_hunter/item_bh_shock_dart.lua")

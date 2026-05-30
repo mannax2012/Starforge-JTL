@@ -1,4 +1,4 @@
---Copyright (C) 2007 <SWGEmu>
+--Copyright (C) 2009 <SWGEmu>
 
 --This File is part of Core3.
 
@@ -39,16 +39,13 @@
 --gives permission to release a modified version without this exception;
 --this exception also makes it possible to release a modified version
 --which carries forward this exception.
---true = 1, false = 0
 
-ForceRun2Command = {
-        name = "forcerun2",
-        forceCost = 400,
-        duration = 120,
-        --animationCRC = hashCode()
-        clientEffect = "clienteffect/pl_force_run_self.cef",
-        clientEffectLabel = "force_run",
-        speedMod = 2.5
-}
+object_draft_schematic_item_bounty_hunter_shared_item_bh_shock_dart = SharedDraftSchematicObjectTemplate:new {
+	clientTemplateFileName = "object/draft_schematic/item/bounty_hunter/shared_item_bh_shock_dart.iff"}
+ObjectTemplates:addClientTemplate(object_draft_schematic_item_bounty_hunter_shared_item_bh_shock_dart, 
+"object/draft_schematic/item/bounty_hunter/shared_item_bh_shock_dart.iff")
 
-AddCommand(ForceRun2Command)
+object_draft_schematic_item_bounty_hunter_shared_item_bh_plasma_battery = SharedDraftSchematicObjectTemplate:new {
+	clientTemplateFileName = "object/draft_schematic/item/bounty_hunter/shared_item_bh_plasma_battery.iff"}
+ObjectTemplates:addClientTemplate(object_draft_schematic_item_bounty_hunter_shared_item_bh_plasma_battery, 
+"object/draft_schematic/item/bounty_hunter/shared_item_bh_plasma_battery.iff")

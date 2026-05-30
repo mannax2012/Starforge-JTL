@@ -1,0 +1,37 @@
+/*
+				Copyright <SWGEmu>
+		See file COPYING for copying conditions.*/
+
+package server.zone.objects.creature.buffs;
+
+import server.zone.objects.creature.CreatureObject;
+import server.zone.objects.creature.buffs.ShockedDebuffTickEvent;
+import server.zone.objects.creature.buffs.Buff;
+include server.zone.objects.creature.buffs.BuffType;
+
+@json
+class ShockedDebuff extends Buff {
+	public static final int SHOCK_TICK_SECONDS = 5;
+
+	protected transient ShockedDebuffTickEvent shockBuffEvent;
+
+	protected int tickCount;
+	protected int snareDuration;
+	protected boolean stripForceRun;
+
+	public ShockedDebuff(CreatureObject creo, unsigned int buffCRC, int duration, int snareDurationSeconds, boolean removeForceRun) {
+		super(creo, buffCRC, duration, BuffType.OTHER);
+
+		tickCount = 0;
+		snareDuration = snareDurationSeconds;
+		stripForceRun = removeForceRun;
+	}
+
+	public native void initializeTransientMembers();
+
+	public native void activate(boolean applyModifiers);
+
+	public native void deactivate(boolean removeModifiers);
+
+	public native void clearBuffEvent();
+}

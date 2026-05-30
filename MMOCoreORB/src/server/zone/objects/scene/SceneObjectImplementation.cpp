@@ -13,6 +13,7 @@
 #include "server/zone/packets/object/DataTransform.h"
 #include "server/zone/packets/object/DataTransformWithParent.h"
 #include "server/zone/packets/object/PlayClientEffectObjectMessage.h"
+#include "server/zone/packets/object/StopClientEffectObjectByLabelMessage.h"
 #include "server/zone/managers/planet/PlanetManager.h"
 #include "server/zone/managers/components/ComponentManager.h"
 #include "templates/manager/TemplateManager.h"
@@ -2178,6 +2179,15 @@ float SceneObjectImplementation::getTemplateRadius() {
 
 void SceneObjectImplementation::playEffect(const String& file, const String& aux) {
 	PlayClientEffectObjectMessage* effect = new PlayClientEffectObjectMessage(asSceneObject(), file, aux);
+
+	broadcastMessage(effect, true);
+}
+
+void SceneObjectImplementation::stopEffect(const String& label) {
+	if (label.isEmpty())
+		return;
+
+	StopClientEffectObjectByLabelMessage* effect = new StopClientEffectObjectByLabelMessage(asSceneObject(), label);
 
 	broadcastMessage(effect, true);
 }

@@ -41,14 +41,53 @@
 --which carries forward this exception.
 --true = 1, false = 0
 
-ForceRun2Command = {
-        name = "forcerun2",
-        forceCost = 400,
-        duration = 120,
-        --animationCRC = hashCode()
-        clientEffect = "clienteffect/pl_force_run_self.cef",
-        clientEffectLabel = "force_run",
-        speedMod = 2.5
+MeleeBHSearingSweepCommand = {
+        name = "meleebhsearingsweep",
+
+	damageMultiplier = 3.0,
+	speedMultiplier = 2.5,
+	healthCostMultiplier = 0,
+	actionCostMultiplier = 2,
+	mindCostMultiplier = 0,
+        accuracyBonus = 25,
+
+	animation = "lower_posture_2hmelee_6",
+
+	combatSpam = "blindspin",
+
+	areaAction = true,
+	areaRange = 16,
+
+	stateEffects = {
+	  StateEffect( 
+		KNOCKDOWN_EFFECT,
+		{ "knockdownRecovery", "lastKnockdown" },
+		{ "knockdown_defense" },
+		{},
+		100,
+		0,
+		0
+	  )
+	},
+
+	dotEffects = {
+	  DotEffect(
+		ONFIRE,
+		{ "resistance_fire", "fire_resist" },
+		HEALTH,
+		true,
+		0,
+		100,
+		100,
+		60,
+		20,
+		3
+	  )
+	},
+
+	weaponType = ONEHANDMELEEWEAPON,
+
+	range = -1
 }
 
-AddCommand(ForceRun2Command)
+AddCommand(MeleeBHSearingSweepCommand)

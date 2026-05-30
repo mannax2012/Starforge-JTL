@@ -7,6 +7,12 @@
 
 const String InformantMissionScreenHandler::STARTSCREENHANDLERID = "convoscreenstart";
 
+namespace {
+bool isBountyHunterNovice(CreatureObject* player) {
+	return player != nullptr && (player->hasSkill("combat_bountyhunter_novice") || player->hasSkill("combat_melee_bountyhunter_novice"));
+}
+}
+
 MissionObject* InformantMissionScreenHandler::getBountyMissionObject(CreatureObject* player) {
 	if (player == nullptr) {
 		return nullptr;
@@ -24,7 +30,7 @@ MissionObject* InformantMissionScreenHandler::getBountyMissionObject(CreatureObj
 		if (datapad->getContainerObject(i)->isMissionObject()) {
 			Reference<MissionObject*> mission = datapad->getContainerObject(i).castTo<MissionObject*>();
 
-			if (mission != nullptr && mission->getTypeCRC() == MissionTypes::BOUNTY) {
+			if (mission != nullptr && MissionTypes::isBountyType(mission->getTypeCRC())) {
 				BountyMissionObjective* objective = cast<BountyMissionObjective*>(mission->getMissionObjective());
 				if (objective != nullptr) {
 					return mission;
@@ -52,7 +58,7 @@ ConversationScreen* InformantMissionScreenHandler::handleScreen(CreatureObject* 
 	}
 
 	//Check if player is bounty hunter.
-	if (!conversingPlayer->hasSkill("combat_bountyhunter_novice")) {
+	if (!isBountyHunterNovice(conversingPlayer)) {
 		conversationScreen->setDialogText(String("@mission/mission_generic:informant_not_bounty_hunter"));
 	} else {
 		//Get bounty mission object if it exists.

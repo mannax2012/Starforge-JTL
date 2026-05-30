@@ -1,4 +1,4 @@
---Copyright (C) 2007 <SWGEmu>
+--Copyright (C) 2010 <SWGEmu>
 
 --This File is part of Core3.
 
@@ -38,17 +38,7 @@
 --it is their choice whether to do so. The GNU Lesser General Public License
 --gives permission to release a modified version without this exception;
 --this exception also makes it possible to release a modified version
---which carries forward this exception.
---true = 1, false = 0
 
-ForceRun2Command = {
-        name = "forcerun2",
-        forceCost = 400,
-        duration = 120,
-        --animationCRC = hashCode()
-        clientEffect = "clienteffect/pl_force_run_self.cef",
-        clientEffectLabel = "force_run",
-        speedMod = 2.5
-}
-
-AddCommand(ForceRun2Command)
+-- Server Objects
+includeFile("tangible/item/bounty_hunter/bh_shock_dart.lua")
+includeFile("tangible/item/bounty_hunter/bh_shield_battery.lua")

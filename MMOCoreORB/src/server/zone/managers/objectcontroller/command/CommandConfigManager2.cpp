@@ -31,8 +31,13 @@
 #include "server/zone/objects/creature/commands/HealHealthSelf3Command.h"
 #include "server/zone/objects/creature/commands/HealHealthSelf4Command.h"
 #include "server/zone/objects/creature/commands/RecruitCityNPCCommand.h"
-// #include "server/zone/objects/creature/commands/MeleeBHPalmStrikeCommand.h"
-// #include "server/zone/objects/creature/commands/RegrantSkillsCommand.h"
+#include "server/zone/objects/creature/commands/BountyHunterShockDartCommand.h"
+#include "server/zone/objects/creature/commands/MeleeBHCombatPlasmaShieldCommand.h"
+#include "server/zone/objects/creature/commands/MeleeBHCrossCheckCommand.h"
+#include "server/zone/objects/creature/commands/MeleeBHPalmStrikeCommand.h"
+#include "server/zone/objects/creature/commands/MeleeBHSearingSweepCommand.h"
+#include "server/zone/objects/creature/commands/MeleeBHVibroRendCommand.h"
+#include "server/zone/objects/creature/commands/RegrantSkillsCommand.h"
 
 #include "server/zone/objects/creature/commands/JediQueueCommand.h"
 
@@ -356,6 +361,8 @@
 #include "server/zone/objects/creature/commands/HealEnhanceCommand.h"
 #include "server/zone/objects/creature/commands/HealHealthSelf1Command.h"
 #include "server/zone/objects/creature/commands/HealHealthSelf2Command.h"
+#include "server/zone/objects/creature/commands/HealOther1Command.h"
+#include "server/zone/objects/creature/commands/HealOther2Command.h"
 #include "server/zone/objects/creature/commands/HealHealthWoundOther1Command.h"
 #include "server/zone/objects/creature/commands/HealHealthWoundOther2Command.h"
 #include "server/zone/objects/creature/commands/HealHealthWoundSelf1Command.h"
@@ -764,6 +771,8 @@ void CommandConfigManager::registerCommands2() {
 	commandFactory.registerCommand<HealEnhanceCommand>(String("healEnhance").toLowerCase());
 	commandFactory.registerCommand<HealHealthSelf1Command>(String("healHealthSelf1").toLowerCase());
 	commandFactory.registerCommand<HealHealthSelf2Command>(String("healHealthSelf2").toLowerCase());
+	commandFactory.registerCommand<HealOther1Command>(String("healOther1").toLowerCase());
+	commandFactory.registerCommand<HealOther2Command>(String("healOther2").toLowerCase());
 	commandFactory.registerCommand<HealHealthWoundOther1Command>(String("healHealthWoundOther1").toLowerCase());
 	commandFactory.registerCommand<HealHealthWoundOther2Command>(String("healHealthWoundOther2").toLowerCase());
 	commandFactory.registerCommand<HealHealthWoundSelf1Command>(String("healHealthWoundSelf1").toLowerCase());
@@ -851,6 +860,11 @@ void CommandConfigManager::registerCommands2() {
 	commandFactory.registerCommand<HealHealthSelf3Command>(String("healHealthSelf3").toLowerCase());
 	commandFactory.registerCommand<HealHealthSelf4Command>(String("healHealthSelf4").toLowerCase());
 	commandFactory.registerCommand<RecruitCityNPCCommand>(String("recruitCityNPC").toLowerCase());
-	// commandFactory.registerCommand<MeleeBHPalmStrikeCommand>(String("meleeBHPalmStrike").toLowerCase());
-	// commandFactory.registerCommand<RegrantSkillsCommand>(String("regrantSkills").toLowerCase());
+	commandFactory.registerCommand<BountyHunterShockDartCommand>(String("bountyHunterShockDart").toLowerCase());
+	commandFactory.registerCommand<MeleeBHCombatPlasmaShieldCommand>(String("meleeBHCombatPlasmaShield").toLowerCase());
+	commandFactory.registerCommand<MeleeBHCrossCheckCommand>(String("meleeBHCrossCheck").toLowerCase());
+	commandFactory.registerCommand<MeleeBHPalmStrikeCommand>(String("meleeBHPalmStrike").toLowerCase());
+	commandFactory.registerCommand<MeleeBHSearingSweepCommand>(String("meleeBHSearingSweep").toLowerCase());
+	commandFactory.registerCommand<MeleeBHVibroRendCommand>(String("meleeBHVibroRend").toLowerCase());
+	commandFactory.registerCommand<RegrantSkillsCommand>(String("regrantSkills").toLowerCase());
 }

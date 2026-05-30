@@ -1,4 +1,4 @@
---Copyright (C) 2007 <SWGEmu>
+--Copyright (C) 2010 <SWGEmu>
 
 --This File is part of Core3.
 
@@ -38,17 +38,9 @@
 --it is their choice whether to do so. The GNU Lesser General Public License
 --gives permission to release a modified version without this exception;
 --this exception also makes it possible to release a modified version
---which carries forward this exception.
---true = 1, false = 0
 
-ForceRun2Command = {
-        name = "forcerun2",
-        forceCost = 400,
-        duration = 120,
-        --animationCRC = hashCode()
-        clientEffect = "clienteffect/pl_force_run_self.cef",
-        clientEffectLabel = "force_run",
-        speedMod = 2.5
+object_tangible_item_bounty_hunter_bh_shield_battery = object_tangible_item_bounty_hunter_shared_bh_shield_battery:new {
+	useCount = 10
 }
 
-AddCommand(ForceRun2Command)
+ObjectTemplates:addTemplate(object_tangible_item_bounty_hunter_bh_shield_battery, "object/tangible/item/bounty_hunter/bh_shield_battery.iff")

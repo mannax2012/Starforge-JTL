@@ -44,36 +44,46 @@
 MeleeBHPalmStrikeCommand = {
         name = "meleebhpalmstrike",
 
-	damageMultiplier = 4.0,
-	speedMultiplier = 3.0,
+	damageMultiplier = 5.0,
+	speedMultiplier = 2.25,
 	healthCostMultiplier = 0,
-	actionCostMultiplier = 2.5,
+	actionCostMultiplier = 2.25,
 	mindCostMultiplier = 0,
-        accuracyBonus = 15,
+        accuracyBonus = 25,
 
 	animation = "combo_5a", 
 	animType = GENERATE_INTENSITY,
 
-
-
 	stateEffects = {
-	  StateEffect( 
-		BLIND_EFFECT, 
-		{}, 
-		{ "blind_defense" }, 
+	  StateEffect(
+		DIZZY_EFFECT,
+		{},
+		{ "dizzy_defense" },
 		{ "jedi_state_defense", "resistance_states" },
-		40, 
-		0, 
+		75,
+		0,
 		30
 	  )
 	},
+
+	dotEffects = {
+	  DotEffect(
+		BLEEDING,
+		{ "resistance_bleeding", "bleed_resist" },
+		ACTION,
+		true,
+		0,
+		100,
+		60,
+		60
+	  )
+	},
 	
-	combatSpam = "spittingrawl",
+	combatSpam = "chomok",
 	
-	weaponType = UNARMEDWEAPON,	
+	weaponType = UNARMEDWEAPON + ONEHANDMELEEWEAPON,
 
 	range = -1
 }
 
 AddCommand(MeleeBHPalmStrikeCommand)
-

@@ -1,4 +1,4 @@
---Copyright (C) 2007 <SWGEmu>
+--Copyright (C) 2009 <SWGEmu>
 
 --This File is part of Core3.
 
@@ -39,16 +39,15 @@
 --gives permission to release a modified version without this exception;
 --this exception also makes it possible to release a modified version
 --which carries forward this exception.
---true = 1, false = 0
 
-ForceRun2Command = {
-        name = "forcerun2",
-        forceCost = 400,
-        duration = 120,
-        --animationCRC = hashCode()
-        clientEffect = "clienteffect/pl_force_run_self.cef",
-        clientEffectLabel = "force_run",
-        speedMod = 2.5
+object_tangible_item_bounty_hunter_shared_bh_shock_dart = SharedTangibleObjectTemplate:new {
+	clientTemplateFileName = "object/tangible/item/bounty_hunter/shared_bh_shock_dart.iff"
 }
 
-AddCommand(ForceRun2Command)
+ObjectTemplates:addClientTemplate(object_tangible_item_bounty_hunter_shared_bh_shock_dart, "object/tangible/item/bounty_hunter/shared_bh_shock_dart.iff")
+
+object_tangible_item_bounty_hunter_shared_bh_shield_battery = SharedTangibleObjectTemplate:new {
+	clientTemplateFileName = "object/tangible/item/bounty_hunter/shared_bh_shield_battery.iff"
+}
+
+ObjectTemplates:addClientTemplate(object_tangible_item_bounty_hunter_shared_bh_shield_battery, "object/tangible/item/bounty_hunter/shared_bh_shield_battery.iff")

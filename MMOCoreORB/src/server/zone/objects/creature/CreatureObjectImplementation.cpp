@@ -35,9 +35,21 @@
 #include "server/zone/packets/ui/NewbieTutorialEnableHudElement.h"
 #include "server/zone/packets/ui/OpenHolocronToPageMessage.h"
 #include "server/zone/packets/object/Animation.h"
+#include "server/zone/objects/creature/buffs/BuffCRC.h"
 #include "templates/params/creature/CreatureAttribute.h"
 #include "templates/params/creature/CreaturePosture.h"
 #include "server/zone/objects/creature/commands/effect/CommandEffect.h"
+
+namespace {
+	void stopBuffClientEffectIfNeeded(CreatureObject* creature, uint32 buffcrc) {
+		if (creature == nullptr)
+			return;
+
+		if (buffcrc == BuffCRC::JEDI_FORCE_RUN_1 || buffcrc == BuffCRC::JEDI_FORCE_RUN_2 || buffcrc == BuffCRC::JEDI_FORCE_RUN_3) {
+			creature->stopEffect("force_run");
+		}
+	}
+}
 #include "server/zone/objects/creature/CommandQueue.h"
 #include "server/zone/Zone.h"
 #include "server/zone/SpaceZone.h"
@@ -3066,6 +3078,9 @@ bool CreatureObjectImplementation::removeBuff(uint32 buffcrc) {
 	//BuffList::removeBuff checks to see if the buffcrc exists in the map.
 	bool ret = creatureBuffs.removeBuff(buffcrc);
 
+	if (ret)
+		stopBuffClientEffectIfNeeded(asCreatureObject(), buffcrc);
+
 	if (buff != nullptr) {
 		const Vector<unsigned long long>* secondaryCRCs = buff->getSecondaryBuffCRCs();
 
@@ -3097,6 +3112,8 @@ void CreatureObjectImplementation::removeBuff(Buff* buff) {
 
 	//BuffList::removeBuff checks to see if the buffcrc exists in the map.
 	creatureBuffs.removeBuff(buff);
+
+	stopBuffClientEffectIfNeeded(asCreatureObject(), buffcrc);
 }
 
 void CreatureObjectImplementation::clearBuffs(bool updateclient, bool removeAll) {

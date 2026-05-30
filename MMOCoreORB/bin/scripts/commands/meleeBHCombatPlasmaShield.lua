@@ -41,14 +41,11 @@
 --which carries forward this exception.
 --true = 1, false = 0
 
-ForceRun2Command = {
-        name = "forcerun2",
-        forceCost = 400,
-        duration = 120,
-        --animationCRC = hashCode()
-        clientEffect = "clienteffect/pl_force_run_self.cef",
-        clientEffectLabel = "force_run",
-        speedMod = 2.5
+MeleeBHCombatPlasmaShieldCommand = {
+        name = "meleebhcombatplasmashield",
+        cooldown = 300000,
+        defaultPriority = "immediate",
+        clientEffect = "clienteffect/pl_force_armor_self.cef",
 }
 
-AddCommand(ForceRun2Command)
+AddCommand(MeleeBHCombatPlasmaShieldCommand)

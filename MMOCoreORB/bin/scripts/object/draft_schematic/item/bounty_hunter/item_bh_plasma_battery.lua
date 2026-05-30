@@ -41,21 +41,40 @@
 --this exception also makes it possible to release a modified version 
 
 
+object_draft_schematic_item_bounty_hunter_item_bh_plasma_battery = object_draft_schematic_item_bounty_hunter_shared_item_bh_plasma_battery:new {
 
---Children folder includes
-includeFile("tangible/item/bounty_hunter/serverobjects.lua")
-includeFile("tangible/item/new_player/serverobjects.lua")
-includeFile("tangible/item/plant/serverobjects.lua")
-includeFile("tangible/item/quest/serverobjects.lua")
+   templateType = DRAFTSCHEMATIC,
 
--- Server Objects
-includeFile("tangible/item/axkva_min_entrance.lua")
-includeFile("tangible/item/yavin4_exar_kun_entry.lua")
-includeFile("tangible/item/dath_disciple_alter.lua")
-includeFile("tangible/item/dath_disciple_skull.lua")
-includeFile("tangible/item/starforge_token_generic.lua")
-includeFile("tangible/item/con_drinking_glass_01.lua")
-includeFile("tangible/item/droid_customization.lua")
-includeFile("tangible/item/loot_credit_chip.lua")
-includeFile("tangible/item/lytus_family_artefact.lua")
-includeFile("tangible/item/vehicle_customization.lua")
+   customObjectName = "Plasma Battery",
+
+   craftingToolTab = 524288, -- (See DraftSchematicObjectTemplate.h)
+   complexity = 8, 
+   size = 1, 
+   factoryCrateType = "object/factory/factory_crate_electronics.iff",
+   
+   xpType = "crafting_general", 
+   xp = 42, 
+
+   assemblySkill = "general_assembly", 
+   experimentingSkill = "general_experimentation", 
+   customizationSkill = "clothing_customization", 
+
+   customizationOptions = {},
+   customizationStringNames = {},
+   customizationDefaults = {},
+
+   ingredientTemplateNames = {"craft_item_ingredients_n", "craft_item_ingredients_n", "craft_item_ingredients_n"},
+   ingredientTitleNames = {"assembly_enclosure", "controller", "scanner_assembly"},
+   ingredientSlotType = {0, 0, 0},
+   resourceTypes = {"metal", "metal", "ore"},
+   resourceQuantities = {28, 15, 13},
+   contribution = {100, 100, 100},
+
+
+   targetTemplate = "object/tangible/item/bounty_hunter/bh_shield_battery.iff",
+
+   additionalTemplates = {
+             }
+
+}
+ObjectTemplates:addTemplate(object_draft_schematic_item_bounty_hunter_item_bh_plasma_battery, "object/draft_schematic/item/bounty_hunter/item_bh_plasma_battery.iff")

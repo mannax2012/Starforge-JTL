@@ -1597,6 +1597,25 @@ object_tangible_terminal_terminal_character_builder = object_tangible_terminal_s
 					},
 					"Master", "combat_bountyhunter_master"
 				},
+				"Melee Bounty Hunter",
+				{
+					"Novice", "combat_melee_bountyhunter_novice",
+					"Investigation",
+					{
+						"Investigation I", "combat_melee_bountyhunter_investigation_01",
+						"Investigation II", "combat_melee_bountyhunter_investigation_02",
+						"Investigation III", "combat_melee_bountyhunter_investigation_03",
+						"Investigation IV", "combat_melee_bountyhunter_investigation_04"
+					},
+					"One-Handed Grips",
+					{
+						"One-Handed Grips I", "combat_melee_bountyhunter_onehanded_grips_01",
+						"One-Handed Grips II", "combat_melee_bountyhunter_onehanded_grips_02",
+						"One-Handed Grips III", "combat_melee_bountyhunter_onehanded_grips_03",
+						"One-Handed Grips IV", "combat_melee_bountyhunter_onehanded_grips_04"
+					},
+					"Master", "combat_melee_bountyhunter_master"
+				},
 				"Brawler",
 				{
 					"Novice", "combat_brawler_novice",
@@ -2376,6 +2395,39 @@ object_tangible_terminal_terminal_character_builder = object_tangible_terminal_s
 						"Ranged Support IV", "combat_marksman_support_04"
 					},
 					"Master", "combat_marksman_master"
+				},
+				"Mechanic",
+				{
+					"Novice", "crafting_mechanic_novice",
+					"Landspeeders",
+					{
+						"Landspeeders I", "crafting_mechanic_landspeeder_01",
+						"Landspeeders II", "crafting_mechanic_landspeeder_02",
+						"Landspeeders III", "crafting_mechanic_landspeeder_03",
+						"Landspeeders IV", "crafting_mechanic_landspeeder_04"
+					},
+					"Speederbikes",
+					{
+						"Speederbikes I", "crafting_mechanic_speederbike_01",
+						"Speederbikes II", "crafting_mechanic_speederbike_02",
+						"Speederbikes III", "crafting_mechanic_speederbike_03",
+						"Speederbikes IV", "crafting_mechanic_speederbike_04"
+					},
+					"Modules",
+					{
+						"Modules I", "crafting_mechanic_modules_01",
+						"Modules II", "crafting_mechanic_modules_02",
+						"Modules III", "crafting_mechanic_modules_03",
+						"Modules IV", "crafting_mechanic_modules_04"
+					},
+					"Techniques",
+					{
+						"Techniques I", "crafting_mechanic_techniques_01",
+						"Techniques II", "crafting_mechanic_techniques_02",
+						"Techniques III", "crafting_mechanic_techniques_03",
+						"Techniques IV", "crafting_mechanic_techniques_04"
+					},
+					"Master", "crafting_mechanic_master"
 				},
 				"Medic",
 				{

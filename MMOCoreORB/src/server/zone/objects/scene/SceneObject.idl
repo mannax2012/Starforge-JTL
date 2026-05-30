@@ -983,6 +983,9 @@ class SceneObject extends TreeEntry implements Logger, Metrics {
 		playEffect(file, "");
 	}
 
+	@dirty
+	public native void stopEffect(final string label);
+
 	/**
 	 * Is called when this object has been inserted with an object
 	 * @param object object that has been inserted

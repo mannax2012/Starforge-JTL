@@ -123,6 +123,7 @@ createTrainerConversationTemplate("architectTrainerConvoTemplate", "trainer_arch
 createTrainerConversationTemplate("armorsmithTrainerConvoTemplate", "trainer_armorsmith")
 createTrainerConversationTemplate("bioengineerTrainerConvoTemplate", "trainer_bioengineer")
 createTrainerConversationTemplate("bountyhunterTrainerConvoTemplate", "trainer_bountyhunter")
+createTrainerConversationTemplate("meleeBountyHunterTrainerConvoTemplate", "trainer_melee_bountyhunter")
 createTrainerConversationTemplate("carbineTrainerConvoTemplate", "trainer_carbine")
 createTrainerConversationTemplate("chefTrainerConvoTemplate", "trainer_chef")
 createTrainerConversationTemplate("combatmedicTrainerConvoTemplate", "trainer_combatmedic")

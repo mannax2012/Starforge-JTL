@@ -41,14 +41,52 @@
 --which carries forward this exception.
 --true = 1, false = 0
 
-ForceRun2Command = {
-        name = "forcerun2",
-        forceCost = 400,
-        duration = 120,
-        --animationCRC = hashCode()
-        clientEffect = "clienteffect/pl_force_run_self.cef",
-        clientEffectLabel = "force_run",
-        speedMod = 2.5
+MeleeBHVibroRendCommand = {
+        name = "meleebhvibrorend",
+
+	damageMultiplier = 2.5,
+	speedMultiplier = 2.5,
+	healthCostMultiplier = 0,
+	actionCostMultiplier = 2,
+	mindCostMultiplier = 0,
+	accuracyBonus = 10,
+
+	areaAction = true,
+	areaRange = 16,
+
+	dotEffects = {
+	  DotEffect(
+		BLEEDING,
+		{ "resistance_bleeding", "bleed_resist" },
+		HEALTH,
+		true,
+		0,
+		100,
+		60,
+		60
+	  ),
+	  DotEffect(
+		ONFIRE,
+		{ "resistance_fire", "fire_resist" },
+		ACTION,
+		true,
+		0,
+		100,
+		100,
+		60,
+		20,
+		3
+	  )
+	},
+
+	animation = "combo_2c",
+	animType = GENERATE_INTENSITY,
+
+	combatSpam = "limbbreaker",
+
+	weaponType = POLEARMWEAPON + TWOHANDMELEEWEAPON,
+
+	range = -1
 }
 
-AddCommand(ForceRun2Command)
+AddCommand(MeleeBHVibroRendCommand)

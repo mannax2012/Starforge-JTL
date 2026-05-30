@@ -621,6 +621,11 @@ void BountyMissionObjectiveImplementation::handlePlayerKilled(ManagedObject* arg
 		if (killer->isPlayerCreature())
 			killer->sendSystemMessage("You have defeated a bounty hunter, ruining his mission against you!");
 
+		MissionManager* missionManager = owner->getZoneServer()->getMissionManager();
+
+		if (missionManager != nullptr)
+			missionManager->increasePlayerBountyReward(targetID, 100000);
+
 		fail();
 
 		return;

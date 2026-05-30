@@ -15,8 +15,13 @@
 #include "HealHealthSelf3Command.h"
 #include "HealHealthSelf4Command.h"
 #include "RecruitCityNPCCommand.h"
-// #include "MeleeBHPalmStrikeCommand.h"
-// #include "RegrantSkillsCommand.h"
+#include "BountyHunterShockDartCommand.h"
+#include "MeleeBHCombatPlasmaShieldCommand.h"
+#include "MeleeBHCrossCheckCommand.h"
+#include "MeleeBHPalmStrikeCommand.h"
+#include "MeleeBHSearingSweepCommand.h"
+#include "MeleeBHVibroRendCommand.h"
+#include "RegrantSkillsCommand.h"
 
 #include "ActionShot1Command.h"
 #include "ActionShot2Command.h"
@@ -851,4 +856,3 @@
 
 
 #endif /* COMMANDSNEW_H_ */
-

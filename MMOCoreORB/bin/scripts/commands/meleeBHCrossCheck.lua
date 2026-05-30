@@ -41,14 +41,47 @@
 --which carries forward this exception.
 --true = 1, false = 0
 
-ForceRun2Command = {
-        name = "forcerun2",
-        forceCost = 400,
-        duration = 120,
-        --animationCRC = hashCode()
-        clientEffect = "clienteffect/pl_force_run_self.cef",
-        clientEffectLabel = "force_run",
-        speedMod = 2.5
+MeleeBHCrossCheckCommand = {
+        name = "meleebhcrosscheck",
+
+	damageMultiplier = 2.5,
+	speedMultiplier = 2.25,
+	healthCostMultiplier = 0,
+	actionCostMultiplier = 2.5,
+	mindCostMultiplier = 0,
+	accuracyBonus = 10,
+
+	animation = "combo_3b",
+	animType = GENERATE_INTENSITY,
+
+	combatSpam = "legbreaker",
+
+	poolsToDamage = ACTION_ATTRIBUTE,
+
+	stateEffects = {
+	  StateEffect(
+		DIZZY_EFFECT,
+		{},
+		{ "dizzy_defense" },
+		{ "jedi_state_defense", "resistance_states" },
+		75,
+		0,
+		40
+	  ),
+	  StateEffect(
+		KNOCKDOWN_EFFECT,
+		{ "knockdownRecovery", "lastKnockdown" },
+		{ "knockdown_defense" },
+		{},
+		100,
+		0,
+		0
+	  )
+	},
+
+	weaponType = POLEARMWEAPON + TWOHANDMELEEWEAPON,
+
+	range = -1
 }
 
-AddCommand(ForceRun2Command)
+AddCommand(MeleeBHCrossCheckCommand)
