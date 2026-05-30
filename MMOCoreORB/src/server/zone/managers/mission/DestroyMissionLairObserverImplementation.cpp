@@ -8,6 +8,7 @@
 #include "server/zone/objects/creature/ai/AiAgent.h"
 #include "server/zone/objects/creature/ai/Creature.h"
 #include "server/zone/objects/tangible/LairObject.h"
+#include "server/zone/objects/tangible/threat/ThreatMap.h"
 #include "server/zone/managers/creature/SpawnLairMobileTask.h"
 
 // #define DEBUG_MISSION_LAIRS
@@ -83,8 +84,6 @@ bool DestroyMissionLairObserverImplementation::checkForNewSpawns(TangibleObject*
 
 	if (forceSpawn) {
 		spawnNumber.increment();
-	} else if (getMobType() == LairTemplate::NPC) {
-		return false;
 	} else {
 		// Spawn limit has been reached for lair
 		if (spawnedCreatures.size() >= spawnLimit) {
@@ -99,7 +98,7 @@ bool DestroyMissionLairObserverImplementation::checkForNewSpawns(TangibleObject*
 			case 0:
 				spawnNumber.increment();
 				break;
-			// 1st Wave of spawns when lair takes its first damage
+			// 1st backup wave when lair takes its first damage
 			case 1:
 				if (conditionDamage > 0) {
 					spawnNumber.increment();
@@ -107,7 +106,7 @@ bool DestroyMissionLairObserverImplementation::checkForNewSpawns(TangibleObject*
 					return false;
 				}
 				break;
-			// 2nd Wave of spawns when lair condition drops past half of the total condition
+			// 2nd backup wave when lair condition drops past half of the total condition
 			case 2:
 				if (conditionDamage > (maxCondition / 2)) {
 					spawnNumber.increment();
@@ -292,16 +291,55 @@ void DestroyMissionLairObserverImplementation::spawnLairMobile(LairObject* lair,
 		}
 	}
 
-	if (getMobType() != LairTemplate::CREATURE || (spawnNumber < 2)) {
+	// Initial spawn does not trigger follow-up behavior for any lair type.
+	if (spawnNumber < 2) {
 		return;
 	}
 
-	// Any spawn wave with the exception of the initial wave causes lair damage
-	int newDamage = (lair->getMaxCondition() / ((lairTemplate->getSpawnLimit() / 3) * 5));
+	// Only creature lairs self-damage when calling in reinforcements.
+	if (getMobType() == LairTemplate::CREATURE) {
+		int newDamage = (lair->getMaxCondition() / ((lairTemplate->getSpawnLimit() / 3) * 5));
 
 #ifdef DEBUG_MISSION_LAIRS
-	info(true) << "Wild Lair - Name: " << lair->getDisplayedName() << " ID: " << lair->getObjectID() << " Damaging Self from creature spawn: " << newDamage;
+		info(true) << "Mission Lair - Name: " << lair->getDisplayedName() << " ID: " << lair->getObjectID() << " Damaging Self from creature spawn: " << newDamage;
 #endif // DEBUG_MISSION_LAIRS
 
-	lair->inflictDamage(lair, 0, newDamage, true, true, false);
+		lair->inflictDamage(lair, 0, newDamage, true, true, false);
+	}
+
+	// Returning here for no passive spawn, lair is destroyed or we have hit the max passive spawns
+	if (!spawnPassive || lair->isDestroyed() || spawnedCreatures.size() > LairObserver::WILD_LAIR_PASSIVE_MAX) {
+		return;
+	}
+
+	Reference<SpawnLairMobileTask*> spawnTask = new SpawnLairMobileTask(lair, spawnNumber, templateToSpawn, false);
+
+	if (spawnTask == nullptr) {
+		return;
+	}
+
+	int totalThreats = 1;
+	auto threatMap = lair->getThreatMap();
+
+	if (threatMap != nullptr) {
+		totalThreats = threatMap->size();
+		threatMap = nullptr;
+	}
+
+	int min = LairObserver::PASSIVE_SPAWN_TIME_MIN;
+	int max = LairObserver::PASSIVE_SPAWN_TIME_MAX;
+
+	if (totalThreats > 15) {
+		min = 1;
+		max = 2;
+	} else if (totalThreats > 10) {
+		min = LairObserver::PASSIVE_SPAWN_TIME_MIN - 10;
+		max = LairObserver::PASSIVE_SPAWN_TIME_MAX - 10;
+	} else if (totalThreats > 5) {
+		min = LairObserver::PASSIVE_SPAWN_TIME_MIN - 5;
+		max = LairObserver::PASSIVE_SPAWN_TIME_MAX - 5;
+	}
+
+	int spawnTime = System::random(max - min) + min;
+	spawnTask->schedule(spawnTime * 1000);
 }

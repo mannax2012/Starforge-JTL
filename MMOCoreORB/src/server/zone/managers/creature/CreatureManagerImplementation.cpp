@@ -135,7 +135,7 @@ SceneObject* CreatureManagerImplementation::spawnLair(unsigned int lairTemplate,
 			break;
 	}
 
-	uint32 conditionCalc = Math::min((float)CreatureManager::CREATURE_LAIR_MAX, (System::random(baseCondition) + ((baseCondition / 10) * difficultyLevel)));
+	uint32 conditionCalc = Math::min((float)CreatureManager::CREATURE_LAIR_MAX, (System::random(baseCondition) + ((baseCondition / 10) * difficultyLevel)) * 1.5f);
 
 	building->setMaxCondition(conditionCalc);
 	building->setConditionDamage(0, false);

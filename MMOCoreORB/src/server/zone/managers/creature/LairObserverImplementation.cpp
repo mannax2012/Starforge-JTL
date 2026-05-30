@@ -432,8 +432,6 @@ bool LairObserverImplementation::checkForNewSpawns(TangibleObject* lair, Tangibl
 
 	if (forceSpawn) {
 		spawnNumber.increment();
-	} else if (getMobType() == LairTemplate::NPC) {
-		return false;
 	} else {
 		// Spawn limit has been reached for lair
 		if (spawnedCreatures.size() >= spawnLimit) {
@@ -448,7 +446,7 @@ bool LairObserverImplementation::checkForNewSpawns(TangibleObject* lair, Tangibl
 			case 0:
 				spawnNumber.increment();
 				break;
-			// 1st Wave of spawns when lair takes its first damage
+			// 1st backup wave when lair takes its first damage
 			case 1:
 				if (conditionDamage > 0) {
 					spawnNumber.increment();
@@ -456,7 +454,7 @@ bool LairObserverImplementation::checkForNewSpawns(TangibleObject* lair, Tangibl
 					return false;
 				}
 				break;
-			// 2nd Wave of spawns when lair condition drops past half of the total condition
+			// 2nd backup wave when lair condition drops past half of the total condition
 			case 2:
 				if (conditionDamage > (maxCondition / 2)) {
 					spawnNumber.increment();
@@ -771,20 +769,22 @@ void LairObserverImplementation::spawnLairMobile(LairObject* lair, int spawnNumb
 		}
 	}
 
-	// Damage is not applied to initial spawn or NPC lairs
-	if (!isCreatureLair || (spawnNumber < 2)) {
+	// Initial spawn does not trigger follow-up behavior for any lair type.
+	if (spawnNumber < 2) {
 		return;
 	}
 
-	// Any spawn wave with the exception of the initial wave causes lair damage
-	int totalAllowedSpawns = Math::min(getDifficultyLevel(), lairTemplate->getSpawnLimit() / 3);
-	int newDamage = (lair->getMaxCondition() / (totalAllowedSpawns * 5));
+	// Only creature lairs self-damage when calling in reinforcements.
+	if (isCreatureLair) {
+		int totalAllowedSpawns = Math::min(getDifficultyLevel(), lairTemplate->getSpawnLimit() / 3);
+		int newDamage = (lair->getMaxCondition() / (totalAllowedSpawns * 5));
 
 #ifdef DEBUG_WILD_LAIRS
-	info(true) << "Wild Lair - Name: " << lair->getDisplayedName() << " ID: " << lair->getObjectID() << " Damaging Self from creature spawn: " << newDamage;
+		info(true) << "Wild Lair - Name: " << lair->getDisplayedName() << " ID: " << lair->getObjectID() << " Damaging Self from creature spawn: " << newDamage;
 #endif // DEBUG_WILD_LAIRS
 
-	lair->inflictDamage(lair, 0, newDamage, true, true, false);
+		lair->inflictDamage(lair, 0, newDamage, true, true, false);
+	}
 
 	// Returning here for no passive spawn, lair is destroyed or we have hit the max passive spawns
 	if (!spawnPassive || lair->isDestroyed() || spawnedCreatures.size() > LairObserver::WILD_LAIR_PASSIVE_MAX) {
