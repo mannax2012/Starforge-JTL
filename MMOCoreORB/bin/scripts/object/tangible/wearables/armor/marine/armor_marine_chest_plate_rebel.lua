@@ -111,9 +111,9 @@ object_tangible_wearables_armor_marine_armor_marine_chest_plate_rebel = object_t
 	maxCondition = 45000,
 
 	-- These are default Blue Frog stats
-	healthEncumbrance = 150,
-	actionEncumbrance = 49,
-	mindEncumbrance = 19,
+	healthEncumbrance = 0,
+	actionEncumbrance = 0,
+	mindEncumbrance = 0,
 
 	-- LIGHT, MEDIUM, HEAVY
 	rating = LIGHT,

@@ -102,7 +102,6 @@ object_tangible_component_armor_shield_generator_personal = object_tangible_comp
 	healthEncumbrance = 0,
 	actionEncumbrance = 0,
 	mindEncumbrance = 0,
-
 	-- LIGHT, MEDIUM, HEAVY
 	rating = LIGHT,
 

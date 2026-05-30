@@ -115,9 +115,9 @@ object_tangible_wearables_armor_marauder_armor_marauder_s01_belt = object_tangib
 	vulnerability = ELECTRICITY + ACID + STUN + LIGHTSABER,
 
 	-- These are default Blue Frog stats
-	healthEncumbrance = 1,
-	actionEncumbrance = 1,
-	mindEncumbrance = 1,
+	healthEncumbrance = 0,
+	actionEncumbrance = 0,
+	mindEncumbrance = 0,
 
 	-- LIGHT, MEDIUM, HEAVY
 	rating = LIGHT,

@@ -146,7 +146,7 @@ object_weapon_melee_special_fan_metal = object_weapon_melee_special_shared_fan_m
 	experimentalGroupTitles = {"null", "null", "expDamage", "expDamage", "expDamage", "expDamage", "exp_durability", "expRange", "expRange", "null", "expRange", "null", "expEffeciency", "expEffeciency", "expEffeciency"},
 	experimentalSubGroupTitles = {"null", "null", "mindamage", "maxdamage", "attackspeed", "woundchance", "hitpoints", "zerorangemod", "maxrangemod", "midrange", "midrangemod", "maxrange", "attackhealthcost", "attackactioncost", "attackmindcost"},
 	experimentalMin = {0, 0, 37, 160, 1, 14, 750, 5, 5, 1, 5, 5, 0, 300, 0},
-  experimentalMax = {0, 0, 190, 200, 1, 26, 1500, 15, 15, 1, 15, 5, 0, 300, 0},
+  experimentalMax = {0, 0, 190, 200, 1, 26, 1500, 15, 15, 1, 15, 5, 0, 330, 0},
 	experimentalPrecision = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 	experimentalCombineType = {0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
 }

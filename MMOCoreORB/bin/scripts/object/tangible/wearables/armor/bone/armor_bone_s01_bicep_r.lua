@@ -107,9 +107,9 @@ object_tangible_wearables_armor_bone_armor_bone_s01_bicep_r = object_tangible_we
 	vulnerability = KINETIC + BLAST + STUN + HEAT + COLD + ACID + LIGHTSABER,
 
 	-- These are default Blue Frog stats
-	healthEncumbrance = 6,
-	actionEncumbrance = 15,
-	mindEncumbrance = 4,
+	healthEncumbrance = 0,
+	actionEncumbrance = 0,
+	mindEncumbrance = 0,
 
 	-- LIGHT, MEDIUM, HEAVY
 	rating = LIGHT,
