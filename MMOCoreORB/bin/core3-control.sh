@@ -22,6 +22,7 @@ CRASH_ROOT="${CORE3_CRASH_ROOT:-${LOG_DIR}/crash}"
 LATEST_CAPTURE_FILE="${CORE3_LATEST_CAPTURE_FILE:-${CRASH_ROOT}/latest_capture.txt}"
 TAIL_LINES="${CORE3_TAIL_LINES:-400}"
 RUN_WAIT_SECONDS="${CORE3_RUN_WAIT_SECONDS:-90}"
+SHUTDOWN_WAIT_SECONDS="${CORE3_SHUTDOWN_WAIT_SECONDS:-180}"
 
 export SCREENDIR="${SCREEN_DIR}"
 
@@ -37,7 +38,7 @@ log() {
 
 fail() {
   log "ERROR: $1"
-  printf 'ERROR\n' >&2
+  printf 'ERROR: %s\n' "$1" >&2
   exit 1
 }
 
@@ -75,6 +76,17 @@ raw_server_running() {
 wait_for_run_state() {
   for _ in $(seq 1 "${RUN_WAIT_SECONDS}"); do
     if [[ "$(gdb_state)" == "running" ]] || raw_server_running; then
+      return 0
+    fi
+    sleep 1
+  done
+
+  return 1
+}
+
+wait_for_shutdown_state() {
+  for _ in $(seq 1 "${SHUTDOWN_WAIT_SECONDS}"); do
+    if ! raw_server_running && [[ "$(gdb_state)" == "stopped" ]]; then
       return 0
     fi
     sleep 1
@@ -136,6 +148,44 @@ ensure_session() {
   sleep 2
 
   session_exists || fail "failed to create screen session ${SCREEN_SESSION}"
+}
+
+require_existing_session() {
+  ensure_paths
+
+  if session_exists; then
+    return 0
+  fi
+
+  local script_name
+  script_name="$(basename "$0")"
+
+  if raw_server_running; then
+    local pids
+    pids="$(raw_server_pids | tr '\n' ' ' | sed 's/[[:space:]]*$//')"
+    fail "managed gdb screen session ${SCREEN_SESSION} is missing while core3 is running unmanaged (pid(s): ${pids}). Start core3 with ${script_name} run if you want crash capture, or stop the unmanaged process first."
+  fi
+
+  local state
+  state="$(gdb_state)"
+  fail "managed gdb screen session ${SCREEN_SESSION} does not exist (gdb_state=${state}). Run ${script_name} run first, then retry capture-crash once gdb is attached to the server."
+}
+
+require_running_managed_session() {
+  require_existing_session
+
+  local state
+  state="$(gdb_state)"
+
+  if [[ "${state}" != "running" ]] && ! raw_server_running; then
+    fail "managed gdb session ${SCREEN_SESSION} is not running a live core3 process (gdb_state=${state}). Use $(basename "$0") run first or attach to inspect gdb."
+  fi
+
+  if [[ "${state}" != "running" ]]; then
+    local pids
+    pids="$(raw_server_pids | tr '\n' ' ' | sed 's/[[:space:]]*$//')"
+    log "shutdown requested with gdb_state=${state} but live core3 pid(s) detected: ${pids}"
+  fi
 }
 
 send_to_gdb() {
@@ -228,7 +278,7 @@ EOF
 }
 
 capture_crash_artifacts() {
-  ensure_session
+  require_existing_session
 
   local capture_dir
   capture_dir="$(current_capture_dir)"
@@ -244,6 +294,34 @@ capture_if_crashed() {
 
   if gdb_prompt_contains_crash; then
     capture_crash_artifacts >/dev/null
+  fi
+}
+
+shutdown_server() {
+  require_running_managed_session
+
+  local shutdown_args="${*:-0}"
+  local screen_snapshot
+  screen_snapshot="$(mktemp)"
+
+  hardcopy_screen "${screen_snapshot}" || true
+
+  if grep -Eq 'received signal SIG|Program received signal' "${screen_snapshot}"; then
+    rm -f "${screen_snapshot}"
+    fail "cannot perform a clean shutdown because gdb is stopped on a crash in session ${SCREEN_SESSION}. Capture the crash first or recover the session before retrying."
+  fi
+
+  rm -f "${screen_snapshot}"
+
+  log "Sending managed shutdown command to core3 via session ${SCREEN_SESSION}: shutdown ${shutdown_args}"
+  send_to_gdb "shutdown ${shutdown_args}"
+
+  if ! wait_for_shutdown_state; then
+    local state
+    local pids
+    state="$(gdb_state)"
+    pids="$(raw_server_pids | tr '\n' ' ' | sed 's/[[:space:]]*$//')"
+    fail "timed out waiting ${SHUTDOWN_WAIT_SECONDS}s for clean shutdown after sending 'shutdown ${shutdown_args}' (session=${SCREEN_SESSION}, gdb_state=${state}, core3_pids=${pids:-none}). Attach to inspect the server console/logs."
   fi
 }
 
@@ -337,6 +415,7 @@ Commands:
   attach           Reattach to the persistent screen session running gdb ./core3.
   status           Show whether the screen session exists and whether gdb is running/stopped.
   capture-crash    Archive the current gdb/log state into a timestamped crash folder.
+  shutdown         Send the in-server console command `shutdown` (default: `shutdown 0`) and wait for a clean save/exit.
   stop             Stop the screen session (interrupting the inferior first if needed).
 EOF
 }
@@ -360,6 +439,11 @@ main() {
       capture_dir="$(capture_crash_artifacts)"
       printf 'capture_dir=%s\n' "${capture_dir}"
       printf 'SUCCESS\n'
+      ;;
+    shutdown)
+      shift || true
+      shutdown_server "$@"
+      status_server
       ;;
     stop)
       stop_server
