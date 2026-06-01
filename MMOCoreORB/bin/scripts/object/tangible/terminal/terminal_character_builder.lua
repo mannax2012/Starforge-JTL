@@ -1614,6 +1614,20 @@ object_tangible_terminal_terminal_character_builder = object_tangible_terminal_s
 						"One-Handed Grips III", "combat_melee_bountyhunter_onehanded_grips_03",
 						"One-Handed Grips IV", "combat_melee_bountyhunter_onehanded_grips_04"
 					},
+					"Two-Handed Grips",
+					{
+						"Two-Handed Grips I", "combat_melee_bountyhunter_twohanded_grips_01",
+						"Two-Handed Grips II", "combat_melee_bountyhunter_twohanded_grips_02",
+						"Two-Handed Grips III", "combat_melee_bountyhunter_twohanded_grips_03",
+						"Two-Handed Grips IV", "combat_melee_bountyhunter_twohanded_grips_04"
+					},
+					"Defensive",
+					{
+						"Defensive I", "combat_melee_bountyhunter_defensive_01",
+						"Defensive II", "combat_melee_bountyhunter_defensive_02",
+						"Defensive III", "combat_melee_bountyhunter_defensive_03",
+						"Defensive IV", "combat_melee_bountyhunter_defensive_04"
+					},
 					"Master", "combat_melee_bountyhunter_master"
 				},
 				"Brawler",
