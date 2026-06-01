@@ -33,11 +33,16 @@ function trainerConvHandler:runScreenHandlers(pConvTemplate, pPlayer, pNpc, sele
 	if (screenID == "intro") then
 		local pConvScreen = screen:cloneScreen()
 		local clonedConversation = LuaConversationScreen(pConvScreen)
+		local trainerDialogType = trainerType
 
 		if (isJediTrainer) then
 			clonedConversation:setDialogTextStringId(stringTable .. "greeting")
 		else
-			clonedConversation:setDialogTextStringId(stringTable .. trainerType)
+			if (trainerType == "trainer_melee_bountyhunter") then
+				trainerDialogType = "trainer_bountyhunter"
+			end
+
+			clonedConversation:setDialogTextStringId(stringTable .. trainerDialogType)
 		end
 
 		clonedConversation:addOption("@skill_teacher:opt1_1", "msg2_1")

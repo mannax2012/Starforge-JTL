@@ -756,6 +756,8 @@ void CommandConfigManager::parseVariableData(String varName, LuaObject &command,
 			jediCommand->setAnimationCRC(Lua::getIntParameter(L));
 		else if (varName == "clientEffect")
 			jediCommand->setClientEffect(Lua::getStringParameter(L));
+		else if (varName == "clientEffectLabel")
+			jediCommand->setClientEffectLabel(Lua::getStringParameter(L));
 		else if (varName == "speedMod")
 			jediCommand->setSpeedMod(Lua::getFloatParameter(L));
 		else if (varName == "frsLightForceCostModifier")

@@ -43,6 +43,7 @@
 
 
 --Children folder includes
+includeFile("tangible/item/bounty_hunter/serverobjects.lua")
 includeFile("tangible/item/new_player/serverobjects.lua")
 includeFile("tangible/item/plant/serverobjects.lua")
 includeFile("tangible/item/quest/serverobjects.lua")

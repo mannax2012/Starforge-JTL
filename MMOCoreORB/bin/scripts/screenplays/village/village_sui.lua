@@ -22,12 +22,72 @@ function VillageSui:showMainPage(pPlayer)
 	end
 
 	suiPrompt = suiPrompt .. " \\#pcontrast1 Phase Time Left: \\#pcontrast2 " .. phaseTimeLeft
+	suiPrompt = self:appendVillageStageTimers(pPlayer, suiPrompt)
 
 	local sui = SuiListBox.new("VillageGmSui", "mainCallback")
 	sui.setTitle("Starforge Village Time")
 	sui.setPrompt(suiPrompt)
 
 	sui.sendTo(pPlayer)
+end
+
+function VillageSui:appendVillageStageTimers(pPlayer, suiPrompt)
+	if (FsIntro ~= nil and FsIntro:isOnIntro(pPlayer)) then
+		local curStep = FsIntro:getCurrentStep(pPlayer)
+
+		suiPrompt = suiPrompt .. "\n \\#pcontrast1 Village Progression: \\#pcontrast2 Intro"
+
+		if (curStep == FsIntro.OLDMANWAIT) then
+			suiPrompt = suiPrompt .. "\n \\#pcontrast1 Old Man Intro: \\#pcontrast2 " .. self:getDelayTimerString(readScreenPlayData(pPlayer, "VillageJediProgression", "FsIntroDelay"))
+			suiPrompt = suiPrompt .. "\n \\#pcontrast1 Sith Attack: \\#pcontrast2 Locked until Old Man intro completes"
+		elseif (curStep == FsIntro.OLDMANMEET) then
+			suiPrompt = suiPrompt .. "\n \\#pcontrast1 Old Man Intro: \\#pcontrast2 Active"
+			suiPrompt = suiPrompt .. "\n \\#pcontrast1 Sith Attack: \\#pcontrast2 Locked until Old Man intro completes"
+		elseif (curStep == FsIntro.SITHWAIT) then
+			suiPrompt = suiPrompt .. "\n \\#pcontrast1 Old Man Intro: \\#pcontrast2 Completed"
+			suiPrompt = suiPrompt .. "\n \\#pcontrast1 Sith Attack: \\#pcontrast2 " .. self:getDelayTimerString(readScreenPlayData(pPlayer, "VillageJediProgression", "FsIntroDelay"))
+		elseif (curStep == FsIntro.SITHATTACK) then
+			suiPrompt = suiPrompt .. "\n \\#pcontrast1 Old Man Intro: \\#pcontrast2 Completed"
+			suiPrompt = suiPrompt .. "\n \\#pcontrast1 Sith Attack: \\#pcontrast2 Active"
+		else
+			suiPrompt = suiPrompt .. "\n \\#pcontrast1 Old Man Intro: \\#pcontrast2 Completed"
+			suiPrompt = suiPrompt .. "\n \\#pcontrast1 Sith Attack: \\#pcontrast2 Completed"
+		end
+	elseif (FsOutro ~= nil and FsOutro:isOnOutro(pPlayer)) then
+		local curStep = FsOutro:getCurrentStep(pPlayer)
+
+		suiPrompt = suiPrompt .. "\n \\#pcontrast1 Village Progression: \\#pcontrast2 Outro"
+
+		if (curStep == FsOutro.OLDMANWAIT) then
+			suiPrompt = suiPrompt .. "\n \\#pcontrast1 Old Man Outro: \\#pcontrast2 " .. self:getDelayTimerString(readScreenPlayData(pPlayer, "VillageJediProgression", "FsOutroDelay"))
+		elseif (curStep == FsOutro.OLDMANMEET) then
+			suiPrompt = suiPrompt .. "\n \\#pcontrast1 Old Man Outro: \\#pcontrast2 Active"
+		else
+			suiPrompt = suiPrompt .. "\n \\#pcontrast1 Old Man Outro: \\#pcontrast2 Completed"
+		end
+	end
+
+	return suiPrompt
+end
+
+function VillageSui:getDelayTimerString(delayTimestamp)
+	if (delayTimestamp == nil or delayTimestamp == "") then
+		return "unknown"
+	end
+
+	local delayValue = tonumber(delayTimestamp)
+
+	if (delayValue == nil) then
+		return "unknown"
+	end
+
+	local timeLeft = delayValue - os.time()
+
+	if (timeLeft <= 0) then
+		return "Soon"
+	end
+
+	return self:getTimeString(timeLeft * 1000)
 end
 
 function VillageSui:getPhaseDuration()

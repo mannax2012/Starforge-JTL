@@ -13,6 +13,7 @@
 #include "server/zone/packets/object/DataTransform.h"
 #include "server/zone/packets/object/DataTransformWithParent.h"
 #include "server/zone/packets/object/PlayClientEffectObjectMessage.h"
+#include "server/zone/packets/object/StopClientEffectObjectByLabelMessage.h"
 #include "server/zone/managers/planet/PlanetManager.h"
 #include "server/zone/managers/components/ComponentManager.h"
 #include "templates/manager/TemplateManager.h"
@@ -1264,6 +1265,8 @@ void SceneObjectImplementation::closeContainerTo(CreatureObject* player, bool no
 }
 
 SceneObject* SceneObjectImplementation::getRootParent() {
+	constexpr int kMaxRootParentDepth = 100;
+
 	if (savedRootParent != nullptr) {
 		return savedRootParent;
 	}
@@ -1279,7 +1282,16 @@ SceneObject* SceneObjectImplementation::getRootParent() {
 	parents.setNoDuplicateInsertPlan();
 #endif
 
+	int depth = 0;
+
 	while ((tempParent = grandParent->getParent().get()) != nullptr && grandParent != asSceneObject()) {
+		if (tempParent == grandParent || tempParent == asSceneObject()) {
+			const String templateName = templateObject == nullptr ? String("unknown") : templateObject->getFullTemplateString();
+			error() << "getRootParent detected an invalid parent chain for object "
+				<< getObjectID() << " template " << templateName;
+			return nullptr;
+		}
+
 		grandParent = tempParent;
 
 #ifdef DEBUG_GETROOT_PARENT
@@ -1288,6 +1300,13 @@ SceneObject* SceneObjectImplementation::getRootParent() {
 		else
 			parents.put(grandParent);
 #endif
+
+		if (++depth >= kMaxRootParentDepth) {
+			const String templateName = templateObject == nullptr ? String("unknown") : templateObject->getFullTemplateString();
+			error() << "getRootParent exceeded max depth for object "
+				<< getObjectID() << " template " << templateName;
+			return nullptr;
+		}
 	}
 
 	if (grandParent == asSceneObject())
@@ -2178,6 +2197,15 @@ float SceneObjectImplementation::getTemplateRadius() {
 
 void SceneObjectImplementation::playEffect(const String& file, const String& aux) {
 	PlayClientEffectObjectMessage* effect = new PlayClientEffectObjectMessage(asSceneObject(), file, aux);
+
+	broadcastMessage(effect, true);
+}
+
+void SceneObjectImplementation::stopEffect(const String& label) {
+	if (label.isEmpty())
+		return;
+
+	StopClientEffectObjectByLabelMessage* effect = new StopClientEffectObjectByLabelMessage(asSceneObject(), label);
 
 	broadcastMessage(effect, true);
 }

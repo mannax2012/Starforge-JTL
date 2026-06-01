@@ -15,6 +15,18 @@
 #include "server/zone/objects/player/PlayerObject.h"
 #include "server/zone/objects/mission/bountyhunter/BountyHunterDroid.h"
 
+namespace {
+bool hasBountyHunterInvestigationSkill(CreatureObject* player, int tier) {
+	if (player == nullptr)
+		return false;
+
+	String skillSuffix = String::valueOf(tier);
+
+	return player->hasSkill("combat_bountyhunter_investigation_0" + skillSuffix) ||
+			player->hasSkill("combat_melee_bountyhunter_investigation_0" + skillSuffix);
+}
+}
+
 void BountyHunterDroidMenuComponent::fillObjectMenuResponse(SceneObject* droidObject, ObjectMenuResponse* menuResponse, CreatureObject* player) const {
 	if (droidObject == nullptr || !droidObject->isTangibleObject() || player == nullptr) {
 		return;
@@ -73,11 +85,11 @@ int BountyHunterDroidMenuComponent::handleObjectMenuSelect(SceneObject* droidObj
 }
 
 bool BountyHunterDroidMenuComponent::playerCanUseTrack(CreatureObject* player) const {
-	return player->hasSkill("combat_bountyhunter_investigation_03");
+	return hasBountyHunterInvestigationSkill(player, 3);
 }
 
 bool BountyHunterDroidMenuComponent::playerCanUseDroids(CreatureObject* player) const {
-	return player->hasSkill("combat_bountyhunter_investigation_01");
+	return hasBountyHunterInvestigationSkill(player, 1);
 }
 
 bool BountyHunterDroidMenuComponent::isProbeDroid(SceneObject* droidObject) const {

@@ -24,6 +24,7 @@ protected:
 	int duration;
 	uint32 animationCRC;
 	String clientEffect;
+	String clientEffectLabel;
 	float speedMod;
 	int visMod;
 	int buffClass;
@@ -50,6 +51,7 @@ public:
 		duration = 0;
 		animationCRC = 0;
 		clientEffect = "";
+		clientEffectLabel = "";
 		buffClass = BASE_BUFF;
 		speedMod = 0;
 		visMod = 10;
@@ -105,7 +107,7 @@ public:
 
 		// Client Effect.
 		if (!clientEffect.isEmpty()) {
-			creature->playEffect(clientEffect, "");
+			creature->playEffect(clientEffect, clientEffectLabel);
 		}
 
 		// Return.
@@ -306,6 +308,10 @@ public:
 
 	void setClientEffect(String ce) {
 		clientEffect = ce;
+	}
+
+	void setClientEffectLabel(String label) {
+		clientEffectLabel = label;
 	}
 
 	void setSpeedMod(float sm) {

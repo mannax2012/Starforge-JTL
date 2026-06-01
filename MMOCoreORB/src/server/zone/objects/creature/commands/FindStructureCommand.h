@@ -62,11 +62,21 @@ public:
 		StringIdManager* sidman = StringIdManager::instance();
 
 		for (int i = 0; i < ghost->getTotalOwnedStructureCount(); i++) {
-			ManagedReference<StructureObject*> structure = creature->getZoneServer()->getObject(ghost->getOwnedStructure(i)).castTo<StructureObject*>();
+			uint64 structureID = ghost->getOwnedStructure(i);
+			ManagedReference<StructureObject*> structure = creature->getZoneServer()->getObject(structureID).castTo<StructureObject*>();
 
 			StringBuffer temp;
 
 			count++; // Also count null
+
+			if (structure == nullptr) {
+				temp << "\\#ffffff" << count << ") \\#ff6666Unavailable structure entry" << endl;
+				temp << "\t\\#ffffffObject ID:\t\t" << String::valueOf(structureID) << endl;
+				temp << "\t\\#ffffffStatus:\t\t\tMissing from object broker" << endl;
+
+				buildings << temp.toString();
+				continue;
+			}
 
 			String buildingType = "";
 			String buildingName = structure->getCustomObjectName().toString();

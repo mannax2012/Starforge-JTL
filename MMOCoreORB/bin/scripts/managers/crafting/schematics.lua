@@ -43,6 +43,10 @@
 
 schematics = {
 
+	--Bounty Hunting items
+	{path="object/draft_schematic/item/bounty_hunter/item_bh_plasma_battery.iff"},
+	{path="object/draft_schematic/item/bounty_hunter/item_bh_shock_dart.iff"},
+
 	--Structures
 	{path="object/draft_schematic/structure/installation_mining_organic_creature.iff"},
 	{path="object/draft_schematic/structure/installation_mining_organic_creature_heavy.iff"},

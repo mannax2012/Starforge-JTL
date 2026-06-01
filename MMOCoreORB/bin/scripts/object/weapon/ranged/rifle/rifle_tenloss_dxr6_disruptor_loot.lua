@@ -151,8 +151,8 @@ object_weapon_ranged_rifle_rifle_tenloss_dxr6_disruptor_loot = object_weapon_ran
 	experimentalWeights = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
 	experimentalGroupTitles = {"null", "null", "expDamage", "expDamage", "expDamage", "expDamage", "expEffeciency", "exp_durability", "null", "null", "null", "expRange", "expEffeciency", "expEffeciency", "expEffeciency"},
 	experimentalSubGroupTitles = {"null", "null", "mindamage", "maxdamage", "attackspeed", "woundchance", "roundsused", "hitpoints", "zerorangemod", "maxrangemod", "midrange", "midrangemod", "attackhealthcost", "attackactioncost", "attackmindcost"},
-	experimentalMin = {0, 0, 40, 80, 9.5, 10, 30, 500, -40, 30, 54, 45, 0, 280, 0},
-	experimentalMax = {0, 0, 150, 340, 4.9, 45, 65, 1250, -80, 10, 54, 0, 18, 350, 0},
+	experimentalMin = {0, 0, 40, 80, 9.5, 10, 30, 500, -40, 30, 54, 45, 0, 300, 0},
+	experimentalMax = {0, 0, 150, 340, 4.9, 45, 65, 1250, -80, 10, 54, 0, 0, 330, 0},
 	experimentalPrecision = {0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 	experimentalCombineType = {0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
 }

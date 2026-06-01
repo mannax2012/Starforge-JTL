@@ -103,9 +103,9 @@ object_tangible_wearables_armor_chitin_armor_chitin_s01_boots = object_tangible_
 	vulnerability = STUN + HEAT + COLD + ELECTRICITY + LIGHTSABER,
 
 	-- These are default Blue Frog stats
-	healthEncumbrance = 13,
-	actionEncumbrance = 25,
-	mindEncumbrance = 16,
+	healthEncumbrance = 0,
+	actionEncumbrance = 0,
+	mindEncumbrance = 0,
 
 	-- LIGHT, MEDIUM, HEAVY
 	rating = LIGHT,

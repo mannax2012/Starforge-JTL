@@ -639,14 +639,26 @@ void PlayerObjectImplementation::notifySceneReady() {
 		}
 	}
 
-		// Infinity:  Let's make Discord Chat Bot Join the Bot Channel (Thanks MrObvious!)
-	if (creature->getFirstName().toLowerCase() == "holo-net") {
-    	ManagedReference<ChatRoom*> holonetRoom = chatManager->getHolonetRoom();
+	// Ensure service bots refresh their chat registration and service rooms after reconnecting.
+	String botName = creature->getFirstName().toLowerCase();
+	if (botName == "holo-net" || botName == "starforge-ent") {
+		chatManager->removePlayer(botName);
+		chatManager->addPlayer(creature);
+
+		if (botName == "starforge-ent") {
+			ManagedReference<ChatRoom*> auctionRoom = chatManager->getAuctionRoom();
+			if (auctionRoom != nullptr) {
+				auctionRoom->sendTo(creature);
+				chatManager->handleChatEnterRoomById(creature, auctionRoom->getRoomID(), -1, true);
+			}
+		}
+
+		ManagedReference<ChatRoom*> holonetRoom = chatManager->getHolonetRoom();
 		if (holonetRoom != nullptr) {
-        	holonetRoom->sendTo(creature);
-            chatManager->handleChatEnterRoomById(creature, holonetRoom->getRoomID(), -1, true);
-        }
-    }
+			holonetRoom->sendTo(creature);
+			chatManager->handleChatEnterRoomById(creature, holonetRoom->getRoomID(), -1, true);
+		}
+	}
 
 	// Show Terms of Service window
 	checkAndShowTOS();

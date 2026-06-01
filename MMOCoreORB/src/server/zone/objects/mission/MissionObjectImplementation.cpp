@@ -382,6 +382,8 @@ String MissionObjectImplementation::getTypeAsString() const {
 	// clang-format off
 	switch (typeCRC) {
 		case MissionTypes::BOUNTY:          return "bounty";
+		case MissionTypes::BOUNTY_NPC:      return "npc_bounty";
+		case MissionTypes::BOUNTY_PLAYER:   return "player_bounty";
 		case MissionTypes::CRAFTING:        return "crafting";
 		case MissionTypes::DANCER:          return "dancer";
 		case MissionTypes::DELIVER:         return "deliver";

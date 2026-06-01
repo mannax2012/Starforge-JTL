@@ -1,5 +1,60 @@
 SkillTrainer = ScreenPlay:new {}
 
+function SkillTrainer:getTrainerSkills(trainerType)
+	if (trainerType == "trainer_melee_bountyhunter") then
+		return self:getMeleeBountyHunterTrainerSkills()
+	end
+
+	return trainerSkills[trainerType]
+end
+
+function SkillTrainer:getMeleeBountyHunterTrainerSkills()
+	local skillManager = LuaSkillManager()
+	local skills = {}
+	local candidateSkills = {
+		"combat_melee_bountyhunter_novice",
+		"combat_melee_bountyhunter_master",
+		"combat_melee_bountyhunter_investigation_01",
+		"combat_melee_bountyhunter_investigation_02",
+		"combat_melee_bountyhunter_investigation_03",
+		"combat_melee_bountyhunter_investigation_04",
+		"combat_melee_bountyhunter_onehanded_grips_01",
+		"combat_melee_bountyhunter_onehanded_grips_02",
+		"combat_melee_bountyhunter_onehanded_grips_03",
+		"combat_melee_bountyhunter_onehanded_grips_04",
+		"combat_melee_bountyhunter_unarmed_01",
+		"combat_melee_bountyhunter_unarmed_02",
+		"combat_melee_bountyhunter_unarmed_03",
+		"combat_melee_bountyhunter_unarmed_04",
+		"combat_melee_bountyhunter_polearm_01",
+		"combat_melee_bountyhunter_polearm_02",
+		"combat_melee_bountyhunter_polearm_03",
+		"combat_melee_bountyhunter_polearm_04",
+		"combat_melee_bountyhunter_support_01",
+		"combat_melee_bountyhunter_support_02",
+		"combat_melee_bountyhunter_support_03",
+		"combat_melee_bountyhunter_support_04",
+		"combat_melee_bountyhunter_droidcontrol_01",
+		"combat_melee_bountyhunter_droidcontrol_02",
+		"combat_melee_bountyhunter_droidcontrol_03",
+		"combat_melee_bountyhunter_droidcontrol_04",
+		"combat_melee_bountyhunter_droidresponse_01",
+		"combat_melee_bountyhunter_droidresponse_02",
+		"combat_melee_bountyhunter_droidresponse_03",
+		"combat_melee_bountyhunter_droidresponse_04"
+	}
+
+	for i = 1, #candidateSkills, 1 do
+		local skillName = candidateSkills[i]
+
+		if (skillManager:getSkill(skillName) ~= nil) then
+			table.insert(skills, skillName)
+		end
+	end
+
+	return skills
+end
+
 function SkillTrainer:getTrainerType(pPlayer, pNpc, pConvTemplate)
 	local pGhost = CreatureObject(pPlayer):getPlayerObject()
 	local isJediTrainer = false
@@ -17,7 +72,7 @@ end
 
 function SkillTrainer:getTeachableSkills(pPlayer, trainerType, qualifiedOnly)
 	local teachableSkills = { }
-	local skills = trainerSkills[trainerType]
+	local skills = self:getTrainerSkills(trainerType)
 
 	if (skills == nil or #skills == 0) then
 		return teachableSkills
@@ -118,7 +173,7 @@ function SkillTrainer:noCallback(pPlayer, pSui, eventIndex, ...)
 end
 
 function SkillTrainer:hasSurpassedTrainer(pPlayer, trainerType)
-	local skills = trainerSkills[trainerType]
+	local skills = self:getTrainerSkills(trainerType)
 
 	if (skills == nil or #skills == 0) then
 		return true
@@ -150,7 +205,7 @@ function SkillTrainer:hasAllPrereqSkills(pPlayer, trainerType)
 end
 
 function SkillTrainer:getPrerequisiteTrainerSkills(trainerType)
-	local skills = trainerSkills[trainerType]
+	local skills = self:getTrainerSkills(trainerType)
 	local noviceSkill = skills[1] -- Novice line
 
 	if (noviceSkill == nil or noviceSkill == "") then

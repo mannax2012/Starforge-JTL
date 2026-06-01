@@ -45,7 +45,7 @@ function StarforgeNewPlayerTerminals:start()
 	local isStarforge = galaxyName == STARFORGE_GALAXY_NAME
 
 	for _, location in ipairs(TERMINAL_LOCATIONS) do
-		if isZoneEnabled(location.zone) and (isStarforge or not location.isMosEisley) then
+		if isZoneEnabled(location.zone) then
 			self:spawnTerminal(location, isStarforge and NEW_PLAYER_TEMPLATE or CHARACTER_BUILDER_TEMPLATE)
 		end
 	end
