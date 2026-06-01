@@ -89,9 +89,23 @@
 #endif // WITH_SWGREALMS_API
 
 namespace {
-	bool resolvePlayerSafeZone(ZoneServer* zoneServer, PlayerObject* ghost, Zone*& zone, float& x, float& z, float& y) {
-		if (zoneServer == nullptr || ghost == nullptr) {
-			return false;
+		String getDebugTemplateName(SceneObject* object) {
+			if (object == nullptr) {
+				return "null-object";
+			}
+
+			auto objectTemplate = object->getObjectTemplate();
+
+			if (objectTemplate == nullptr) {
+				return "unknown-template";
+			}
+
+			return objectTemplate->getFullTemplateString();
+		}
+
+		bool resolvePlayerSafeZone(ZoneServer* zoneServer, PlayerObject* ghost, Zone*& zone, float& x, float& z, float& y) {
+			if (zoneServer == nullptr || ghost == nullptr) {
+				return false;
 		}
 
 		auto assignZonePosition = [&](const String& zoneName, float posX, float posY) {
@@ -2682,12 +2696,50 @@ void PlayerObjectImplementation::reload(ZoneClientSession* client) {
 
 	creature->setMovementCounter(0);
 
-	if (creature->isRidingMount() && creature->getParent() == nullptr) {
+	auto mountedParent = creature->getParent().get();
+	auto transferZone = creature->getLocalZone();
+
+	if (creature->isRidingMount() && mountedParent == nullptr) {
 		creature->clearState(CreatureState::RIDINGMOUNT);
 		savedParentID = 0;
+	} else if (mountedParent != nullptr && mountedParent->isVehicleObject()) {
+		if (!creature->isRidingMount() || creature->getLocalZone() == nullptr || mountedParent->getParentID() != 0 || mountedParent->getLocalZone() == nullptr) {
+			error() << "PlayerObjectImplementation::reload mounted vehicle state -- playerOID=" << creature->getObjectID()
+				<< " playerName=" << creature->getDisplayedName()
+				<< " playerTemplate=" << getDebugTemplateName(creature)
+				<< " riding=" << creature->isRidingMount()
+				<< " playerParentID=" << creature->getParentID()
+				<< " vehicleOID=" << mountedParent->getObjectID()
+				<< " vehicleName=" << mountedParent->getDisplayedName()
+				<< " vehicleTemplate=" << getDebugTemplateName(mountedParent)
+				<< " vehicleParentID=" << mountedParent->getParentID()
+				<< " playerLocalZone=" << creature->getLocalZone()
+				<< " vehicleLocalZone=" << mountedParent->getLocalZone();
+
+			// Recover by detaching from a persisted vehicle parent before reconnect transfer walks a stale chain.
+			Vector3 cachedWorldPosition = creature->getWorldPosition();
+			auto vehicle = mountedParent->asCreatureObject();
+
+			if (vehicle != nullptr) {
+				vehicle->clearState(CreatureState::MOUNTEDCREATURE);
+			}
+
+			creature->clearState(CreatureState::RIDINGMOUNT);
+			creature->setParent(nullptr);
+			creature->setPosition(cachedWorldPosition.getX(), cachedWorldPosition.getZ(), cachedWorldPosition.getY());
+
+			updateLastValidatedPosition();
+			setSavedParentID(0);
+			mountedParent = nullptr;
+			transferZone = creature->getLocalZone();
+		}
 	}
 
-	Zone* zone = creature->getZone();
+	if (transferZone == nullptr && mountedParent != nullptr) {
+		transferZone = mountedParent->getLocalZone();
+	}
+
+	Zone* zone = transferZone;
 
 	if (zone == nullptr) {
 		auto zoneServer = creature->getZoneServer();
