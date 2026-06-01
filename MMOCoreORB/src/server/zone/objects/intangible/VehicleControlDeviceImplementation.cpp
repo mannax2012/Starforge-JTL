@@ -20,6 +20,84 @@
 #include "server/zone/objects/player/PlayerObject.h"
 
 namespace {
+String getDebugTemplateName(SceneObject* object) {
+	if (object == nullptr) {
+		return "null-object";
+	}
+
+	auto objectTemplate = object->getObjectTemplate();
+
+	if (objectTemplate == nullptr) {
+		return "unknown-template";
+	}
+
+	return objectTemplate->getFullTemplateString();
+}
+
+String getDebugDisplayName(SceneObject* object) {
+	if (object == nullptr) {
+		return "null-object";
+	}
+
+	if (object->isCreatureObject()) {
+		auto creature = object->asCreatureObject();
+
+		if (creature != nullptr) {
+			return creature->getDisplayedName();
+		}
+	}
+
+	return getDebugTemplateName(object);
+}
+
+void detachVehicleRider(VehicleObject* vehicle, bool notifyClient) {
+	if (vehicle == nullptr) {
+		return;
+	}
+
+	ManagedReference<CreatureObject*> rider = vehicle->getLinkedCreature().get();
+
+	if (rider == nullptr) {
+		return;
+	}
+
+	Locker riderLocker(rider, vehicle);
+
+	if (rider->getParent().get() != vehicle && !rider->isRidingMount()) {
+		return;
+	}
+
+	Vector3 cachedWorldPosition = rider->getWorldPosition();
+	vehicle->error() << "VehicleControlDeviceImplementation::detachVehicleRider -- riderOID=" << rider->getObjectID()
+		<< " riderName=" << getDebugDisplayName(rider)
+		<< " riderTemplate=" << getDebugTemplateName(rider)
+		<< " vehicleOID=" << vehicle->getObjectID()
+		<< " vehicleName=" << getDebugDisplayName(vehicle)
+		<< " vehicleTemplate=" << getDebugTemplateName(vehicle)
+		<< " riderParentID=" << rider->getParentID()
+		<< " vehicleParentID=" << vehicle->getParentID();
+
+	if (vehicle->hasState(CreatureState::MOUNTEDCREATURE)) {
+		vehicle->clearState(CreatureState::MOUNTEDCREATURE, notifyClient);
+	}
+
+	if (rider->isRidingMount()) {
+		rider->clearState(CreatureState::RIDINGMOUNT, notifyClient);
+	}
+
+	if (rider->getParent().get() == vehicle) {
+		rider->setParent(nullptr);
+	}
+
+	rider->setPosition(cachedWorldPosition.getX(), cachedWorldPosition.getZ(), cachedWorldPosition.getY());
+
+	auto ghost = rider->getPlayerObject();
+
+	if (ghost != nullptr) {
+		ghost->setSavedParentID(0);
+	}
+}
+
 bool reconcileVehicleState(VehicleControlDevice* device, CreatureObject* owner, bool notifyClient) {
 	if (device == nullptr)
 		return false;
@@ -40,6 +118,20 @@ bool reconcileVehicleState(VehicleControlDevice* device, CreatureObject* owner, 
 
 		if (vehicle->getControlDevice() != device) {
 			vehicle->setControlDevice(device);
+		}
+
+		if (!vehicle->isInQuadTree() && device->getStatus() != 0) {
+			device->error() << "VehicleControlDeviceImplementation::reconcileVehicleState recovering persisted vehicle -- deviceOID=" << device->getObjectID()
+				<< " deviceTemplate=" << getDebugTemplateName(device)
+				<< " ownerOID=" << (owner != nullptr ? owner->getObjectID() : 0)
+				<< " ownerName=" << (owner != nullptr ? owner->getDisplayedName() : String("null-owner"))
+				<< " vehicleOID=" << vehicle->getObjectID()
+				<< " vehicleName=" << getDebugDisplayName(vehicle)
+				<< " vehicleTemplate=" << getDebugTemplateName(vehicle)
+				<< " vehicleParentID=" << vehicle->getParentID();
+			// Recovery may encounter a persisted vehicle that still has a rider attached.
+			// Detach the rider before the vehicle is removed from world state.
+			detachVehicleRider(vehicle, notifyClient);
 		}
 	}
 
