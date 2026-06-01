@@ -23,6 +23,7 @@ LATEST_CAPTURE_FILE="${CORE3_LATEST_CAPTURE_FILE:-${CRASH_ROOT}/latest_capture.t
 TAIL_LINES="${CORE3_TAIL_LINES:-400}"
 RUN_WAIT_SECONDS="${CORE3_RUN_WAIT_SECONDS:-90}"
 SHUTDOWN_WAIT_SECONDS="${CORE3_SHUTDOWN_WAIT_SECONDS:-180}"
+RUN_ARGUMENTS="${CORE3_RUN_ARGUMENTS:-reloadstrings}"
 
 export SCREENDIR="${SCREEN_DIR}"
 
@@ -193,6 +194,18 @@ send_to_gdb() {
   screen -S "${SCREEN_SESSION}" -p 0 -X stuff "${command}"$'\r'
 }
 
+configure_gdb_run_args() {
+  if [[ -n "${RUN_ARGUMENTS}" ]]; then
+    log "Configuring gdb inferior args: ${RUN_ARGUMENTS}"
+    send_to_gdb "set args ${RUN_ARGUMENTS}"
+  else
+    log "Clearing gdb inferior args"
+    send_to_gdb "set args"
+  fi
+
+  sleep 1
+}
+
 hardcopy_screen() {
   local target="$1"
   screen -S "${SCREEN_SESSION}" -p 0 -X hardcopy -h "${target}"
@@ -338,6 +351,8 @@ run_server() {
 
   capture_if_crashed
 
+  configure_gdb_run_args
+
   log "Sending run to gdb session ${SCREEN_SESSION}"
   send_to_gdb 'run'
 
@@ -367,6 +382,8 @@ status_server() {
   if [[ -f "${LATEST_CAPTURE_FILE}" ]]; then
     printf 'latest_capture=%s\n' "$(<"${LATEST_CAPTURE_FILE}")"
   fi
+
+  printf 'run_args=%s\n' "${RUN_ARGUMENTS}"
 }
 
 attach_session() {
