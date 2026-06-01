@@ -13,6 +13,16 @@ Distribution of this file for usage outside of Core3 is prohibited.
 //#define DEBUG_TREE_ENTRY
 // #define DEBUG_WORLD_POSITION
 
+namespace {
+	constexpr int kMaxRootParentDepth = 100;
+
+	void logBrokenRootParentChain(uint64 objectID, const char* functionName) {
+		StringBuffer msg;
+		msg << functionName << " detected an invalid parent chain for TreeEntry " << objectID;
+		Logger::console.error(msg.toString());
+	}
+}
+
 TreeEntryImplementation::TreeEntryImplementation(TreeNode* n) {
 	node = n;
 	bounding = false;
@@ -326,14 +336,28 @@ uint64 TreeEntryImplementation::getObjectID() {
 }
 
 TreeEntry* TreeEntryImplementation::getRootParent() {
+	TreeEntry* self = _this.getReferenceUnsafeStaticCast();
 	ManagedReference<TreeEntry*> grandParent = getParent();
 	ManagedReference<TreeEntry*> tempParent = nullptr;
 
 	if (grandParent == nullptr)
 		return nullptr;
 
-	while ((tempParent = grandParent->getParent()) != nullptr)
+	int depth = 0;
+
+	while ((tempParent = grandParent->getParent()) != nullptr) {
+		if (grandParent == self || tempParent == grandParent || tempParent == self) {
+			logBrokenRootParentChain(getObjectID(), __FUNCTION__);
+			return nullptr;
+		}
+
 		grandParent = tempParent;
+
+		if (++depth >= kMaxRootParentDepth) {
+			logBrokenRootParentChain(getObjectID(), __FUNCTION__);
+			return nullptr;
+		}
+	}
 
 	return grandParent;
 }
@@ -343,6 +367,7 @@ TreeEntry* TreeEntryImplementation::getParentUnsafe() {
 }
 
 TreeEntry* TreeEntryImplementation::getRootParentUnsafe() {
+	TreeEntry* self = _this.getReferenceUnsafeStaticCast();
 	TreeEntry* parent = this->parent.getReferenceUnsafe();
 
 	if (parent == nullptr)
@@ -350,9 +375,21 @@ TreeEntry* TreeEntryImplementation::getRootParentUnsafe() {
 
 	TreeEntry* grandParent = parent;
 	TreeEntry* temp = nullptr;
+	int depth = 0;
 
-	while ((temp = grandParent->getParentUnsafe()) != nullptr)
+	while ((temp = grandParent->getParentUnsafe()) != nullptr) {
+		if (grandParent == self || temp == grandParent || temp == self) {
+			logBrokenRootParentChain(getObjectID(), __FUNCTION__);
+			return nullptr;
+		}
+
 		grandParent = temp;
+
+		if (++depth >= kMaxRootParentDepth) {
+			logBrokenRootParentChain(getObjectID(), __FUNCTION__);
+			return nullptr;
+		}
+	}
 
 	return grandParent;
 }
@@ -471,4 +508,3 @@ float TreeEntryImplementation::getWorldPositionY() const {
 float TreeEntryImplementation::getWorldPositionZ() const {
 	return worldCoordinates.getPositionZ();
 }
-
