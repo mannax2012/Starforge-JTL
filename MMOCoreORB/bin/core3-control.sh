@@ -4,16 +4,18 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+CALLER_DIR="${CORE3_CALLER_DIR:-$(pwd -P)}"
 BIN_DIR="${CORE3_BIN_DIR:-${REPO_ROOT}/bin}"
 SERVER_BIN="${CORE3_SERVER_BIN:-${BIN_DIR}/core3}"
-LOG_DIR="${CORE3_LOG_DIR:-${BIN_DIR}/log}"
+LOG_DIR="${CORE3_LOG_DIR:-${CALLER_DIR}/log}"
 SCREEN_DIR="${CORE3_SCREEN_DIR:-${LOG_DIR}/screen}"
 CONTROL_LOG="${CORE3_CONTROL_LOG:-${LOG_DIR}/core3-control.log}"
-CORE3_LOG="${CORE3_SERVER_LOG:-${LOG_DIR}/core3.log}"
+CORE3_LOG="${CORE3_SERVER_LOG:-${BIN_DIR}/log/core3.log}"
 GDB_SCREEN_LOG="${CORE3_GDB_SCREEN_LOG:-${LOG_DIR}/gdb-screen.log}"
 GDB_STATE_FILE="${CORE3_GDB_STATE_FILE:-${LOG_DIR}/gdb-state.txt}"
-GDB_LIVE_CRASH_FILE="${CORE3_GDB_LIVE_CRASH_FILE:-${BIN_DIR}/gdb-crash.txt}"
+GDB_LIVE_CRASH_FILE="${CORE3_GDB_LIVE_CRASH_FILE:-${LOG_DIR}/gdb-crash.txt}"
 GDB_INIT_FILE="${CORE3_GDB_INIT_FILE:-${BIN_DIR}/gdb-session.gdb}"
+GDB_CRASH_SCRIPT="${CORE3_GDB_CRASH_SCRIPT:-${REPO_ROOT}/gdb-crash.gdb}"
 SCREEN_SESSION="${CORE3_SCREEN_SESSION:-core3-gdb}"
 RAW_PROCESS_NAME="${CORE3_RAW_PROCESS_NAME:-core3}"
 CRASH_ROOT="${CORE3_CRASH_ROOT:-${LOG_DIR}/crash}"
@@ -113,6 +115,7 @@ ensure_session() {
   require_tool gdb
   require_file "${SERVER_BIN}" "core3 binary"
   require_file "${GDB_INIT_FILE}" "gdb session init file"
+  require_file "${GDB_CRASH_SCRIPT}" "gdb crash macro file"
 
   ensure_paths
 
@@ -128,7 +131,7 @@ ensure_session() {
   : >"${GDB_SCREEN_LOG}"
 
   log "Creating screen session ${SCREEN_SESSION}"
-  screen -dmS "${SCREEN_SESSION}" -L -Logfile "${GDB_SCREEN_LOG}" bash -c "cd '${BIN_DIR}' && exec gdb -q -x '${GDB_INIT_FILE}' '${SERVER_BIN}'"
+  screen -dmS "${SCREEN_SESSION}" -L -Logfile "${GDB_SCREEN_LOG}" bash -c "cd '${BIN_DIR}' && export CORE3_GDB_STATE_FILE='${GDB_STATE_FILE}' && exec gdb -q -x '${GDB_INIT_FILE}' '${SERVER_BIN}'"
 
   sleep 2
 
@@ -208,9 +211,9 @@ EOF
 
   rm -f "${GDB_LIVE_CRASH_FILE}" "${target_file}"
 
-  send_to_gdb 'source ../gdb-crash.gdb'
+  send_to_gdb "source ${GDB_CRASH_SCRIPT}"
   sleep 1
-  send_to_gdb 'crashdump'
+  send_to_gdb "crashdump_to ${GDB_LIVE_CRASH_FILE}"
 
   for _ in $(seq 1 20); do
     if [[ -f "${GDB_LIVE_CRASH_FILE}" ]]; then
