@@ -661,6 +661,8 @@ void CommandConfigManager::registerCommands2() {
 	commandFactory.registerCommand<ForceKnockdown2Command>(String("forceKnockdown2").toLowerCase());
 	commandFactory.registerCommand<ForceKnockdown3Command>(String("forceKnockdown3").toLowerCase());
 	commandFactory.registerCommand<ForceChainHeal1Command>(String("forceChainHeal1").toLowerCase());
+	commandFactory.registerCommand<ForceChainHeal1Command>(String("forceChainHeal2").toLowerCase());
+	commandFactory.registerCommand<ForceChainHeal1Command>(String("forceChainHeal3").toLowerCase());
 	commandFactory.registerCommand<ForceChainLightning1Command>(String("forceChainLightning1").toLowerCase());
 		commandFactory.registerCommand<ForceLightningCone1Command>(String("forceLightningCone1").toLowerCase());
 	commandFactory.registerCommand<ForceLightningCone2Command>(String("forceLightningCone2").toLowerCase());
