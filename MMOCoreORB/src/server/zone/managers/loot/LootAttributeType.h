@@ -10,6 +10,7 @@ public:
 		UNIFORM,
 		DYNAMIC,
 		NORMAL,
+		LEVELSCALED,
 		SIZE,
 	};
 
@@ -19,6 +20,7 @@ public:
 			case RandomType::UNIFORM: return "uniform";
 			case RandomType::DYNAMIC: return "dynamic";
 			case RandomType::NORMAL: return "normal";
+			case RandomType::LEVELSCALED: return "levelscaled";
 			default: return "null";
 		}
 	}

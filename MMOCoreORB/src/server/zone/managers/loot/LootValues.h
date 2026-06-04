@@ -84,6 +84,9 @@ private:
 	inline void setNormalValue(const String& attribute);
 
 	template<typename Auto = float>
+	inline void setLevelScaledValue(const String& attribute);
+
+	template<typename Auto = float>
 	inline void setDynamicValue(const String& attribute, float percentageMax);
 
 	inline void setModifierValue(const String& attribute, float percentageMax);

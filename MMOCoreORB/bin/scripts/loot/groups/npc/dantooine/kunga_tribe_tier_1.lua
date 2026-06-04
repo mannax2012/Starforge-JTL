@@ -7,7 +7,8 @@ kunga_tribe_tier_1 = {
 	lootItems = {
 		{groupTemplate = "armor_attachments", weight = 500000},
 		{groupTemplate = "clothing_attachments", weight = 500000},
-		{groupTemplate = "junk", weight = 3100000},
+		{groupTemplate = "kunga_common", weight = 350000},
+		{groupTemplate = "junk", weight = 2750000},
 		{groupTemplate = "loot_kit_parts", weight = 2700000},
 		{groupTemplate = "power_crystals", weight = 400000},
 		{groupTemplate = "wearables_common", weight = 900000},

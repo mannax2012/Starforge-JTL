@@ -40,6 +40,20 @@
 --this exception also makes it possible to release a modified version
 --which carries forward this exception.
 
+object_tangible_component_chemistry_shared_mokk_blood = SharedTangibleObjectTemplate:new {
+clientTemplateFileName = "object/tangible/component/chemistry/shared_mokk_blood.iff"}
+ObjectTemplates:addClientTemplate(object_tangible_component_chemistry_shared_mokk_blood, 
+"object/tangible/component/chemistry/shared_mokk_blood.iff")
+
+object_tangible_component_chemistry_shared_dantari_blood = SharedTangibleObjectTemplate:new {
+clientTemplateFileName = "object/tangible/component/chemistry/shared_dantari_blood.iff"}
+ObjectTemplates:addClientTemplate(object_tangible_component_chemistry_shared_dantari_blood, 
+"object/tangible/component/chemistry/shared_dantari_blood.iff")
+
+object_tangible_component_chemistry_shared_kunga_blood = SharedTangibleObjectTemplate:new {
+clientTemplateFileName = "object/tangible/component/chemistry/shared_kunga_blood.iff"}
+ObjectTemplates:addClientTemplate(object_tangible_component_chemistry_shared_kunga_blood, 
+"object/tangible/component/chemistry/shared_kunga_blood.iff")
 
 object_tangible_component_chemistry_shared_biologic_effect_controller = SharedTangibleObjectTemplate:new {
 	clientTemplateFileName = "object/tangible/component/chemistry/shared_biologic_effect_controller.iff"

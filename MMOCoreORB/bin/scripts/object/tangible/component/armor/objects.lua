@@ -40,7 +40,21 @@
 --this exception also makes it possible to release a modified version
 --which carries forward this exception.
 
+object_tangible_component_armor_shared_armor_segment_enhancement_kunga = SharedTangibleObjectTemplate:new {
+	clientTemplateFileName = "object/tangible/component/armor/shared_armor_segment_enhancement_kunga.iff"}
+ObjectTemplates:addClientTemplate(object_tangible_component_armor_shared_armor_segment_enhancement_kunga,
+ "object/tangible/component/armor/shared_armor_segment_enhancement_kunga.iff")
 
+ object_tangible_component_armor_shared_armor_segment_enhancement_dantari = SharedTangibleObjectTemplate:new {
+	clientTemplateFileName = "object/tangible/component/armor/shared_armor_segment_enhancement_dantari.iff"}
+ObjectTemplates:addClientTemplate(object_tangible_component_armor_shared_armor_segment_enhancement_dantari,
+ "object/tangible/component/armor/shared_armor_segment_enhancement_dantari.iff")
+
+ object_tangible_component_armor_shared_armor_segment_enhancement_mokk = SharedTangibleObjectTemplate:new {
+	clientTemplateFileName = "object/tangible/component/armor/shared_armor_segment_enhancement_mokk.iff"}
+ObjectTemplates:addClientTemplate(object_tangible_component_armor_shared_armor_segment_enhancement_mokk,
+ "object/tangible/component/armor/shared_armor_segment_enhancement_mokk.iff")
+ 
 object_tangible_component_armor_shared_armor_layer = SharedTangibleObjectTemplate:new {
 	clientTemplateFileName = "object/tangible/component/armor/shared_armor_layer.iff"
 	--Data below here is deprecated and loaded from the tres, keeping for easy lookups
