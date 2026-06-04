@@ -346,15 +346,25 @@ void TangibleObjectImplementation::sendPvpStatusTo(CreatureObject* player) {
 
 	auto thisFaction = getFaction();
 	auto playerFaction = player->getFaction();
+	CreatureObject* thisCreature = asCreatureObject();
+	PlayerObject* thisGhost = (thisCreature != nullptr) ? thisCreature->getPlayerObject() : nullptr;
+	PlayerObject* playerGhost = player->getPlayerObject();
+	bool groupedPlayers = thisCreature != nullptr && player->isPlayerCreature() && thisCreature->getGroupID() != 0 && thisCreature->getGroupID() == player->getGroupID()
+		&& thisGhost != nullptr && playerGhost != nullptr && !thisGhost->hasTef() && !playerGhost->hasTef();
+
+	// Group members should see one another as non-hostile even if they are overt or special forces.
+	// This keeps the client reticle, tab targeting, and faction presentation aligned with grouped friendly-fire rules.
+	if (groupedPlayers) {
+		newPvpStatusBitmask &= ~(ObjectFlag::ATTACKABLE | ObjectFlag::AGGRESSIVE | ObjectFlag::ENEMY |
+			ObjectFlag::OVERT | ObjectFlag::TEF | ObjectFlag::WILLBEDECLARED | ObjectFlag::WASDECLARED);
+	}
 
 	bool isShipAgent = isShipAiAgent();
 
 	// Handle enemy flagging for Rebel/Imperial
-	if ((isAiAgent() && !isPet() && (thisFactionStatus >= FactionStatus::COVERT)) && (thisFaction > 0) && (playerFaction > 0) && (thisFaction != playerFaction)) {
+	if (!groupedPlayers && (isAiAgent() && !isPet() && (thisFactionStatus >= FactionStatus::COVERT)) && (thisFaction > 0) && (playerFaction > 0) && (thisFaction != playerFaction)) {
 		if (ConfigManager::instance()->useCovertOvertSystem()) {
-			PlayerObject* ghost = player->getPlayerObject();
-
-			if (player->getFactionStatus() == FactionStatus::OVERT || (ghost != nullptr && ghost->hasGcwTef())) {
+			if (player->getFactionStatus() == FactionStatus::OVERT || (playerGhost != nullptr && playerGhost->hasGcwTef())) {
 				newPvpStatusBitmask |= ObjectFlag::ENEMY;
 			} else if (newPvpStatusBitmask & ObjectFlag::ENEMY) {
 				newPvpStatusBitmask &= ~ObjectFlag::ENEMY;
@@ -366,7 +376,7 @@ void TangibleObjectImplementation::sendPvpStatusTo(CreatureObject* player) {
 				newPvpStatusBitmask &= ~ObjectFlag::ENEMY;
 			}
 		}
-	} else if (!(newPvpStatusBitmask & ObjectFlag::ENEMY) && isShipAgent && (player->isPilotingShip() || player->isOnboardPobShip() || player->isShipGunner())) {
+	} else if (!groupedPlayers && !(newPvpStatusBitmask & ObjectFlag::ENEMY) && isShipAgent && (player->isPilotingShip() || player->isOnboardPobShip() || player->isShipGunner())) {
 		auto thisShipAgent = asShipAiAgent();
 		auto playerRoot =  player->getRootParent();
 
@@ -377,7 +387,7 @@ void TangibleObjectImplementation::sendPvpStatusTo(CreatureObject* player) {
 				newPvpStatusBitmask |= ObjectFlag::ENEMY;
 			}
 		}
-	} else if (isShipObject() && attackable && aggressive) {
+	} else if (!groupedPlayers && isShipObject() && attackable && aggressive) {
 		newPvpStatusBitmask |= ObjectFlag::ENEMY;
 	}
 

@@ -27,6 +27,49 @@
 //#define DEBUG_GROUPS
 //#define DEBUG_GROUP_LEVEL
 
+namespace {
+void refreshGroupedCreatureForClient(CreatureObject* subject, CreatureObject* viewer) {
+	if (subject == nullptr || viewer == nullptr || subject == viewer)
+		return;
+
+	subject->sendDestroyTo(viewer);
+
+	Reference<CreatureObject*> subjectRef = subject;
+	Reference<CreatureObject*> viewerRef = viewer;
+
+	Core::getTaskManager()->scheduleTask([subjectRef, viewerRef] () {
+		if (subjectRef == nullptr || viewerRef == nullptr)
+			return;
+
+		Locker subjectLocker(subjectRef);
+		Locker viewerLocker(viewerRef, subjectRef);
+
+		if (subjectRef->getZoneUnsafe() == nullptr || viewerRef->getZoneUnsafe() == nullptr)
+			return;
+
+		subjectRef->sendTo(viewerRef, true, false);
+	}, "GroupClientRefresh", 200);
+}
+
+void scheduleSoftLogRefresh(CreatureObject* player) {
+	if (player == nullptr || !player->isPlayerCreature())
+		return;
+
+	player->sendSceneResetToOwner();
+
+	Reference<CreatureObject*> playerRef = player;
+
+	Core::getTaskManager()->scheduleTask([playerRef] () {
+		if (playerRef == nullptr) {
+			return;
+		}
+
+		Locker locker(playerRef);
+		playerRef->sendObjectsToOwner(true);
+	}, "GroupSoftLogRefresh", 200);
+}
+}
+
 void GroupObjectImplementation::sendBaselinesTo(SceneObject* player) {
 	if (player == nullptr)
 		return;
@@ -111,6 +154,8 @@ void GroupObjectImplementation::updatePvPStatusNearCreature(CreatureObject* crea
 		return;
 
 	creatureCloseObjects->safeCopyReceiversTo(closeObjectsVector, CloseObjectsVector::CREOTYPE);
+	SortedVector<uint64> ownerRefreshIds;
+	ownerRefreshIds.setNoDuplicateInsertPlan();
 
 	for (int i = 0; i < groupMembers.size(); i++) {
 		CreatureObject* member = getGroupMember(i);
@@ -123,6 +168,19 @@ void GroupObjectImplementation::updatePvPStatusNearCreature(CreatureObject* crea
 
 		if (member->isPlayerCreature())
 			creature->sendPvpStatusTo(member);
+
+		// Force a lightweight object rebuild for both clients so target cursors and reticles
+		// pick up the new grouped PvP relationship immediately, like a fresh login would.
+		refreshGroupedCreatureForClient(member, creature);
+		refreshGroupedCreatureForClient(creature, member);
+
+		if (ownerRefreshIds.put(member->getObjectID()) != -1) {
+			scheduleSoftLogRefresh(member);
+		}
+
+		if (ownerRefreshIds.put(creature->getObjectID()) != -1) {
+			scheduleSoftLogRefresh(creature);
+		}
 	}
 }
 
@@ -177,6 +235,8 @@ void GroupObjectImplementation::addMember(CreatureObject* newMember, bool notify
 			broadcastMessage(groupDelta6);
 		}
 	}
+
+	updatePvPStatusNearCreature(newMember);
 }
 
 void GroupObjectImplementation::removeMember(CreatureObject* memberRemoved) {

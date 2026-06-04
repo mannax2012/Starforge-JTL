@@ -41,15 +41,15 @@
 --which carries forward this exception.
 --true = 1, false = 0
 
-ForceChainHeal1Command = {
-	name = "forcechainheal1",
-	healAmount = 750,
-	forceCost = 25,
-	forceCostMultiplier = 0.05,
-	defaultTime = 1,
+ForceChainHeal3Command = {
+	name = "forcechainheal3",
+	healAmount = 2500,
+	forceCost = 45,
+	forceCostMultiplier = 0.04,
+	defaultTime = 3,
 	attributesToHeal = HEALTH_ATTRIBUTE,
 	range = 32,
-	chainToAmount = 4,
+	chainToAmount = 6,
 }
 
-AddCommand(ForceChainHeal1Command)
+AddCommand(ForceChainHeal3Command)

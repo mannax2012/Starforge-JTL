@@ -1,0 +1,62 @@
+/*
+				Copyright <SWGEmu>
+		See file COPYING for copying conditions.*/
+
+package server.zone.objects.creature.buffs;
+
+import server.zone.objects.creature.CreatureObject;
+import server.zone.objects.tangible.weapon.WeaponObject;
+import server.zone.objects.creature.buffs.CenterOfBeingBuffDurationEvent;
+import server.zone.objects.creature.buffs.Buff;
+include server.zone.objects.creature.buffs.BuffType;
+
+@json
+class CenterOfBeingBuff extends Buff {
+	protected CreatureObject player;
+
+	public CenterOfBeingBuff(CreatureObject creo, unsigned int buffCRC, int duration) {
+		super(creo, buffCRC, duration, BuffType.SKILL);
+		player = creo;
+	}
+
+	@preLocked
+	public native void activate(boolean applyModifiers);
+
+	@read
+	public boolean checkRenew() {
+		if (!player)
+			return false;
+
+		if ((player.getScreenPlayState("centerofbeing_toggle") & 1) == 0)
+			return false;
+
+		WeaponObject weapon = player.getWeapon();
+
+		if (!weapon)
+			return false;
+
+		int duration = 0;
+		int efficacy = 0;
+
+		if (weapon.isUnarmedWeapon()) {
+			duration = player.getSkillMod("center_of_being_duration_unarmed");
+			efficacy = player.getSkillMod("unarmed_center_of_being_efficacy");
+		} else if (weapon.isOneHandMeleeWeapon()) {
+			duration = player.getSkillMod("center_of_being_duration_onehandmelee");
+			efficacy = player.getSkillMod("onehandmelee_center_of_being_efficacy");
+		} else if (weapon.isTwoHandMeleeWeapon()) {
+			duration = player.getSkillMod("center_of_being_duration_twohandmelee");
+			efficacy = player.getSkillMod("twohandmelee_center_of_being_efficacy");
+		} else if (weapon.isPolearmWeaponObject()) {
+			duration = player.getSkillMod("center_of_being_duration_polearm");
+			efficacy = player.getSkillMod("polearm_center_of_being_efficacy");
+		}
+
+		return duration > 0 && efficacy > 0;
+	}
+
+	public native void loadBuffDurationEvent(CreatureObject creo);
+
+	@preLocked
+	public native void scheduleBuffEvent();
+}

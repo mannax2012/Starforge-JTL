@@ -41,33 +41,8 @@
 --this exception also makes it possible to release a modified version 
 
 
+object_tangible_component_chemistry_dantari_blood = object_tangible_component_chemistry_shared_dantari_blood:new {
 
---Children folder includes
+}
 
--- Server Objects
-includeFile("tangible/component/chemistry/biologic_effect_controller.lua")
-includeFile("tangible/component/chemistry/biologic_effect_controller_advanced.lua")
-includeFile("tangible/component/chemistry/chemistry_component.lua")
-includeFile("tangible/component/chemistry/dispersal_mechanism.lua")
-includeFile("tangible/component/chemistry/dispersal_mechanism_advanced.lua")
-includeFile("tangible/component/chemistry/dispersal_mechanism_quest.lua")
-includeFile("tangible/component/chemistry/endrost.lua")
-includeFile("tangible/component/chemistry/infection_amplifier.lua")
-includeFile("tangible/component/chemistry/infection_amplifier_advanced.lua")
-includeFile("tangible/component/chemistry/infection_amplifier_donkuwah.lua")
-includeFile("tangible/component/chemistry/janta_blood.lua")
-includeFile("tangible/component/chemistry/kunga_blood.lua")
-includeFile("tangible/component/chemistry/dantari_blood.lua")
-includeFile("tangible/component/chemistry/mokk_blood.lua")
-includeFile("tangible/component/chemistry/liquid_delivery_suspension.lua")
-includeFile("tangible/component/chemistry/liquid_delivery_suspension_advanced.lua")
-includeFile("tangible/component/chemistry/liquid_delivery_suspension_quest.lua")
-includeFile("tangible/component/chemistry/quest_stimpack_a.lua")
-includeFile("tangible/component/chemistry/rancor_bile.lua")
-includeFile("tangible/component/chemistry/release_mechanism_duration.lua")
-includeFile("tangible/component/chemistry/release_mechanism_duration_advanced.lua")
-includeFile("tangible/component/chemistry/resilience_compound.lua")
-includeFile("tangible/component/chemistry/resilience_compound_advanced.lua")
-includeFile("tangible/component/chemistry/solid_delivery_shell.lua")
-includeFile("tangible/component/chemistry/solid_delivery_shell_advanced.lua")
-includeFile("tangible/component/chemistry/spider_venom.lua")
+ObjectTemplates:addTemplate(object_tangible_component_chemistry_dantari_blood, "object/tangible/component/chemistry/dantari_blood.iff")

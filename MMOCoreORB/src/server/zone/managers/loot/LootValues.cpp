@@ -97,6 +97,17 @@ void LootValues::setRandomValues() {
 			continue;
 		}
 
+		if (randomType == RandomType::LEVELSCALED) {
+			if (precision == 0) {
+				setLevelScaledValue<int>(attribute);
+			} else {
+				setLevelScaledValue<float>(attribute);
+			}
+
+			attributeIndex.add(attribute);
+			continue;
+		}
+
 		if (randomType == RandomType::UNIFORM) {
 			if (precision == 0) {
 				setUniformValue<int>(attribute);
@@ -244,6 +255,27 @@ void LootValues::setNormalValue(const String& attribute) {
 	Auto min = staticValues.getMinValue(attribute);
 	Auto max = staticValues.getMaxValue(attribute);
 	Auto value = getNormalValue(min, max);
+
+	float percent = getValuePercentage(min, max, value);
+
+	setCurrentValue(attribute, value, min, max);
+	setCurrentPercentage(attribute, percent, 1.f);
+}
+
+template<typename Auto>
+void LootValues::setLevelScaledValue(const String& attribute) {
+	Auto min = staticValues.getMinValue(attribute);
+	Auto max = staticValues.getMaxValue(attribute);
+
+	if (max == min || level <= 0) {
+		setCurrentValue(attribute, min, min, max);
+		setCurrentPercentage(attribute, 0.f, 1.f);
+		return;
+	}
+
+	float levelRank = getLevelRankValue(level, 0.f, 1.f);
+	Auto levelMax = getPercentageValue(min, max, levelRank);
+	Auto value = getRandomValue(min, levelMax);
 
 	float percent = getValuePercentage(min, max, value);
 

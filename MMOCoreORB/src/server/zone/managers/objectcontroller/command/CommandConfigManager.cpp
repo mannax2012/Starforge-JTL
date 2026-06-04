@@ -366,12 +366,16 @@ void CommandConfigManager::registerSpecialCommands(CommandList* sCommands) {
 	createCommand(String("creatureRangedAttack").toLowerCase())->setCommandGroup(0xe1c9a54a);
 	createCommand(String("defaultDroidAttack").toLowerCase())->setCommandGroup(0xe1c9a54a);
 
-	QueueCommand* forceChainHeal = createCommand(String("forceChainHeal1").toLowerCase());
+	const char* forceChainHeals[] = {"forceChainHeal1", "forceChainHeal2", "forceChainHeal3"};
 
-	if (forceChainHeal != nullptr) {
-		forceChainHeal->setAddToCombatQueue(true);
-		forceChainHeal->setCommandGroup(0xa7d8a613);
-		forceChainHeal->setMaxRange(32);
+	for (const auto& forceChainHealName : forceChainHeals) {
+		QueueCommand* forceChainHeal = createCommand(String(forceChainHealName).toLowerCase());
+
+		if (forceChainHeal != nullptr) {
+			forceChainHeal->setAddToCombatQueue(true);
+			forceChainHeal->setCommandGroup(0xa7d8a613);
+			forceChainHeal->setMaxRange(32);
+		}
 	}
 
 	// Space Special Commands

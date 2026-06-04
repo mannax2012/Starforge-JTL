@@ -41,7 +41,7 @@ public:
 
 		ManagedReference<CreatureObject*> chainSource = creature;
 		ManagedReference<GroupObject*> group = creature->getGroup();
-		ManagedReference<CreatureObject*> nextTarget = getSelectedChainTarget(creature, target, visitedTargets);
+		ManagedReference<CreatureObject*> nextTarget = resolveRequestedChainTarget(creature, target, visitedTargets);
 
 		if (nextTarget == creature && !needsChainHeal(creature)) {
 			visitedTargets.add(creature->getObjectID());
@@ -95,6 +95,33 @@ public:
 	}
 
 private:
+	ManagedReference<CreatureObject*> resolveRequestedChainTarget(CreatureObject* healer, const uint64& target, const Vector<uint64>& visitedTargets) const {
+		if (healer == nullptr)
+			return nullptr;
+
+		uint64 healerId = healer->getObjectID();
+		uint64 selectedTargetId = healer->getTargetID();
+
+		if (target != 0 && target != healerId) {
+			ManagedReference<CreatureObject*> targetCreature = getSelectedChainTarget(healer, target, visitedTargets);
+
+			if (targetCreature != nullptr)
+				return targetCreature;
+		}
+
+		if (selectedTargetId != 0 && selectedTargetId != healerId && selectedTargetId != target) {
+			ManagedReference<CreatureObject*> selectedTarget = getSelectedChainTarget(healer, selectedTargetId, visitedTargets);
+
+			if (selectedTarget != nullptr)
+				return selectedTarget;
+		}
+
+		if (target == healerId || selectedTargetId == healerId)
+			return healer;
+
+		return nullptr;
+	}
+
 	void playChainHealTargetEffect(CreatureObject* healer, CreatureObject* healTarget) const {
 		if (healer == nullptr || healTarget == nullptr || healer == healTarget)
 			return;

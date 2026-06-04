@@ -5,8 +5,12 @@
 #ifndef CENTEROFBEINGCOMMAND_H_
 #define CENTEROFBEINGCOMMAND_H_
 
+#include "server/zone/objects/creature/buffs/CenterOfBeingBuff.h"
+
 class CenterOfBeingCommand : public QueueCommand {
 public:
+	static constexpr const char* TOGGLE_SCREENPLAY = "centerofbeing_toggle";
+	static constexpr uint64 TOGGLE_ENABLED = 1;
 
 	CenterOfBeingCommand(const String& name, ZoneProcessServer* server)
 		: QueueCommand(name, server) {
@@ -23,12 +27,19 @@ public:
 
 		if (!creature->isPlayerCreature())
 			return GENERALERROR;
-		
-		PlayerObject* ghost = creature->getPlayerObject();
 
 		if (creature->hasBuff(STRING_HASHCODE("centerofbeing"))) {
-			creature->sendSystemMessage("@combat_effects:already_centered");
-			return GENERALERROR;
+			uint64 toggleState = creature->getScreenPlayState(TOGGLE_SCREENPLAY);
+
+			if ((toggleState & TOGGLE_ENABLED) != 0) {
+				creature->setScreenPlayState(TOGGLE_SCREENPLAY, toggleState & ~TOGGLE_ENABLED);
+				creature->sendSystemMessage("Center of Being will end after the current cycle.");
+			} else {
+				creature->setScreenPlayState(TOGGLE_SCREENPLAY, toggleState | TOGGLE_ENABLED);
+				creature->sendSystemMessage("Center of Being will continue refreshing.");
+			}
+
+			return SUCCESS;
 		}
 
 		WeaponObject* weapon = creature->getWeapon();
@@ -56,7 +67,7 @@ public:
 
 		uint32 centerHash = STRING_HASHCODE("centerofbeing");
 
-		Buff* centered = new Buff(creature, centerHash, duration, BuffType::SKILL);
+		Buff* centered = new CenterOfBeingBuff(creature, centerHash, duration);
 
 		Locker locker(centered);
 
@@ -70,6 +81,7 @@ public:
 		centered->setStartFlyText("combat_effects", "center_start_fly", 0, 255, 0);
 		centered->setEndFlyText("combat_effects", "center_stop_fly", 255, 0, 0);
 
+		creature->setScreenPlayState(TOGGLE_SCREENPLAY, creature->getScreenPlayState(TOGGLE_SCREENPLAY) | TOGGLE_ENABLED);
 		creature->addBuff(centered);
 
 		if (creature->isInCombat())
