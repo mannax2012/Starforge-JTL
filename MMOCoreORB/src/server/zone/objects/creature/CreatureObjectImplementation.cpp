@@ -3482,6 +3482,24 @@ Reference<PlayerObject*> CreatureObjectImplementation::getPlayerObject() {
 * This function should return true if this creature is aggressive to the creature passed
 * in the function
 */
+namespace {
+bool groupedPlayersIgnoreHostility(CreatureObject* first, CreatureObject* second) {
+	if (first == nullptr || second == nullptr || !first->isPlayerCreature() || !second->isPlayerCreature())
+		return false;
+
+	if (first->getGroupID() == 0 || first->getGroupID() != second->getGroupID())
+		return false;
+
+	PlayerObject* firstGhost = first->getPlayerObject();
+	PlayerObject* secondGhost = second->getPlayerObject();
+
+	if (firstGhost == nullptr || secondGhost == nullptr)
+		return false;
+
+	return !firstGhost->hasTef() && !secondGhost->hasTef();
+}
+}
+
 bool CreatureObjectImplementation::isAggressiveTo(TangibleObject* target) {
 	if (target == nullptr || !target->isCreatureObject() || getObjectID() == target->getObjectID())
 		return false;
@@ -3517,13 +3535,23 @@ bool CreatureObjectImplementation::isAggressiveTo(TangibleObject* target) {
 		}
 
 		if (tarCreo->isPlayerCreature()) {
-			if (ConfigManager::instance()->getPvpMode())
+			if (ConfigManager::instance()->getPvpMode()) {
+				if (groupedPlayersIgnoreHostility(asCreatureObject(), tarCreo)) {
+					return false;
+				}
+
 				return true;
+			}
 
 			if (CombatManager::instance()->areInDuel(tarCreo, asCreatureObject()))
 				return true;
 
 			PlayerObject* tarGhost = tarCreo->getPlayerObject();
+
+			// Keep client hostility visuals in sync with grouped friendly-fire rules.
+			if (groupedPlayersIgnoreHostility(asCreatureObject(), tarCreo)) {
+				return false;
+			}
 
 			if (thisFaction != targetFaction && thisFaction > 0 && targetFaction > 0) {
 				bool covertOvert = ConfigManager::instance()->useCovertOvertSystem();
@@ -3777,6 +3805,10 @@ bool CreatureObjectImplementation::isAttackableBy(CreatureObject* creature, bool
 		if (creature->isPlayerCreature()) {
 			// PvP Mode Config active, all players are attackable to one another
 			if (ConfigManager::instance()->getPvpMode()) {
+				if (groupedPlayersIgnoreHostility(asCreatureObject(), creature)) {
+					return false;
+				}
+
 				return true;
 			}
 
@@ -3787,6 +3819,12 @@ bool CreatureObjectImplementation::isAttackableBy(CreatureObject* creature, bool
 			}
 
 			// info(true) << "Attacking Player: " << creature->getDisplayedName() << " passed basic checks against against: " << getDisplayedName();
+
+			// Group membership always prevents direct friendly fire between players.
+			// TEFed players fall back to normal PvP rules until the flag expires.
+			if (groupedPlayersIgnoreHostility(asCreatureObject(), creature)) {
+				return false;
+			}
 
 			if (hasPersonalEnemyFlag(creature) && creature->hasPersonalEnemyFlag(asCreatureObject())) {
 				return true;
@@ -3801,11 +3839,6 @@ bool CreatureObjectImplementation::isAttackableBy(CreatureObject* creature, bool
 
 			if (creature->hasBountyMissionFor(asCreatureObject()) || (ghost->hasBhTef() && hasBountyMissionFor(creature))) {
 				return true;
-			}
-
-			// Group prevents players being attackable to one another from Overt status
-			if (getGroupID() != 0 && getGroupID() == creature->getGroupID()) {
-				return false;
 			}
 
 			if (ghost->isInPvpArea(true) && targetGhost->isInPvpArea(true)) {
@@ -3901,10 +3934,10 @@ bool CreatureObjectImplementation::isHealableBy(CreatureObject* healerCreo) {
 		if (thisGhost->isLinkDead() && healerGhost->getAccountID() == thisGhost->getAccountID() && !ConfigManager::instance()->getBool("Core3.CombatManager.AllowSameAccountLinkDeadBeneficialActions", true))
 			return false;
 
-		// In the same group
+		// Group members can always receive helpful actions from one another,
+		// even when faction alignment would normally block outside help.
 		if (getGroupID() != 0 && getGroupID() == healerCreo->getGroupID()) {
-			if (thisGhost->isInPvpArea(true))
-				return true;
+			return true;
 		}
 
 		// This player has a BH TEF and cannot be healed.
