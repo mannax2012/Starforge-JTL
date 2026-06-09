@@ -40,7 +40,17 @@
 --this exception also makes it possible to release a modified version
 
 object_tangible_item_bounty_hunter_bh_shock_dart = object_tangible_item_bounty_hunter_shared_bh_shock_dart:new {
-	useCount = 10
+	useCount = 10,
+
+	numberExperimentalProperties = {1, 1, 2, 1, 1},
+	experimentalProperties = {"XX", "XX", "OQ", "UT", "XX", "XX"},
+	experimentalWeights = {1, 1, 2, 1, 1, 1},
+	experimentalGroupTitles = {"null", "null", "exp_charges", "null", "null"},
+	experimentalSubGroupTitles = {"null", "null", "charges", "null", "hitpoints"},
+	experimentalMin = {0, 0, 10, 0, 1000},
+	experimentalMax = {0, 0, 20, 0, 1000},
+	experimentalPrecision = {0, 0, 0, 0, 0},
+	experimentalCombineType = {0, 0, 1, 0, 4}
 }
 
 ObjectTemplates:addTemplate(object_tangible_item_bounty_hunter_bh_shock_dart, "object/tangible/item/bounty_hunter/bh_shock_dart.iff")
