@@ -10,16 +10,62 @@
 
 
 #include "server/zone/objects/creature/buffs/Buff.h"
+#include "server/zone/objects/creature/buffs/BuffCRC.h"
 #include "QueueCommand.h"
 #include "server/zone/objects/creature/CreatureObject.h"
 #include "server/zone/managers/visibility/VisibilityManager.h"
 #include "server/zone/objects/creature/buffs/SingleUseBuff.h"
+#include "server/zone/objects/creature/events/ForceRunEffectTask.h"
 #include "server/zone/objects/player/PlayerObject.h"
 #include "server/zone/managers/frs/FrsManager.h"
 
 class JediQueueCommand : public QueueCommand {
 
 protected:
+	void logForceRunTrace(CreatureObject* creature, const String& phase) const {
+		if (creature == nullptr)
+			return;
+
+		const bool isForceRunBuff = buffCRC == BuffCRC::JEDI_FORCE_RUN_1
+			|| buffCRC == BuffCRC::JEDI_FORCE_RUN_2
+			|| buffCRC == BuffCRC::JEDI_FORCE_RUN_3
+			|| clientEffect == "clienteffect/pl_force_run_self.cef";
+
+		if (!isForceRunBuff)
+			return;
+
+		StringBuffer msg;
+		msg << "[ForceRunTrace] phase=" << phase
+			<< " player=" << creature->getDisplayedName()
+			<< " oid=" << creature->getObjectID()
+			<< " cmd=" << name
+			<< " buffCRC=0x" << hex << buffCRC << dec
+			<< " effect=" << clientEffect
+			<< " effectLabel=" << clientEffectLabel
+			<< " speedMod=" << speedMod
+			<< " has1=" << creature->hasBuff(BuffCRC::JEDI_FORCE_RUN_1)
+			<< " has2=" << creature->hasBuff(BuffCRC::JEDI_FORCE_RUN_2)
+			<< " has3=" << creature->hasBuff(BuffCRC::JEDI_FORCE_RUN_3)
+			<< " speedMulti=" << creature->getSpeedMultiplierMod()
+			<< " accelMulti=" << creature->getAccelerationMultiplierMod();
+
+		creature->info(msg.toString(), true);
+	}
+
+	void scheduleForceRunEffect(CreatureObject* creature) const {
+		if (creature == nullptr || clientEffect != "clienteffect/pl_force_run_self.cef")
+			return;
+
+		Reference<ForceRunEffectTask*> existingTask = creature->getPendingTask(ForceRunEffectTask::getPendingTaskName()).castTo<ForceRunEffectTask*>();
+
+		if (existingTask == nullptr) {
+			Reference<ForceRunEffectTask*> replayTask = new ForceRunEffectTask(creature, clientEffect);
+			creature->addPendingTask(ForceRunEffectTask::getPendingTaskName(), replayTask, ForceRunEffectTask::REPLAY_DELAY_MS);
+		} else {
+			existingTask->reschedule(ForceRunEffectTask::REPLAY_DELAY_MS);
+		}
+	}
+
 	int forceCost;
 	int duration;
 	uint32 animationCRC;
@@ -77,7 +123,9 @@ public:
 	int doJediSelfBuffCommand(CreatureObject* creature) const {
 		// first and foremost, we need to toggle this buff off if we already have it
 		if (creature->hasBuff(buffCRC)) {
+			logForceRunTrace(creature, "toggle_remove_before");
 			creature->removeBuff(buffCRC);
+			logForceRunTrace(creature, "toggle_remove_after");
 			return SUCCESS;
 		}
 
@@ -101,13 +149,16 @@ public:
 
 		// Add buff.
 		creature->addBuff(buff);
+		logForceRunTrace(creature, "apply_after_addBuff");
 
 		// Force Cost.
 		doForceCost(creature);
 
 		// Client Effect.
 		if (!clientEffect.isEmpty()) {
-			creature->playEffect(clientEffect, clientEffectLabel);
+			creature->playEffect(clientEffect, "");
+			logForceRunTrace(creature, "apply_after_playEffect");
+			scheduleForceRunEffect(creature);
 		}
 
 		// Return.

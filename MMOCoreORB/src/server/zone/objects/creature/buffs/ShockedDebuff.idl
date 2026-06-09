@@ -18,13 +18,20 @@ class ShockedDebuff extends Buff {
 	protected int tickCount;
 	protected int snareDuration;
 	protected boolean stripForceRun;
+	protected unsigned long attackerID;
+	protected int tickDamage;
+	protected byte damageAttribute;
 
-	public ShockedDebuff(CreatureObject creo, unsigned int buffCRC, int duration, int snareDurationSeconds, boolean removeForceRun) {
+	public ShockedDebuff(CreatureObject creo, unsigned int buffCRC, int duration, int snareDurationSeconds, boolean removeForceRun,
+			unsigned long attacker, int tickDamageAmount, byte damagePool) {
 		super(creo, buffCRC, duration, BuffType.OTHER);
 
 		tickCount = 0;
 		snareDuration = snareDurationSeconds;
 		stripForceRun = removeForceRun;
+		attackerID = attacker;
+		tickDamage = tickDamageAmount;
+		damageAttribute = damagePool;
 	}
 
 	public native void initializeTransientMembers();
