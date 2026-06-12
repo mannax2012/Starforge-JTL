@@ -8,9 +8,9 @@ rancor_hides = {
 	craftingValues = {
 		{"armor_effectiveness",3,6,10},
 		{"armor_integrity",1000,3000,0},
-		{"armor_health_encumbrance",10,0,0},
-		{"armor_action_encumbrance",10,0,0},
-		{"armor_mind_encumbrance",10,0,0},
+		{"armor_health_encumbrance",0,0,0},
+		{"armor_action_encumbrance",0,0,0},
+		{"armor_mind_encumbrance",0,0,0},
 		{"heateffectiveness",3,6,10},
 		{"coldeffectiveness",3,6,10},
 		{"useCount",1,11,0},
