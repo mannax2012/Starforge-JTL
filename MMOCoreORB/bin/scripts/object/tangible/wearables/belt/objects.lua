@@ -41,6 +41,11 @@
 --which carries forward this exception.
 
 
+object_tangible_wearables_belt_shared_belt_tusken_raider_crafted = SharedTangibleObjectTemplate:new {
+	clientTemplateFileName = "object/tangible/wearables/belt/shared_belt_tusken_raider_crafted.iff"}
+ObjectTemplates:addClientTemplate(object_tangible_wearables_belt_shared_belt_tusken_raider_crafted, 
+"object/tangible/wearables/belt/shared_belt_tusken_raider_crafted.iff")
+
 object_tangible_wearables_belt_shared_aakuan_belt = SharedTangibleObjectTemplate:new {
 	clientTemplateFileName = "object/tangible/wearables/belt/shared_aakuan_belt.iff"
 	--Data below here is deprecated and loaded from the tres, keeping for easy lookups

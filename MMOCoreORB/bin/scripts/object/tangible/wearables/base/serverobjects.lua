@@ -44,6 +44,9 @@
 
 --Children folder includes
 
+includeFile("tangible/wearables/base/base_fannypack.lua")
+
+
 -- Server Objects
 includeFile("tangible/wearables/base/armor_base.lua")
 includeFile("tangible/wearables/base/base_back.lua")

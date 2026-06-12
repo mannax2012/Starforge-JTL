@@ -42,7 +42,9 @@
 
 
 object_tangible_component_armor_scale_giant_dune_kimogila = object_tangible_component_armor_shared_scale_giant_dune_kimogila:new {
-
+	healthEncumbrance = 0,
+	actionEncumbrance = 0,
+	mindEncumbrance = 0,
 }
 
 ObjectTemplates:addTemplate(object_tangible_component_armor_scale_giant_dune_kimogila, "object/tangible/component/armor/scale_giant_dune_kimogila.iff")

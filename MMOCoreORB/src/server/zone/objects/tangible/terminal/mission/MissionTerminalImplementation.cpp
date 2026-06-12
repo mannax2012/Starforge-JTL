@@ -215,23 +215,27 @@ int MissionTerminalImplementation::handleObjectMenuSelect(CreatureObject* player
 		box->setCallback(new MissionDifficultySelectionSuiCallback(getZoneServer(), terminalType));
 		box->setPromptTitle("Mission Difficulty Selection");
 
-		String promptText = "Use this menu to lower combat mission offerings to a fixed level bracket.\n\nCurrent combat range: " + getMissionDifficultyBracketLabel(currentBracketMax) + "\n";
+		String baseBracketLabel = getMissionDifficultyBracketLabel(currentBracketMax);
+		String activeBracketLabel = baseBracketLabel;
+		String promptText = "Use this menu to lower combat mission offerings to a fixed level bracket.\n\nBase combat range: " + baseBracketLabel + "\n";
 		String selectedBracket = ghost->getScreenPlayData(MISSION_DIFFICULTY_CHOICE_SCREENPLAY, MISSION_DIFFICULTY_CHOICE_VARIABLE);
 
 		if (!selectedBracket.isEmpty()) {
 			int selectedBracketMax = Integer::valueOf(selectedBracket);
 
 			if (selectedBracketMax >= MISSION_DIFFICULTY_BRACKET_SIZE && selectedBracketMax < currentBracketMax) {
-				promptText += "Active lower range: " + getMissionDifficultyBracketLabel(selectedBracketMax) + "\n";
+				activeBracketLabel = getMissionDifficultyBracketLabel(selectedBracketMax);
 			} else {
 				ghost->deleteScreenPlayData(MISSION_DIFFICULTY_CHOICE_SCREENPLAY, MISSION_DIFFICULTY_CHOICE_VARIABLE);
 			}
 		}
 
-		promptText += "\nChoose Current Range to restore normal mission difficulty. Only lower brackets are listed below.";
+		promptText += "Active mission offering range: " + activeBracketLabel + "\n";
+		promptText += "Mission difficulty values shown in the terminal are scaled display values and may be higher than the active offering range.\n";
+		promptText += "\nChoose Base Range to restore normal mission difficulty. Only lower brackets are listed below.";
 		box->setPromptText(promptText);
 
-		box->addMenuItem("Current Range (" + getMissionDifficultyBracketLabel(currentBracketMax) + ")");
+		box->addMenuItem("Base Range (" + baseBracketLabel + ")");
 
 		for (int bracketMax = currentBracketMax - MISSION_DIFFICULTY_BRACKET_SIZE; bracketMax >= MISSION_DIFFICULTY_BRACKET_SIZE; bracketMax -= MISSION_DIFFICULTY_BRACKET_SIZE) {
 			box->addMenuItem(getMissionDifficultyBracketLabel(bracketMax));

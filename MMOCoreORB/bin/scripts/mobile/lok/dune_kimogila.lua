@@ -28,6 +28,7 @@ dune_kimogila = Creature:new {
 
 	templates = {"object/mobile/kimogila_hue.iff"},
 	hues = { 8, 9, 10, 11, 12, 13, 14, 15 },
+	controlDeviceTemplate = "object/intangible/pet/kimogila_hue.iff",
 	lootGroups = {
 	 {
 	        groups = {

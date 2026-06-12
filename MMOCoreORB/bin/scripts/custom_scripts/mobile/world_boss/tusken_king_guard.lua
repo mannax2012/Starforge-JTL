@@ -39,6 +39,12 @@ tusken_king_guard = Creature:new {
 			},
 				lootChance = 10000000,
 		},
+		{
+			groups = {
+				{group = "tusken_clothing_schematics", chance = 10000000}
+			},
+				lootChance = 250000,
+		},
 	},
 
 	primaryWeapon = "tusken_ranged",

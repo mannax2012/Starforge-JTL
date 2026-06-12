@@ -59,10 +59,6 @@ includeFile("items/custom/lightsaber_one_hand_rahm_gen4_schematic.lua")
 includeFile("items/custom/lightsaber_two_hand_rahm_gen3_schematic.lua")
 includeFile("items/custom/lightsaber_two_hand_rahm_gen4_schematic.lua")
 
---[[
-includeFile("items/custom/lance_trando_pike_schematic.lua")
-includeFile("items/custom/baton_gaderiffi_elite_schematic.lua")
-
 includeFile("items/custom/tusken_belt_schematic.lua")
 includeFile("items/custom/tusken_boots_schematic.lua")
 includeFile("items/custom/tusken_bracer_l_schematic.lua")
@@ -74,6 +70,10 @@ includeFile("items/custom/tusken_robe_s02_schematic.lua")
 includeFile("items/custom/tusken_bandolier_s01_schematic.lua")
 includeFile("items/custom/tusken_bandolier_s02_schematic.lua")
 includeFile("items/custom/tusken_bandolier_s03_schematic.lua")
+
+--[[
+includeFile("items/custom/lance_trando_pike_schematic.lua")
+includeFile("items/custom/baton_gaderiffi_elite_schematic.lua")
 includeFile("items/custom/starforge_backpack_schematic.lua")
 ]]
 

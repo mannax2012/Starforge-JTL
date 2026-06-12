@@ -61,7 +61,8 @@ object_tangible_wearables_base_base_backpack = object_tangible_wearables_base_sh
 			"object/creature/player/wookiee_male.iff",
 			"object/creature/player/wookiee_female.iff",
 			"object/creature/player/zabrak_male.iff",
-			"object/creature/player/zabrak_female.iff" },
+			"object/creature/player/zabrak_female.iff",
+			"object/creature/player/nautolan_male.iff",},
 }
 
 ObjectTemplates:addTemplate(object_tangible_wearables_base_base_backpack, "object/tangible/wearables/base/base_backpack.iff")

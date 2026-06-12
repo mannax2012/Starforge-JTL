@@ -85,6 +85,12 @@ tusken_king_boss = Creature:new {
 			},
 				lootChance = 1500000,
 		},
+		{
+			groups = {
+				{group = "tusken_clothing_schematics", chance = 10000000}
+			},
+				lootChance = 400000,
+		},
 	},
 	primaryWeapon = "tusken_ranged",
 	secondaryWeapon = "tusken_melee",
