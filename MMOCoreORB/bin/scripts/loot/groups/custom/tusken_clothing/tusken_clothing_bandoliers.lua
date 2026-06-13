@@ -5,9 +5,9 @@ tusken_clothing_bandoliers = {
 	minimumLevel = 0,
 	maximumLevel = 0,
 	lootItems = {
-		{itemTemplate = "bandolier_tusken_raider_s01", weight = 3333333},
-		{itemTemplate = "bandolier_tusken_raider_s02", weight = 3333333},
-		{itemTemplate = "bandolier_tusken_raider_s03", weight = 3333334}
+		{itemTemplate = "tusken_bandolier_s01_schematic", weight = 3333333},
+		{itemTemplate = "tusken_bandolier_s02_schematic", weight = 3333333},
+		{itemTemplate = "tusken_bandolier_s03_schematic", weight = 3333334}
 	}
 }
 

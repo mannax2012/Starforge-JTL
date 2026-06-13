@@ -7,12 +7,12 @@ tusken_clothing_schematics = {
 	lootItems = {
 		{itemTemplate = "tusken_clothing_bandoliers", weight = 1250000},
 		{itemTemplate = "tusken_clothing_robes", weight = 1250000},
-		{itemTemplate = "boots_tusken_raider_crafted", weight = 1250000},
-		{itemTemplate = "hat_tusken_raider_crafted", weight = 1250000},
-		{itemTemplate = "bracer_l_tusken_raider_crafted", weight = 1250000},
-		{itemTemplate = "bracer_r_tusken_raider_crafted", weight = 1250000},
-		{itemTemplate = "gloves_tusken_raider_crafted", weight = 1250000},
-		{itemTemplate = "belt_tusken_raider_crafted", weight = 1250000}
+		{itemTemplate = "tusken_boots_schematic", weight = 1250000},
+		{itemTemplate = "tusken_hat_schematic", weight = 1250000},
+		{itemTemplate = "tusken_bracer_l_schematic", weight = 1250000},
+		{itemTemplate = "tusken_bracer_r_schematic", weight = 1250000},
+		{itemTemplate = "tusken_gloves_schematic", weight = 1250000},
+		{itemTemplate = "tusken_belt_schematic", weight = 1250000}
 	}
 }
 

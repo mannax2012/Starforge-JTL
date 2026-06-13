@@ -62,12 +62,12 @@ object_draft_schematic_clothing_custom_clothing_belt_tusken_raider_schematic = o
    customizationStringNames = {"/private/index_color_1"},
    customizationDefaults = {66},
 
-   ingredientTemplateNames = {"craft_clothing_ingredients_n", "craft_clothing_ingredients_n", "craft_clothing_ingredients_n"},
-   ingredientTitleNames = {"shell", "liner", "grip_pads"},
-   ingredientSlotType = {0, 0, 0},
-   resourceTypes = {"bone_mammal_tatooine", "wooly_hide", "fiberplast_tatooine"},
-   resourceQuantities = {15, 15, 10},
-   contribution = {100, 100, 100},
+   ingredientTemplateNames = {"craft_clothing_ingredients_n", "craft_clothing_ingredients_n", "craft_clothing_ingredients_n", "craft_clothing_ingredients_n", "craft_clothing_ingredients_n"},
+   ingredientTitleNames = {"primary_pocket", "secondary_pocket", "strap_pad", "strap_adjustment", "frame_reinforcement"},
+   ingredientSlotType = { 1, 1, 0, 0, 0},
+   resourceTypes = {"object/tangible/component/clothing/shared_cargo_pocket.iff", "object/tangible/component/clothing/shared_cargo_pocket.iff", "hide_wooly_tatooine", "bone_mammal_tatooine", "fiberplast_tatooine"},
+   resourceQuantities = {1, 1, 10, 50, 10},
+   contribution = {100, 100, 100, 100, 100},
 
 
    targetTemplate = "object/tangible/wearables/belt/belt_tusken_raider_crafted.iff",

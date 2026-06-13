@@ -5,8 +5,8 @@ tusken_clothing_robes = {
 	minimumLevel = 0,
 	maximumLevel = 0,
 	lootItems = {
-		{itemTemplate = "robe_tusken_raider_s01_crafted", weight = 5000000},
-		{itemTemplate = "robe_tusken_raider_s02_crafted", weight = 5000000}
+		{itemTemplate = "tusken_robe_s01_schematic", weight = 5000000},
+		{itemTemplate = "tusken_robe_s02_schematic", weight = 5000000}
 	}
 }
 
