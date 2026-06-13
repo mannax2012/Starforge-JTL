@@ -62,6 +62,7 @@ object_tangible_wearables_bandolier_bandolier_tusken_raider_bag_s01 = object_tan
 				"object/creature/player/wookiee_female.iff",
 				"object/creature/player/zabrak_male.iff",
 				"object/creature/player/zabrak_female.iff",
+				"object/creature/player/nautolan_male.iff",
 				"object/mobile/vendor/aqualish_female.iff",
 				"object/mobile/vendor/aqualish_male.iff",
 				"object/mobile/vendor/bith_female.iff",
