@@ -16,9 +16,9 @@ includeFile("groups/custom/lewt_chest_rare.lua")
 includeFile("groups/custom/tusken_king_rare.lua")
 ]]
 
-includeFile("groups/custom/tusken_clothing/tusken_raider_schematics.lua")
-includeFile("groups/custom/tusken_clothing/tusken_raider_bandoliers.lua")
-includeFile("groups/custom/tusken_clothing/tusken_raider_robes.lua")
+includeFile("groups/custom/tusken_clothing/tusken_clothing_schematics.lua")
+includeFile("groups/custom/tusken_clothing/tusken_clothing_bandoliers.lua")
+includeFile("groups/custom/tusken_clothing/tusken_clothing_robes.lua")
 
 includeFile("groups/custom/rebels_lightsaber_schematics.lua")
 includeFile("groups/custom/cal_lightsaber_schematics.lua")

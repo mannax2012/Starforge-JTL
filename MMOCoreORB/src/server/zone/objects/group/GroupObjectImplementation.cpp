@@ -50,24 +50,6 @@ void refreshGroupedCreatureForClient(CreatureObject* subject, CreatureObject* vi
 		subjectRef->sendTo(viewerRef, true, false);
 	}, "GroupClientRefresh", 200);
 }
-
-void scheduleSoftLogRefresh(CreatureObject* player) {
-	if (player == nullptr || !player->isPlayerCreature())
-		return;
-
-	player->sendSceneResetToOwner();
-
-	Reference<CreatureObject*> playerRef = player;
-
-	Core::getTaskManager()->scheduleTask([playerRef] () {
-		if (playerRef == nullptr) {
-			return;
-		}
-
-		Locker locker(playerRef);
-		playerRef->sendObjectsToOwner(true);
-	}, "GroupSoftLogRefresh", 200);
-}
 }
 
 void GroupObjectImplementation::sendBaselinesTo(SceneObject* player) {
@@ -154,8 +136,6 @@ void GroupObjectImplementation::updatePvPStatusNearCreature(CreatureObject* crea
 		return;
 
 	creatureCloseObjects->safeCopyReceiversTo(closeObjectsVector, CloseObjectsVector::CREOTYPE);
-	SortedVector<uint64> ownerRefreshIds;
-	ownerRefreshIds.setNoDuplicateInsertPlan();
 
 	for (int i = 0; i < groupMembers.size(); i++) {
 		CreatureObject* member = getGroupMember(i);
@@ -173,14 +153,6 @@ void GroupObjectImplementation::updatePvPStatusNearCreature(CreatureObject* crea
 		// pick up the new grouped PvP relationship immediately, like a fresh login would.
 		refreshGroupedCreatureForClient(member, creature);
 		refreshGroupedCreatureForClient(creature, member);
-
-		if (ownerRefreshIds.put(member->getObjectID()) != -1) {
-			scheduleSoftLogRefresh(member);
-		}
-
-		if (ownerRefreshIds.put(creature->getObjectID()) != -1) {
-			scheduleSoftLogRefresh(creature);
-		}
 	}
 }
 
