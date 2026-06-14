@@ -1,7 +1,7 @@
 define _crashdump_common
   set logging overwrite on
   set logging redirect on
-  set logging enabled on
+  set logging on
 
   echo === CURRENT THREAD ===\n
   bt 20
@@ -16,7 +16,7 @@ define _crashdump_common
   echo \n=== ALL THREAD BACKTRACES ===\n
   thread apply all bt 12
 
-  set logging enabled off
+  set logging off
 end
 
 define crashdump
