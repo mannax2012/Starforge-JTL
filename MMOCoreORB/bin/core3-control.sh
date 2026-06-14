@@ -51,6 +51,9 @@ SQL_PORT="${CORE3_SQL_PORT:-3306}"
 SQL_USER="${CORE3_SQL_USER:-}"
 SQL_PASSWORD="${CORE3_SQL_PASSWORD:-}"
 SQL_DATABASE="${CORE3_SQL_DATABASE:-}"
+DB_RECOVER_TOOL_OVERRIDE="${CORE3_DB_RECOVER_TOOL:-}"
+DB_HOTBACKUP_TOOL_OVERRIDE="${CORE3_DB_HOTBACKUP_TOOL:-}"
+AUTO_RECOVER_DB="${CORE3_AUTO_RECOVER_DB:-0}"
 
 export SCREENDIR="${SCREEN_DIR}"
 
@@ -82,6 +85,41 @@ require_tool() {
   command -v "${name}" >/dev/null 2>&1 || fail "required tool not found: ${name}"
 }
 
+find_tool() {
+  local name
+
+  for name in "$@"; do
+    if command -v "${name}" >/dev/null 2>&1; then
+      printf '%s\n' "${name}"
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+db_recover_tool() {
+  if [[ -n "${DB_RECOVER_TOOL_OVERRIDE}" ]]; then
+    require_tool "${DB_RECOVER_TOOL_OVERRIDE}"
+    printf '%s\n' "${DB_RECOVER_TOOL_OVERRIDE}"
+    return 0
+  fi
+
+  find_tool db_recover db5.3_recover db5.1_recover db4.8_recover ||
+    fail "required Berkeley DB recovery tool not found. Install db_recover or set CORE3_DB_RECOVER_TOOL to the correct executable."
+}
+
+db_hotbackup_tool() {
+  if [[ -n "${DB_HOTBACKUP_TOOL_OVERRIDE}" ]]; then
+    require_tool "${DB_HOTBACKUP_TOOL_OVERRIDE}"
+    printf '%s\n' "${DB_HOTBACKUP_TOOL_OVERRIDE}"
+    return 0
+  fi
+
+  find_tool db_hotbackup db5.3_hotbackup db5.1_hotbackup db4.8_hotbackup ||
+    fail "required Berkeley DB hot backup tool not found. Install db_hotbackup or set CORE3_DB_HOTBACKUP_TOOL to the correct executable."
+}
+
 cleanup_dead_screens() {
   if [[ -d "${SCREEN_DIR}" ]]; then
     screen -wipe >/dev/null 2>&1 || true
@@ -94,11 +132,11 @@ session_exists() {
 }
 
 raw_server_pids() {
-  ps -C "${RAW_PROCESS_NAME}" -o pid=,stat= 2>/dev/null | awk '$2 !~ /^Z/ { print $1 }'
+  ps -C "${RAW_PROCESS_NAME}" -o pid=,stat= 2>/dev/null | awk '$2 !~ /^Z/ { print $1 }' || true
 }
 
 raw_server_zombie_pids() {
-  ps -C "${RAW_PROCESS_NAME}" -o pid=,stat= 2>/dev/null | awk '$2 ~ /^Z/ { print $1 }'
+  ps -C "${RAW_PROCESS_NAME}" -o pid=,stat= 2>/dev/null | awk '$2 ~ /^Z/ { print $1 }' || true
 }
 
 raw_server_running() {
@@ -145,8 +183,10 @@ wait_for_pid_exit() {
 gdb_state() {
   if [[ -f "${GDB_STATE_FILE}" ]]; then
     <"${GDB_STATE_FILE}" tr -d '\r'
+  elif raw_server_running; then
+    printf 'running\n'
   else
-    printf 'unknown\n'
+    printf 'stopped\n'
   fi
 }
 
@@ -658,7 +698,13 @@ run_server() {
   fi
 
   capture_if_crashed
-  recover_db
+
+  if [[ "${AUTO_RECOVER_DB}" == "1" ]]; then
+    log "Automatic Berkeley DB recovery enabled; running recovery before start"
+    recover_db
+  else
+    log "Skipping automatic Berkeley DB recovery before start"
+  fi
 
   configure_gdb_run_args
 
@@ -674,13 +720,13 @@ status_server() {
   local state
   state="$(gdb_state)"
 
+  printf 'session=%s\n' "${SCREEN_SESSION}"
   if session_exists; then
-    printf 'session=%s\n' "${SCREEN_SESSION}"
-    printf 'gdb_state=%s\n' "${state}"
+    printf 'session_exists=yes\n'
   else
-    printf 'session=missing\n'
-    printf 'gdb_state=missing\n'
+    printf 'session_exists=no\n'
   fi
+  printf 'gdb_state=%s\n' "${state}"
 
   local pids
   pids="$(raw_server_pids | tr '\n' ' ' | sed 's/[[:space:]]*$//')"
@@ -776,7 +822,8 @@ force_stop_server() {
 }
 
 recover_db() {
-  require_tool db_recover
+  local recover_tool
+  recover_tool="$(db_recover_tool)"
 
   if raw_server_running; then
     local pids
@@ -793,9 +840,9 @@ recover_db() {
   local db_home="${BIN_DIR}/databases"
   [[ -d "${db_home}" ]] || fail "database home not found at ${db_home}"
 
-  log "Running db_recover against ${db_home}"
-  db_recover -h "${db_home}" -v
-  log "db_recover completed for ${db_home}"
+  log "Running ${recover_tool} against ${db_home}"
+  "${recover_tool}" -h "${db_home}" -v
+  log "${recover_tool} completed for ${db_home}"
 }
 
 backup_sql_database() {
@@ -824,7 +871,8 @@ backup_sql_database() {
 }
 
 backup_database() {
-  require_tool db_hotbackup
+  local hotbackup_tool
+  hotbackup_tool="$(db_hotbackup_tool)"
 
   local db_home="${BIN_DIR}/databases"
   [[ -d "${db_home}" ]] || fail "database home not found at ${db_home}"
@@ -837,8 +885,8 @@ backup_database() {
   raw_db_dir="${backup_dir}/databases"
   archive_path="${backup_dir}.zip"
 
-  log "Running db_hotbackup against ${db_home} into ${raw_db_dir}"
-  db_hotbackup -h "${db_home}" -b "${raw_db_dir}"
+  log "Running ${hotbackup_tool} against ${db_home} into ${raw_db_dir}"
+  "${hotbackup_tool}" -h "${db_home}" -b "${raw_db_dir}"
 
   if [[ "${SQL_BACKUP_ENABLED}" == "1" ]]; then
     backup_sql_database "${backup_dir}/sql-backup.sql"
@@ -910,6 +958,9 @@ Optional backup / transfer environment:
   CORE3_SQL_USER=your-user
   CORE3_SQL_PASSWORD=your-password
   CORE3_SQL_DATABASE=your-database
+  CORE3_AUTO_RECOVER_DB=0
+  CORE3_DB_RECOVER_TOOL=db_recover
+  CORE3_DB_HOTBACKUP_TOOL=db_hotbackup
 EOF
 }
 

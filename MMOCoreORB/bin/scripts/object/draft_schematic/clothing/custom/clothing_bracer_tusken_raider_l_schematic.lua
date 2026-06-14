@@ -66,7 +66,7 @@ object_draft_schematic_clothing_custom_clothing_bracer_tusken_raider_l_schematic
    ingredientTitleNames = {"body", "binding_and_hardware", "liner", "load_bearing_harness"},
    ingredientSlotType = {1, 1, 0, 1},
    resourceTypes = {"object/tangible/component/clothing/shared_reinforced_fiber_panels.iff", "object/tangible/component/clothing/shared_metal_fasteners.iff", "hide_wooly_tatooine", "object/tangible/component/clothing/shared_reinforced_fiber_panels.iff"},
-   resourceQuantities = {1, 2 12, 1},
+   resourceQuantities = {1, 2, 12, 1},
    contribution = {100, 100, 100, 100},
 
 
