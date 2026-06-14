@@ -56,7 +56,7 @@ object_draft_schematic_item_bounty_hunter_item_bh_plasma_battery = object_draft_
    xp = 42, 
 
    assemblySkill = "general_assembly", 
-   experimentingSkill = "general_experimentation", 
+   experimentingSkill = "bounty_hunter_crafting_experimentation",
    customizationSkill = "clothing_customization", 
 
    customizationOptions = {},

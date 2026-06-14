@@ -56,6 +56,7 @@ object_tangible_wearables_pants_pants_s18 = object_tangible_wearables_pants_shar
 				"object/creature/player/trandoshan_female.iff",
 				"object/creature/player/twilek_female.iff",
 				"object/creature/player/zabrak_female.iff",
+				"object/creature/player/nautolan_male.iff",
 				"object/mobile/vendor/aqualish_female.iff",
 				"object/mobile/vendor/bith_female.iff",
 				"object/mobile/vendor/bothan_female.iff",

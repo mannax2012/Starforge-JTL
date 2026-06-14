@@ -6867,8 +6867,17 @@ bool PlayerManagerImplementation::doEnhanceCharacter(uint32 crc, CreatureObject*
 	if (player == nullptr)
 		return false;
 
-	if (player->hasBuff(crc))
-		return false;
+	Buff* currentBuff = player->getBuff(crc);
+
+	if (currentBuff != nullptr) {
+		Locker currentBuffLocker(currentBuff, player);
+
+		int currentAmount = currentBuff->getAttributeModifierValue(attribute);
+		float currentDuration = currentBuff->getBuffDuration();
+
+		if (currentAmount > amount || currentDuration > duration)
+			return false;
+	}
 
 	ManagedReference<Buff*> buff = new Buff(player, crc, duration, buffType);
 

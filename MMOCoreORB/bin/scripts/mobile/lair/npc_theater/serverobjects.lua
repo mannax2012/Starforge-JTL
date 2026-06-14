@@ -266,6 +266,7 @@ includeFile("lair/npc_theater/tatooine/tatooine_rodian_clan_outpost_neutral_larg
 includeFile("lair/npc_theater/tatooine/tatooine_spice_fiend_neutral_small_theater.lua")
 includeFile("lair/npc_theater/tatooine/tatooine_trandosian_slaver_neutral_medium_theater.lua")
 includeFile("lair/npc_theater/tatooine/tatooine_tusken_camp.lua")
+includeFile("lair/npc_theater/tatooine/tatooine_tusken_princeling_warcamp_neutral_large_theater.lua")
 includeFile("lair/npc_theater/tatooine/tatooine_tusken_raider_kingdom_neutral_large_theater.lua")
 includeFile("lair/npc_theater/tatooine/tatooine_tusken_raider_village_neutral_large_theater.lua")
 includeFile("lair/npc_theater/tatooine/tatooine_valarian_assasin_neutral_large_theater.lua")
@@ -282,4 +283,3 @@ includeFile("lair/npc_theater/yavin4/yavin4_stranded_imperial_base_imperial_medi
 includeFile("lair/npc_theater/yavin4/yavin4_stranded_imperial_patrol_imperial_medium_theater.lua")
 includeFile("lair/npc_theater/yavin4/yavin4_stranded_rebel_base_rebel_medium_theater.lua")
 includeFile("lair/npc_theater/yavin4/yavin4_stranded_rebel_patrol_rebel_medium_theater.lua")
-

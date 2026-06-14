@@ -61,7 +61,8 @@ object_tangible_wearables_base_wearables_base = object_tangible_wearables_base_s
 			"object/creature/player/wookiee_male.iff",
 			"object/creature/player/wookiee_female.iff",
 			"object/creature/player/zabrak_male.iff",
-			"object/creature/player/zabrak_female.iff" },
+			"object/creature/player/zabrak_female.iff",
+			"object/creature/player/nautolan_male.iff",},
 
 	objectMenuComponent = "WearableObjectMenuComponent",
 }

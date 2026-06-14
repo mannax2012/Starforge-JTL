@@ -243,6 +243,7 @@ includeFile("lair/creature_lair/lok/lok_gurk_lair_neutral_small_03.lua")
 includeFile("lair/creature_lair/lok/lok_gurk_lair_neutral_small_04.lua")
 includeFile("lair/creature_lair/lok/lok_gurnaset_lair_neutral_medium.lua")
 includeFile("lair/creature_lair/lok/lok_kimogilla_dune_lair_neutral_medium.lua")
+includeFile("lair/creature_lair/lok/lok_kimogilla_dune_lair_neutral_medium_boss_01.lua")
 includeFile("lair/creature_lair/lok/lok_kimogilla_giant_dune_lair_neutral_medium.lua")
 includeFile("lair/creature_lair/lok/lok_kimogilla_lair2_neutral_medium.lua")
 includeFile("lair/creature_lair/lok/lok_kimogilla_lair_neutral_medium.lua")
@@ -594,4 +595,3 @@ includeFile("lair/creature_lair/yavin4/yavin4_tybis_male_neutral_medium_boss_01.
 includeFile("lair/creature_lair/yavin4/yavin4_whisper_bird_lair2_neutral_medium.lua")
 includeFile("lair/creature_lair/yavin4/yavin4_whisper_bird_lair_neutral_medium.lua")
 includeFile("lair/creature_lair/yavin4/yavin4_whisper_bird_male_neutral_medium_boss_01.lua")
-

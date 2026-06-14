@@ -9,9 +9,57 @@
 #include "server/zone/managers/collision/CollisionManager.h"
 #include "server/zone/objects/creature/buffs/BuffCRC.h"
 #include "server/zone/objects/creature/buffs/ShockedDebuff.h"
+#include "server/zone/packets/object/StopClientEffectObjectByLabelMessage.h"
+#include "server/zone/objects/player/PlayerObject.h"
 #include "server/zone/objects/tangible/TangibleObject.h"
+#include "templates/params/creature/CreatureAttribute.h"
 
 class BountyHunterShockDartCommand : public QueueCommand {
+	void stopForceRunClientEffect(CreatureObject* creature) const {
+		if (creature == nullptr)
+			return;
+
+		// Force run is played with an empty aux string, so test the raw stop packet
+		// with both empty and basename-style labels in addition to our older guesses.
+		static const char* labels[] = {
+			"",
+			"force_run",
+			"clienteffect/pl_force_run_self.cef",
+			"pl_force_run_self.cef",
+			"pl_force_run_self",
+			"force_run_self"
+		};
+
+		for (const char* label : labels) {
+			// The stale trail only matters on the target's own client, so send the
+			// stop packet directly to that session and broadcast it to observers separately.
+			creature->sendMessage(new StopClientEffectObjectByLabelMessage(creature, label));
+			creature->broadcastMessage(new StopClientEffectObjectByLabelMessage(creature, label), false);
+		}
+	}
+
+	void logShockForceRunTrace(CreatureObject* attacker, CreatureObject* target, const String& phase, bool removed1, bool removed2, bool removed3) const {
+		if (target == nullptr)
+			return;
+
+		StringBuffer msg;
+		msg << "[ForceRunTrace] phase=" << phase
+			<< " attacker=" << (attacker != nullptr ? attacker->getDisplayedName() : "null")
+			<< " attackerOid=" << (attacker != nullptr ? attacker->getObjectID() : 0)
+			<< " target=" << target->getDisplayedName()
+			<< " targetOid=" << target->getObjectID()
+			<< " removed1=" << removed1
+			<< " removed2=" << removed2
+			<< " removed3=" << removed3
+			<< " has1=" << target->hasBuff(BuffCRC::JEDI_FORCE_RUN_1)
+			<< " has2=" << target->hasBuff(BuffCRC::JEDI_FORCE_RUN_2)
+			<< " has3=" << target->hasBuff(BuffCRC::JEDI_FORCE_RUN_3)
+			<< " speedMulti=" << target->getSpeedMultiplierMod()
+			<< " accelMulti=" << target->getAccelerationMultiplierMod();
+
+		target->info(msg.toString(), true);
+	}
+
 	bool matchesRequiredItem(SceneObject* item, const String& templateToken) const {
 		if (item == nullptr)
 			return false;
@@ -84,6 +132,25 @@ class BountyHunterShockDartCommand : public QueueCommand {
 		return 5;
 	}
 
+	int getShockTickDamage(CreatureObject* targetCreature, TangibleObject* dart) const {
+		if (targetCreature == nullptr)
+			return 1;
+
+		// Start by draining a quarter of the victim's current max action pool on each tick.
+		int maxAction = targetCreature->getMaxHAM(CreatureAttribute::ACTION);
+		int tickDamage = Math::max(1, (int)ceil(maxAction * 0.25f));
+
+		if (dart == nullptr)
+			return tickDamage;
+
+		return tickDamage;
+	}
+
+	uint8 getShockDamageAttribute() const {
+		// Shock is more of an endurance/mobility disruption than a lethal poison.
+		return CreatureAttribute::ACTION;
+	}
+
 	float getMaxRange() const {
 		return 32.f;
 	}
@@ -129,13 +196,43 @@ public:
 		}
 
 		const int shockDurationSeconds = getShockDurationSeconds(dart);
+		const int shockTickDamage = getShockTickDamage(targetCreature, dart);
 		const bool stripForceRun = targetCreature->isPlayerCreature() && targetCreature->getPlayerObject() != nullptr
 			&& targetCreature->getPlayerObject()->isJedi();
+
+		if (stripForceRun) {
+			bool removedForceRun = false;
+			bool removed1 = false;
+			bool removed2 = false;
+			bool removed3 = false;
+			logShockForceRunTrace(creature, targetCreature, "shock_hit_before_stop", removed1, removed2, removed3);
+			stopForceRunClientEffect(targetCreature);
+
+			if (targetCreature->hasBuff(BuffCRC::JEDI_FORCE_RUN_3)) {
+				targetCreature->removeBuff(BuffCRC::JEDI_FORCE_RUN_3);
+				removedForceRun = true;
+				removed3 = true;
+			}
+
+			if (targetCreature->hasBuff(BuffCRC::JEDI_FORCE_RUN_2)) {
+				targetCreature->removeBuff(BuffCRC::JEDI_FORCE_RUN_2);
+				removedForceRun = true;
+				removed2 = true;
+			}
+
+			if (targetCreature->hasBuff(BuffCRC::JEDI_FORCE_RUN_1)) {
+				targetCreature->removeBuff(BuffCRC::JEDI_FORCE_RUN_1);
+				removedForceRun = true;
+				removed1 = true;
+			}
+
+			logShockForceRunTrace(creature, targetCreature, "shock_hit_after_remove", removed1, removed2, removed3);
+		}
 
 		// Reapplying the same buff CRC replaces the existing shocked debuff, so the dart can
 		// be fired into the same target again to refresh the effect.
 		ManagedReference<Buff*> shockedDebuff = new ShockedDebuff(targetCreature, STRING_HASHCODE("bountyhuntershockdart_shocked"),
-			shockDurationSeconds, getShockSnareSeconds(), stripForceRun);
+			shockDurationSeconds, getShockSnareSeconds(), stripForceRun, creature->getObjectID(), shockTickDamage, getShockDamageAttribute());
 
 		Locker debuffLocker(shockedDebuff, targetCreature);
 		targetCreature->addBuff(shockedDebuff);

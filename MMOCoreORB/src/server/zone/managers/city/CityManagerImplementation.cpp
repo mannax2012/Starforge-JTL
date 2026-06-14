@@ -765,6 +765,7 @@ void CityManagerImplementation::processCityUpdate(CityRegion* city) {
 		radius = city->getRadius();
 
 		city->cleanupCitizens();
+		int citizens = city->getCitizenCount();
 
 		ManagedReference<SceneObject*> mayor = zoneServer->getObject(city->getMayorID());
 
@@ -773,12 +774,10 @@ void CityManagerImplementation::processCityUpdate(CityRegion* city) {
 
 			if (ghost != nullptr) {
 				TransactionLog trx(TrxCode::EXPERIENCE, mayor);
-				ghost->addExperience(trx, "political", 750, true);
+				ghost->addExperience(trx, "political", 750 + (citizens * 200), true);
 			}
 		}
 		updateCityVoting(city);
-
-		int citizens = city->getCitizenCount();
 
 		if (cityRank - 1 >= citizensPerRank.size())
 			return;
@@ -1161,7 +1160,7 @@ void CityManagerImplementation::updateCityVoting(CityRegion* city, bool override
 
 			if (ghost != nullptr) {
 				TransactionLog trx(TrxCode::EXPERIENCE, mayor);
-				ghost->addExperience(trx, "political", votes * 300, true);
+				ghost->addExperience(trx, "political", votes * 500, true);
 			}
 
 			if (votes > topVotes || (votes == topVotes && candidateID == incumbentID)) {

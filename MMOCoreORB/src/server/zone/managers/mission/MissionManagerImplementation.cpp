@@ -1006,10 +1006,14 @@ void MissionManagerImplementation::randomizeGenericDestroyMission(CreatureObject
 	}
 
 	int difficultyLevel = System::random(rolledMaxDiff - rolledMinDiff) + rolledMinDiff;
-	int difficulty = (difficultyLevel - minDiff) / ((maxDiff > (minDiff + 5) ? maxDiff - minDiff : 5) / 5);
+	int difficultyStep = ((maxDiff > (minDiff + 5) ? maxDiff - minDiff : 5) / 5);
 
-	if (difficulty == 5)
-		difficulty = 4;
+	if (difficultyStep < 1) {
+		difficultyStep = 1;
+	}
+
+	int difficulty = (difficultyLevel - minDiff) / difficultyStep;
+	difficulty = Math::min(difficulty, 4);
 
 	int diffDisplay = difficultyLevel < 5 ? 4 : difficultyLevel;
 	PlayerObject* targetGhost = player->getPlayerObject();

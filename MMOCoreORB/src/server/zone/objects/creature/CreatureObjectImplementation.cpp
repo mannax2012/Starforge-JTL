@@ -3,6 +3,7 @@
 		See file COPYING for copying conditions. */
 
 #include "server/zone/objects/creature/CreatureObject.h"
+#include "server/zone/objects/creature/buffs/BuffCRC.h"
 #include "server/zone/objects/creature/ai/AiAgent.h"
 #include "server/zone/objects/creature/ai/HelperDroidObject.h"
 #include "templates/params/creature/CreatureState.h"
@@ -39,17 +40,6 @@
 #include "templates/params/creature/CreatureAttribute.h"
 #include "templates/params/creature/CreaturePosture.h"
 #include "server/zone/objects/creature/commands/effect/CommandEffect.h"
-
-namespace {
-	void stopBuffClientEffectIfNeeded(CreatureObject* creature, uint32 buffcrc) {
-		if (creature == nullptr)
-			return;
-
-		if (buffcrc == BuffCRC::JEDI_FORCE_RUN_1 || buffcrc == BuffCRC::JEDI_FORCE_RUN_2 || buffcrc == BuffCRC::JEDI_FORCE_RUN_3) {
-			creature->stopEffect("force_run");
-		}
-	}
-}
 #include "server/zone/objects/creature/CommandQueue.h"
 #include "server/zone/Zone.h"
 #include "server/zone/SpaceZone.h"
@@ -93,7 +83,6 @@ namespace {
 
 #include "server/zone/objects/tangible/threat/ThreatMap.h"
 
-#include "engine/core/TaskManager.h"
 #include "server/zone/objects/creature/credits/CreditObject.h"
 
 #include "templates/customization/AssetCustomizationManagerTemplate.h"
@@ -3073,13 +3062,32 @@ void CreatureObjectImplementation::renewBuff(uint32 buffCRC, int duration, bool 
 }
 
 bool CreatureObjectImplementation::removeBuff(uint32 buffcrc) {
+	const bool traceForceRun = buffcrc == BuffCRC::JEDI_FORCE_RUN_1
+		|| buffcrc == BuffCRC::JEDI_FORCE_RUN_2
+		|| buffcrc == BuffCRC::JEDI_FORCE_RUN_3;
+
+	if (traceForceRun) {
+		removePendingTask("forceRunEffect");
+		stopEffect("force_run");
+
+		StringBuffer msg;
+		msg << "[ForceRunTrace] phase=removeBuff_before"
+			<< " player=" << getDisplayedName()
+			<< " oid=" << getObjectID()
+			<< " requestCRC=0x" << hex << buffcrc << dec
+			<< " has1=" << hasBuff(BuffCRC::JEDI_FORCE_RUN_1)
+			<< " has2=" << hasBuff(BuffCRC::JEDI_FORCE_RUN_2)
+			<< " has3=" << hasBuff(BuffCRC::JEDI_FORCE_RUN_3)
+			<< " speedMulti=" << getSpeedMultiplierMod()
+			<< " accelMulti=" << getAccelerationMultiplierMod();
+
+		info(msg.toString(), true);
+	}
+
 	Reference<Buff*> buff = getBuff(buffcrc);
 
 	//BuffList::removeBuff checks to see if the buffcrc exists in the map.
 	bool ret = creatureBuffs.removeBuff(buffcrc);
-
-	if (ret)
-		stopBuffClientEffectIfNeeded(asCreatureObject(), buffcrc);
 
 	if (buff != nullptr) {
 		const Vector<unsigned long long>* secondaryCRCs = buff->getSecondaryBuffCRCs();
@@ -3087,6 +3095,22 @@ bool CreatureObjectImplementation::removeBuff(uint32 buffcrc) {
 		for (int i = 0; i < secondaryCRCs->size(); i++) {
 			removeBuff(secondaryCRCs->get(i));
 		}
+	}
+
+	if (traceForceRun) {
+		StringBuffer msg;
+		msg << "[ForceRunTrace] phase=removeBuff_after"
+			<< " player=" << getDisplayedName()
+			<< " oid=" << getObjectID()
+			<< " requestCRC=0x" << hex << buffcrc << dec
+			<< " removed=" << ret
+			<< " has1=" << hasBuff(BuffCRC::JEDI_FORCE_RUN_1)
+			<< " has2=" << hasBuff(BuffCRC::JEDI_FORCE_RUN_2)
+			<< " has3=" << hasBuff(BuffCRC::JEDI_FORCE_RUN_3)
+			<< " speedMulti=" << getSpeedMultiplierMod()
+			<< " accelMulti=" << getAccelerationMultiplierMod();
+
+		info(msg.toString(), true);
 	}
 
 	return ret;
@@ -3108,12 +3132,8 @@ void CreatureObjectImplementation::removeBuff(Buff* buff) {
 	if (buff == nullptr)
 		return;
 
-	uint32 buffcrc = buff->getBuffCRC();
-
 	//BuffList::removeBuff checks to see if the buffcrc exists in the map.
 	creatureBuffs.removeBuff(buff);
-
-	stopBuffClientEffectIfNeeded(asCreatureObject(), buffcrc);
 }
 
 void CreatureObjectImplementation::clearBuffs(bool updateclient, bool removeAll) {

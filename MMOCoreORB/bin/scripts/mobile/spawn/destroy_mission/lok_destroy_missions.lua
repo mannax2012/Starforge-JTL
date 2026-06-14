@@ -141,15 +141,21 @@ lok_destroy_missions = {
 			size = 25,
 		},
 		{
-			lairTemplateName = "lok_gurk_lair2_neutral_medium_boss_01",
-			minDifficulty = 41,
-			maxDifficulty = 45,
-			size = 25,
-		},
-		{
 			lairTemplateName = "lok_canyon_corsair_camp2_neutral_medium_theater",
 			minDifficulty = 45,
 			maxDifficulty = 50,
+			size = 25,
+		},
+		{
+			lairTemplateName = "lok_gurk_lair2_neutral_medium_boss_01",
+			minDifficulty = 91,
+			maxDifficulty = 100,
+			size = 25,
+		},
+		{
+			lairTemplateName = "lok_kimogilla_dune_lair_neutral_medium_boss_01",
+			minDifficulty = 91,
+			maxDifficulty = 100,
 			size = 25,
 		},
 	}

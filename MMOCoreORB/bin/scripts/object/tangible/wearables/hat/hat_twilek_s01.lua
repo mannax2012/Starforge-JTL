@@ -43,6 +43,7 @@
 
 object_tangible_wearables_hat_hat_twilek_s01 = object_tangible_wearables_hat_shared_hat_twilek_s01:new {
 	playerRaces = { "object/creature/player/twilek_female.iff",
+				"object/creature/player/nautolan_male.iff",
 				"object/mobile/vendor/twilek_female.iff" },
 
 	numberExperimentalProperties = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
