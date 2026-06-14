@@ -20,10 +20,37 @@ SCREEN_SESSION="${CORE3_SCREEN_SESSION:-core3-gdb}"
 RAW_PROCESS_NAME="${CORE3_RAW_PROCESS_NAME:-core3}"
 CRASH_ROOT="${CORE3_CRASH_ROOT:-${LOG_DIR}/crash}"
 LATEST_CAPTURE_FILE="${CORE3_LATEST_CAPTURE_FILE:-${CRASH_ROOT}/latest_capture.txt}"
+BACKUP_ROOT="${CORE3_BACKUP_ROOT:-${LOG_DIR}/backup}"
+LATEST_BACKUP_FILE="${CORE3_LATEST_BACKUP_FILE:-${BACKUP_ROOT}/latest_backup.txt}"
+BACKUP_KEEP_RAW="${CORE3_BACKUP_KEEP_RAW:-0}"
+BACKUP_KEEP_COUNT="${CORE3_BACKUP_KEEP_COUNT:-5}"
 TAIL_LINES="${CORE3_TAIL_LINES:-400}"
 RUN_WAIT_SECONDS="${CORE3_RUN_WAIT_SECONDS:-90}"
 SHUTDOWN_WAIT_SECONDS="${CORE3_SHUTDOWN_WAIT_SECONDS:-180}"
-RUN_ARGUMENTS="${CORE3_RUN_ARGUMENTS:-reloadstrings}"
+RUN_ARGUMENTS="${CORE3_RUN_ARGUMENTS:-}"
+EMAIL_ENABLED="${CORE3_EMAIL_ENABLED:-0}"
+EMAIL_TO="${CORE3_EMAIL_TO:-}"
+EMAIL_FROM="${CORE3_EMAIL_FROM:-${EMAIL_TO}}"
+EMAIL_SMTP_HOST="${CORE3_EMAIL_SMTP_HOST:-}"
+EMAIL_SMTP_PORT="${CORE3_EMAIL_SMTP_PORT:-587}"
+EMAIL_SMTP_USER="${CORE3_EMAIL_SMTP_USER:-}"
+EMAIL_SMTP_PASS="${CORE3_EMAIL_SMTP_PASS:-}"
+EMAIL_SMTP_STARTTLS="${CORE3_EMAIL_SMTP_STARTTLS:-1}"
+EMAIL_SUBJECT_PREFIX="${CORE3_EMAIL_SUBJECT_PREFIX:-[core3-capture]}"
+TRANSFER_ENABLED="${CORE3_TRANSFER_ENABLED:-0}"
+TRANSFER_DEST="${CORE3_TRANSFER_DEST:-}"
+TRANSFER_PATH="${CORE3_TRANSFER_PATH:-}"
+TRANSFER_PORT="${CORE3_TRANSFER_PORT:-22}"
+TRANSFER_SSH_KEY="${CORE3_TRANSFER_SSH_KEY:-}"
+TRANSFER_STRICT_HOST_KEY_CHECKING="${CORE3_TRANSFER_STRICT_HOST_KEY_CHECKING:-1}"
+TRANSFER_KNOWN_HOSTS="${CORE3_TRANSFER_KNOWN_HOSTS:-${HOME}/.ssh/known_hosts}"
+SQL_BACKUP_ENABLED="${CORE3_SQL_BACKUP_ENABLED:-0}"
+SQL_DUMP_TOOL="${CORE3_SQL_DUMP_TOOL:-mysqldump}"
+SQL_HOST="${CORE3_SQL_HOST:-localhost}"
+SQL_PORT="${CORE3_SQL_PORT:-3306}"
+SQL_USER="${CORE3_SQL_USER:-}"
+SQL_PASSWORD="${CORE3_SQL_PASSWORD:-}"
+SQL_DATABASE="${CORE3_SQL_DATABASE:-}"
 
 export SCREENDIR="${SCREEN_DIR}"
 
@@ -67,7 +94,11 @@ session_exists() {
 }
 
 raw_server_pids() {
-  pgrep -x "${RAW_PROCESS_NAME}" || true
+  ps -C "${RAW_PROCESS_NAME}" -o pid=,stat= 2>/dev/null | awk '$2 !~ /^Z/ { print $1 }'
+}
+
+raw_server_zombie_pids() {
+  ps -C "${RAW_PROCESS_NAME}" -o pid=,stat= 2>/dev/null | awk '$2 ~ /^Z/ { print $1 }'
 }
 
 raw_server_running() {
@@ -86,7 +117,9 @@ wait_for_run_state() {
 }
 
 wait_for_shutdown_state() {
-  for _ in $(seq 1 "${SHUTDOWN_WAIT_SECONDS}"); do
+  local total_wait_seconds="$1"
+
+  for _ in $(seq 1 "${total_wait_seconds}"); do
     if ! raw_server_running && [[ "$(gdb_state)" == "stopped" ]]; then
       return 0
     fi
@@ -118,7 +151,7 @@ gdb_state() {
 }
 
 ensure_paths() {
-  mkdir -p "${LOG_DIR}" "${CRASH_ROOT}" "${SCREEN_DIR}"
+  mkdir -p "${LOG_DIR}" "${CRASH_ROOT}" "${BACKUP_ROOT}" "${SCREEN_DIR}"
   chmod 700 "${SCREEN_DIR}" 2>/dev/null || true
   cleanup_dead_screens
 }
@@ -232,6 +265,13 @@ current_capture_dir() {
   printf '%s\n' "${dir}"
 }
 
+current_backup_dir() {
+  local dir
+  dir="${BACKUP_ROOT}/$(timestamp)-database"
+  mkdir -p "${dir}"
+  printf '%s\n' "${dir}"
+}
+
 capture_log_snapshot() {
   local capture_dir="$1"
 
@@ -257,6 +297,255 @@ capture_log_snapshot() {
   } >"${capture_dir}/metadata.txt"
 
   printf '%s\n' "${capture_dir}" >"${LATEST_CAPTURE_FILE}"
+}
+
+email_capture_enabled() {
+  [[ "${EMAIL_ENABLED}" == "1" ]]
+}
+
+email_capture_configured() {
+  email_capture_enabled && [[ -n "${EMAIL_TO}" ]] && [[ -n "${EMAIL_FROM}" ]] && [[ -n "${EMAIL_SMTP_HOST}" ]]
+}
+
+create_zip_archive() {
+  local source_dir="$1"
+  local archive_path="$2"
+
+  require_tool python3
+
+  python3 - "${source_dir}" "${archive_path}" <<'PY'
+import pathlib
+import sys
+import zipfile
+
+source_dir = pathlib.Path(sys.argv[1]).resolve()
+archive_path = pathlib.Path(sys.argv[2]).resolve()
+
+archive_path.parent.mkdir(parents=True, exist_ok=True)
+
+with zipfile.ZipFile(archive_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+    for path in sorted(source_dir.rglob("*")):
+        if path == archive_path or not path.is_file():
+            continue
+        zf.write(path, arcname=path.relative_to(source_dir))
+PY
+}
+
+transfer_enabled() {
+  [[ "${TRANSFER_ENABLED}" == "1" ]]
+}
+
+transfer_configured() {
+  transfer_enabled && [[ -n "${TRANSFER_DEST}" ]] && [[ -n "${TRANSFER_PATH}" ]]
+}
+
+ssh_option_args() {
+  if [[ "${TRANSFER_STRICT_HOST_KEY_CHECKING}" == "1" ]]; then
+    printf '%s\n' "-o" "StrictHostKeyChecking=yes" "-o" "UserKnownHostsFile=${TRANSFER_KNOWN_HOSTS}"
+  else
+    printf '%s\n' "-o" "StrictHostKeyChecking=no"
+  fi
+}
+
+ensure_remote_transfer_path() {
+  local remote_path="$1"
+  local remote_quoted
+  local ssh_args=()
+
+  remote_quoted="$(printf '%q' "${remote_path}")"
+
+  while IFS= read -r arg; do
+    ssh_args+=("${arg}")
+  done < <(ssh_option_args)
+
+  require_tool ssh
+
+  if [[ -n "${TRANSFER_SSH_KEY}" ]]; then
+    require_file "${TRANSFER_SSH_KEY}" "transfer ssh key"
+    ssh_args+=(-i "${TRANSFER_SSH_KEY}")
+  fi
+
+  ssh_args+=(-p "${TRANSFER_PORT}")
+  ssh "${ssh_args[@]}" "${TRANSFER_DEST}" "mkdir -p -- ${remote_quoted}"
+}
+
+transfer_file() {
+  local file_path="$1"
+  local remote_path="$2"
+  local scp_args=()
+
+  while IFS= read -r arg; do
+    scp_args+=("${arg}")
+  done < <(ssh_option_args)
+
+  require_tool scp
+
+  if [[ -n "${TRANSFER_SSH_KEY}" ]]; then
+    require_file "${TRANSFER_SSH_KEY}" "transfer ssh key"
+    scp_args+=(-i "${TRANSFER_SSH_KEY}")
+  fi
+
+  scp_args+=(-P "${TRANSFER_PORT}")
+  scp "${scp_args[@]}" "${file_path}" "${TRANSFER_DEST}:${remote_path}/"
+}
+
+transfer_artifact_if_configured() {
+  local artifact_path="$1"
+  local artifact_label="$2"
+
+  if ! transfer_enabled; then
+    return 0
+  fi
+
+  if ! transfer_configured; then
+    log "Transfer skipped for ${artifact_label}: missing CORE3_TRANSFER_DEST or CORE3_TRANSFER_PATH"
+    return 0
+  fi
+
+  if ! ensure_remote_transfer_path "${TRANSFER_PATH}"; then
+    log "Transfer failed for ${artifact_label}: could not create remote path ${TRANSFER_PATH}"
+    return 0
+  fi
+
+  if ! transfer_file "${artifact_path}" "${TRANSFER_PATH}"; then
+    log "Transfer failed for ${artifact_label}: ${artifact_path}"
+    return 0
+  fi
+
+  log "Transferred ${artifact_label} to ${TRANSFER_DEST}:${TRANSFER_PATH}"
+}
+
+rotate_backup_archives() {
+  local keep_count="$1"
+  local -a archives=()
+
+  if ! [[ "${keep_count}" =~ ^[0-9]+$ ]]; then
+    return 0
+  fi
+
+  if (( keep_count < 1 )); then
+    return 0
+  fi
+
+  mapfile -t archives < <(find "${BACKUP_ROOT}" -maxdepth 1 -type f -name '*.zip' -printf '%T@ %p\n' | sort -nr | awk '{sub($1 FS, ""); print}')
+
+  if (( ${#archives[@]} <= keep_count )); then
+    return 0
+  fi
+
+  local index
+  for (( index = keep_count; index < ${#archives[@]}; index++ )); do
+    rm -f "${archives[${index}]}"
+    log "Removed old backup archive ${archives[${index}]}"
+  done
+}
+
+send_capture_email() {
+  local capture_dir="$1"
+  local archive_path="$2"
+
+  CORE3_CAPTURE_DIR="${capture_dir}" \
+  CORE3_CAPTURE_ARCHIVE="${archive_path}" \
+  CORE3_EMAIL_TO="${EMAIL_TO}" \
+  CORE3_EMAIL_FROM="${EMAIL_FROM}" \
+  CORE3_EMAIL_SMTP_HOST="${EMAIL_SMTP_HOST}" \
+  CORE3_EMAIL_SMTP_PORT="${EMAIL_SMTP_PORT}" \
+  CORE3_EMAIL_SMTP_USER="${EMAIL_SMTP_USER}" \
+  CORE3_EMAIL_SMTP_PASS="${EMAIL_SMTP_PASS}" \
+  CORE3_EMAIL_SMTP_STARTTLS="${EMAIL_SMTP_STARTTLS}" \
+  CORE3_EMAIL_SUBJECT_PREFIX="${EMAIL_SUBJECT_PREFIX}" \
+  CORE3_SERVER_BIN="${SERVER_BIN}" \
+  python3 - <<'PY'
+import datetime
+import os
+import pathlib
+import smtplib
+import socket
+import ssl
+from email.message import EmailMessage
+
+capture_dir = pathlib.Path(os.environ["CORE3_CAPTURE_DIR"]).resolve()
+archive_path = pathlib.Path(os.environ["CORE3_CAPTURE_ARCHIVE"]).resolve()
+to_addr = os.environ["CORE3_EMAIL_TO"]
+from_addr = os.environ["CORE3_EMAIL_FROM"]
+smtp_host = os.environ["CORE3_EMAIL_SMTP_HOST"]
+smtp_port = int(os.environ["CORE3_EMAIL_SMTP_PORT"])
+smtp_user = os.environ.get("CORE3_EMAIL_SMTP_USER", "")
+smtp_pass = os.environ.get("CORE3_EMAIL_SMTP_PASS", "")
+use_starttls = os.environ.get("CORE3_EMAIL_SMTP_STARTTLS", "1") != "0"
+subject_prefix = os.environ.get("CORE3_EMAIL_SUBJECT_PREFIX", "[core3-capture]")
+server_bin = os.environ.get("CORE3_SERVER_BIN", "core3")
+hostname = socket.gethostname()
+captured_at = datetime.datetime.now().astimezone().strftime("%Y-%m-%d %H:%M:%S %Z")
+
+msg = EmailMessage()
+msg["Subject"] = f"{subject_prefix} {hostname} {capture_dir.name}"
+msg["From"] = from_addr
+msg["To"] = to_addr
+msg.set_content(
+    "\n".join(
+        [
+            "core3 crash capture created.",
+            "",
+            f"Host: {hostname}",
+            f"Captured: {captured_at}",
+            f"Server: {server_bin}",
+            f"Capture directory: {capture_dir}",
+            f"Attachment: {archive_path.name}",
+        ]
+    )
+)
+
+with archive_path.open("rb") as fh:
+    msg.add_attachment(
+        fh.read(),
+        maintype="application",
+        subtype="zip",
+        filename=archive_path.name,
+    )
+
+if use_starttls:
+    context = ssl.create_default_context()
+    with smtplib.SMTP(smtp_host, smtp_port, timeout=30) as smtp:
+        smtp.ehlo()
+        smtp.starttls(context=context)
+        smtp.ehlo()
+        if smtp_user:
+            smtp.login(smtp_user, smtp_pass)
+        smtp.send_message(msg)
+else:
+    with smtplib.SMTP(smtp_host, smtp_port, timeout=30) as smtp:
+        smtp.ehlo()
+        if smtp_user:
+            smtp.login(smtp_user, smtp_pass)
+        smtp.send_message(msg)
+PY
+}
+
+email_capture_artifacts() {
+  local capture_dir="$1"
+  local archive_path="${capture_dir}/capture.zip"
+
+  if ! email_capture_enabled; then
+    return 0
+  fi
+
+  if ! email_capture_configured; then
+    log "Capture email skipped: missing CORE3_EMAIL_TO, CORE3_EMAIL_FROM, or CORE3_EMAIL_SMTP_HOST"
+    return 0
+  fi
+
+  if ! create_zip_archive "${capture_dir}" "${archive_path}"; then
+    log "Capture email skipped: failed to create archive for ${capture_dir}"
+    return 0
+  fi
+
+  if ! send_capture_email "${capture_dir}" "${archive_path}"; then
+    log "Capture email failed for ${capture_dir}"
+    return 0
+  fi
+
+  log "Capture email sent for ${capture_dir} to ${EMAIL_TO}"
 }
 
 capture_live_gdb_dump_if_crashed() {
@@ -294,10 +583,21 @@ capture_crash_artifacts() {
   require_existing_session
 
   local capture_dir
+  local capture_archive
   capture_dir="$(current_capture_dir)"
+  capture_archive="${capture_dir}/capture.zip"
 
   capture_log_snapshot "${capture_dir}"
   capture_live_gdb_dump_if_crashed "${capture_dir}"
+  email_capture_artifacts "${capture_dir}"
+
+  if transfer_enabled; then
+    if create_zip_archive "${capture_dir}" "${capture_archive}"; then
+      transfer_artifact_if_configured "${capture_archive}" "capture archive"
+    else
+      log "Transfer skipped for capture archive: failed to create archive for ${capture_dir}"
+    fi
+  fi
 
   printf '%s\n' "${capture_dir}"
 }
@@ -314,6 +614,8 @@ shutdown_server() {
   require_running_managed_session
 
   local shutdown_args="${*:-0}"
+  local shutdown_minutes=0
+  local shutdown_wait_seconds="${SHUTDOWN_WAIT_SECONDS}"
   local screen_snapshot
   screen_snapshot="$(mktemp)"
 
@@ -326,15 +628,21 @@ shutdown_server() {
 
   rm -f "${screen_snapshot}"
 
+  if [[ "${shutdown_args}" =~ ^[0-9]+$ ]]; then
+    shutdown_minutes="${shutdown_args}"
+  fi
+
+  shutdown_wait_seconds="$((shutdown_minutes * 60 + SHUTDOWN_WAIT_SECONDS))"
+
   log "Sending managed shutdown command to core3 via session ${SCREEN_SESSION}: shutdown ${shutdown_args}"
   send_to_gdb "shutdown ${shutdown_args}"
 
-  if ! wait_for_shutdown_state; then
+  if ! wait_for_shutdown_state "${shutdown_wait_seconds}"; then
     local state
     local pids
     state="$(gdb_state)"
     pids="$(raw_server_pids | tr '\n' ' ' | sed 's/[[:space:]]*$//')"
-    fail "timed out waiting ${SHUTDOWN_WAIT_SECONDS}s for clean shutdown after sending 'shutdown ${shutdown_args}' (session=${SCREEN_SESSION}, gdb_state=${state}, core3_pids=${pids:-none}). Attach to inspect the server console/logs."
+    fail "timed out waiting ${shutdown_wait_seconds}s for clean shutdown after sending 'shutdown ${shutdown_args}' (session=${SCREEN_SESSION}, gdb_state=${state}, core3_pids=${pids:-none}). Attach to inspect the server console/logs."
   fi
 }
 
@@ -350,6 +658,7 @@ run_server() {
   fi
 
   capture_if_crashed
+  recover_db
 
   configure_gdb_run_args
 
@@ -377,6 +686,19 @@ status_server() {
   pids="$(raw_server_pids | tr '\n' ' ' | sed 's/[[:space:]]*$//')"
   if [[ -n "${pids}" ]]; then
     printf 'core3_pids=%s\n' "${pids}"
+    local first_pid
+    first_pid="$(printf '%s\n' "${pids}" | awk '{print $1}')"
+    if [[ -n "${first_pid}" ]] && [[ -r "/proc/${first_pid}/cmdline" ]]; then
+      local cmdline
+      cmdline="$(tr '\0' ' ' <"/proc/${first_pid}/cmdline" | sed 's/[[:space:]]*$//')"
+      printf 'core3_cmdline=%s\n' "${cmdline}"
+    fi
+  fi
+
+  local zombie_pids
+  zombie_pids="$(raw_server_zombie_pids | tr '\n' ' ' | sed 's/[[:space:]]*$//')"
+  if [[ -n "${zombie_pids}" ]]; then
+    printf 'core3_zombie_pids=%s\n' "${zombie_pids}"
   fi
 
   if [[ -f "${LATEST_CAPTURE_FILE}" ]]; then
@@ -396,11 +718,10 @@ stop_server() {
     if raw_server_running; then
       local pid
       for pid in $(raw_server_pids); do
-        log "Stopping unmanaged core3 pid=${pid}"
+        log "Sending SIGTERM to unmanaged core3 pid=${pid}"
         kill -TERM "${pid}" 2>/dev/null || true
         if ! wait_for_pid_exit "${pid}"; then
-          log "Unmanaged core3 pid=${pid} did not stop after SIGTERM; sending SIGKILL"
-          kill -KILL "${pid}" 2>/dev/null || true
+          fail "unmanaged core3 pid=${pid} did not stop after SIGTERM; refusing to send SIGKILL because it can leave Berkeley DB requiring recovery. Stop it from the server console if possible, or use force-stop if you accept the risk."
         fi
       done
     else
@@ -413,7 +734,38 @@ stop_server() {
   state="$(gdb_state)"
 
   if [[ "${state}" == "running" ]]; then
-    log "Interrupting running inferior in ${SCREEN_SESSION}"
+    log "stop requested while core3 is running; using managed shutdown to avoid Berkeley DB recovery"
+    shutdown_server 0
+  fi
+
+  log "Stopping screen session ${SCREEN_SESSION}"
+  screen -S "${SCREEN_SESSION}" -X quit || true
+  rm -f "${GDB_STATE_FILE}"
+}
+
+force_stop_server() {
+  if ! session_exists; then
+    if raw_server_running; then
+      local pid
+      for pid in $(raw_server_pids); do
+        log "Force-stopping unmanaged core3 pid=${pid} with SIGTERM"
+        kill -TERM "${pid}" 2>/dev/null || true
+        if ! wait_for_pid_exit "${pid}"; then
+          log "Unmanaged core3 pid=${pid} did not stop after SIGTERM; sending SIGKILL"
+          kill -KILL "${pid}" 2>/dev/null || true
+        fi
+      done
+    else
+      log "force-stop requested but screen session ${SCREEN_SESSION} does not exist"
+    fi
+    return 0
+  fi
+
+  local state
+  state="$(gdb_state)"
+
+  if [[ "${state}" == "running" ]]; then
+    log "Force-stopping managed inferior in ${SCREEN_SESSION} via Ctrl-C"
     screen -S "${SCREEN_SESSION}" -p 0 -X stuff $'\003'
     sleep 2
   fi
@@ -421,6 +773,97 @@ stop_server() {
   log "Stopping screen session ${SCREEN_SESSION}"
   screen -S "${SCREEN_SESSION}" -X quit || true
   rm -f "${GDB_STATE_FILE}"
+}
+
+recover_db() {
+  require_tool db_recover
+
+  if raw_server_running; then
+    local pids
+    pids="$(raw_server_pids | tr '\n' ' ' | sed 's/[[:space:]]*$//')"
+    fail "cannot run db_recover while core3 is running (pid(s): ${pids})"
+  fi
+
+  local state
+  state="$(gdb_state)"
+  if session_exists && [[ "${state}" == "running" ]]; then
+    fail "cannot run db_recover while the managed gdb session is still running core3"
+  fi
+
+  local db_home="${BIN_DIR}/databases"
+  [[ -d "${db_home}" ]] || fail "database home not found at ${db_home}"
+
+  log "Running db_recover against ${db_home}"
+  db_recover -h "${db_home}" -v
+  log "db_recover completed for ${db_home}"
+}
+
+backup_sql_database() {
+  local output_file="$1"
+  local -a args=()
+
+  if [[ "${SQL_BACKUP_ENABLED}" != "1" ]]; then
+    return 0
+  fi
+
+  [[ -n "${SQL_USER}" ]] || fail "CORE3_SQL_USER is required when CORE3_SQL_BACKUP_ENABLED=1"
+  [[ -n "${SQL_DATABASE}" ]] || fail "CORE3_SQL_DATABASE is required when CORE3_SQL_BACKUP_ENABLED=1"
+
+  require_tool "${SQL_DUMP_TOOL}"
+
+  args+=(-h "${SQL_HOST}" -P "${SQL_PORT}" -u "${SQL_USER}")
+
+  if [[ -n "${SQL_PASSWORD}" ]]; then
+    args+=("-p${SQL_PASSWORD}")
+  fi
+
+  args+=("${SQL_DATABASE}")
+
+  "${SQL_DUMP_TOOL}" "${args[@]}" >"${output_file}"
+  log "SQL backup completed: ${output_file}"
+}
+
+backup_database() {
+  require_tool db_hotbackup
+
+  local db_home="${BIN_DIR}/databases"
+  [[ -d "${db_home}" ]] || fail "database home not found at ${db_home}"
+
+  local backup_dir
+  local raw_db_dir
+  local archive_path
+
+  backup_dir="$(current_backup_dir)"
+  raw_db_dir="${backup_dir}/databases"
+  archive_path="${backup_dir}.zip"
+
+  log "Running db_hotbackup against ${db_home} into ${raw_db_dir}"
+  db_hotbackup -h "${db_home}" -b "${raw_db_dir}"
+
+  if [[ "${SQL_BACKUP_ENABLED}" == "1" ]]; then
+    backup_sql_database "${backup_dir}/sql-backup.sql"
+  fi
+
+  {
+    printf 'timestamp=%s\n' "$(date --iso-8601=seconds)"
+    printf 'db_home=%s\n' "${db_home}"
+    printf 'raw_server_running=%s\n' "$(raw_server_running && printf yes || printf no)"
+    printf 'sql_backup_enabled=%s\n' "${SQL_BACKUP_ENABLED}"
+  } >"${backup_dir}/metadata.txt"
+
+  create_zip_archive "${backup_dir}" "${archive_path}"
+  printf '%s\n' "${archive_path}" >"${LATEST_BACKUP_FILE}"
+  log "Database backup archive created at ${archive_path}"
+
+  transfer_artifact_if_configured "${archive_path}" "database backup"
+  rotate_backup_archives "${BACKUP_KEEP_COUNT}"
+
+  if [[ "${BACKUP_KEEP_RAW}" != "1" ]]; then
+    rm -rf "${backup_dir}"
+    log "Removed raw backup directory ${backup_dir}"
+  fi
+
+  printf '%s\n' "${archive_path}"
 }
 
 usage() {
@@ -432,8 +875,41 @@ Commands:
   attach           Reattach to the persistent screen session running gdb ./core3.
   status           Show whether the screen session exists and whether gdb is running/stopped.
   capture-crash    Archive the current gdb/log state into a timestamped crash folder.
+  backup-db        Create a Berkeley DB hot backup archive and optionally transfer it.
   shutdown         Send the in-server console command `shutdown` (default: `shutdown 0`) and wait for a clean save/exit.
-  stop             Stop the screen session (interrupting the inferior first if needed).
+  stop             Prefer a clean shutdown, then stop the screen session.
+  force-stop       Interrupt or kill core3 immediately. This can leave Berkeley DB requiring recovery.
+  recover-db       Run db_recover against bin/databases while core3 is stopped.
+
+Optional crash email environment:
+  CORE3_EMAIL_ENABLED=1
+  CORE3_EMAIL_TO=you@example.com
+  CORE3_EMAIL_FROM=core3@example.com
+  CORE3_EMAIL_SMTP_HOST=smtp.example.com
+  CORE3_EMAIL_SMTP_PORT=587
+  CORE3_EMAIL_SMTP_USER=optional-user
+  CORE3_EMAIL_SMTP_PASS=optional-password
+  CORE3_EMAIL_SMTP_STARTTLS=1
+  CORE3_EMAIL_SUBJECT_PREFIX=[core3-capture]
+
+Optional backup / transfer environment:
+  CORE3_BACKUP_ROOT=/path/to/backup
+  CORE3_BACKUP_KEEP_RAW=0
+  CORE3_BACKUP_KEEP_COUNT=5
+  CORE3_TRANSFER_ENABLED=1
+  CORE3_TRANSFER_DEST=ubuntu@testcenter.swg-starforge.com
+  CORE3_TRANSFER_PATH=/home/ubuntu/backups
+  CORE3_TRANSFER_PORT=22
+  CORE3_TRANSFER_SSH_KEY=/path/to/key
+  CORE3_TRANSFER_STRICT_HOST_KEY_CHECKING=1
+  CORE3_TRANSFER_KNOWN_HOSTS=/path/to/known_hosts
+  CORE3_SQL_BACKUP_ENABLED=0
+  CORE3_SQL_DUMP_TOOL=mysqldump
+  CORE3_SQL_HOST=localhost
+  CORE3_SQL_PORT=3306
+  CORE3_SQL_USER=your-user
+  CORE3_SQL_PASSWORD=your-password
+  CORE3_SQL_DATABASE=your-database
 EOF
 }
 
@@ -457,6 +933,12 @@ main() {
       printf 'capture_dir=%s\n' "${capture_dir}"
       printf 'SUCCESS\n'
       ;;
+    backup-db)
+      local backup_archive
+      backup_archive="$(backup_database)"
+      printf 'backup_archive=%s\n' "${backup_archive}"
+      printf 'SUCCESS\n'
+      ;;
     shutdown)
       shift || true
       shutdown_server "$@"
@@ -465,6 +947,14 @@ main() {
     stop)
       stop_server
       status_server
+      ;;
+    force-stop)
+      force_stop_server
+      status_server
+      ;;
+    recover-db)
+      recover_db
+      printf 'SUCCESS\n'
       ;;
     *)
       usage
