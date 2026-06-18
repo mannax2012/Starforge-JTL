@@ -277,6 +277,12 @@ void ZoneClientSessionImplementation::closeConnection(bool lockPlayer, bool doLo
 	ManagedReference<CreatureObject*> play = player.get();
 
 	if (play != nullptr) {
+		Locker playerLocker(play, _this.getReferenceUnsafeStaticCast());
+
+		if (play->getClient() == _this.getReferenceUnsafeStaticCast()) {
+			play->setClient(nullptr);
+		}
+
 		server = play->getZoneServer();
 
 		Reference<ClearClientEvent*> task = new ClearClientEvent(play, _this.getReferenceUnsafeStaticCast());

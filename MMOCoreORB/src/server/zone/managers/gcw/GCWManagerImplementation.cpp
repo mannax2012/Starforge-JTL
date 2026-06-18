@@ -330,21 +330,29 @@ void GCWManagerImplementation::stop() {
 }
 
 void GCWManagerImplementation::performGCWTasks() {
-	Locker locker(_this.getReferenceUnsafeStaticCast());
+	Vector<uint64> baseObjectIds;
+	int totalBase = 0;
 
-	int totalBase = gcwBaseList.size();
+	{
+		Locker locker(_this.getReferenceUnsafeStaticCast());
+		totalBase = gcwBaseList.size();
+
+		for (int i = 0; i < totalBase; ++i) {
+			Reference<BuildingObject*> base = getBase(i);
+
+			if (base != nullptr)
+				baseObjectIds.add(base->getObjectID());
+		}
+	}
 
 	info("Checking " + String::valueOf(totalBase) + " bases", true);
 
-	uint64 thisOid;
 	int rebelCheck = 0, rebelsScore = 0;
 	int imperialCheck = 0, imperialsScore = 0;
 	int totalPlayerBases = 0;
 
-	for (int i = 0; i < gcwBaseList.size(); i++) {
-		thisOid = getBase(i)->getObjectID();
-
-		Reference<BuildingObject*> building = zone->getZoneServer()->getObject(thisOid).castTo<BuildingObject*>();
+	for (int i = 0; i < baseObjectIds.size(); ++i) {
+		Reference<BuildingObject*> building = zone->getZoneServer()->getObject(baseObjectIds.get(i)).castTo<BuildingObject*>();
 
 		if (building == nullptr)
 			continue;
@@ -390,12 +398,16 @@ void GCWManagerImplementation::performGCWTasks() {
 		verifyTurrets(building);
 	}
 
-	setRebelBaseCount(rebelCheck);
-	setImperialBaseCount(imperialCheck);
-	setRebelScore(rebelsScore);
-	setImperialScore(imperialsScore);
+	{
+		Locker locker(_this.getReferenceUnsafeStaticCast());
+		setRebelBaseCount(rebelCheck);
+		setImperialBaseCount(imperialCheck);
+		setRebelScore(rebelsScore);
+		setImperialScore(imperialsScore);
 
-	updateWinningFaction();
+		updateWinningFaction();
+	}
+
 	spawnGcwControlBanners();
 
 	CheckGCWTask* task = new CheckGCWTask(_this.getReferenceUnsafeStaticCast());

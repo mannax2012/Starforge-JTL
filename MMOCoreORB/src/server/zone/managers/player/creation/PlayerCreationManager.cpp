@@ -658,7 +658,7 @@ bool PlayerCreationManager::createCharacter(ClientCreateCharacterCallback* callb
 		"TIE fighter traffic jam caused by new arrival: %s %s.",
 		"Unit %s %s registered. Personality matrix: Chaotic. Threat level: Mildly entertaining.",
 		"Processing... new meatbag %s %s approved for planetary mischief.",
-		"Galactic systems synchronized. Welcome, %s %s. Try not to break anything... again."
+		"Galactic systems synchronized. Welcome, %s %s. Try not to break anything... again.",
 		"Statement: Another meatbag, %s %s, has arrived. Joy.",
 		"Query: Shall I eliminate %s %s now, or let them embarrass themselves first?",
 		"Observation: %s %s appears armed with ambition and poor decisions. Delicious.",
