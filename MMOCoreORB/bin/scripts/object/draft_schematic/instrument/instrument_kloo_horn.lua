@@ -53,7 +53,7 @@ object_draft_schematic_instrument_instrument_kloo_horn = object_draft_schematic_
    factoryCrateType = "object/factory/factory_crate_generic_items.iff",
    
    xpType = "dance", 
-   xp = 5000, 
+   xp = 4000, 
 
    assemblySkill = "instrument_assembly", 
    experimentingSkill = "general_experimentation", 
