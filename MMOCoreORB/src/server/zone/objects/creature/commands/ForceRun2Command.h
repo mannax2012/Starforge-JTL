@@ -23,7 +23,7 @@ public:
 	}
 
 	int doQueueCommand(CreatureObject* creature, const uint64& target, const UnicodeString& arguments) const {
-		int res = creature->hasBuff(buffCRC) ? NOSTACKJEDIBUFF : doJediSelfBuffCommand(creature);
+		int res = doJediSelfBuffCommand(creature);
 
 		if (res == NOSTACKJEDIBUFF) {
 			creature->sendSystemMessage("@jedi_spam:already_force_running"); // You are already force running.
@@ -33,6 +33,9 @@ public:
 		if (res != SUCCESS) {
 			return res;
 		}
+
+		if (!creature->hasBuff(BuffCRC::JEDI_FORCE_RUN_2))
+			return SUCCESS;
 
 		// need to apply the damage reduction in a separate buff so that the multiplication and division applies right
 		Buff* buff = creature->getBuff(BuffCRC::JEDI_FORCE_RUN_2);

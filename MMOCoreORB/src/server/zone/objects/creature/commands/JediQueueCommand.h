@@ -23,6 +23,8 @@ class JediQueueCommand : public QueueCommand {
 
 protected:
 	void logForceRunTrace(CreatureObject* creature, const String& phase) const {
+		return;
+
 		if (creature == nullptr)
 			return;
 
@@ -64,6 +66,46 @@ protected:
 		} else {
 			existingTask->reschedule(ForceRunEffectTask::REPLAY_DELAY_MS);
 		}
+	}
+
+	int toggleForceRunOff(CreatureObject* creature) const {
+		if (creature == nullptr)
+			return GENERALERROR;
+
+		ManagedReference<Buff*> buff = creature->getBuff(buffCRC);
+		float remainingTime = buff != nullptr ? buff->getTimeLeft() : 0.f;
+		int refundedForce = 0;
+
+		if (duration > 0 && remainingTime > 0.f) {
+			ManagedReference<PlayerObject*> playerObject = creature->getPlayerObject();
+
+				if (playerObject != nullptr) {
+					int totalForceCost = getFrsModifiedForceCost(creature);
+					float refundRatio = remainingTime / duration;
+
+					if (refundRatio > 1.f) {
+						refundRatio = 1.f;
+					} else if (refundRatio < 0.f) {
+						refundRatio = 0.f;
+					}
+
+					float refundableForce = totalForceCost * 0.75f;
+					refundedForce = (int)(refundableForce * refundRatio);
+
+					if (refundedForce > 0) {
+						playerObject->setForcePower(playerObject->getForcePower() + refundedForce);
+					}
+				}
+			}
+
+		logForceRunTrace(creature, "toggle_remove_before");
+		creature->removeBuff(buffCRC);
+		logForceRunTrace(creature, "toggle_remove_after");
+
+		if (refundedForce > 0)
+			creature->sendSystemMessage("You release Force Run and recover " + String::valueOf(refundedForce) + " Force Power.");
+
+		return SUCCESS;
 	}
 
 	int forceCost;
@@ -123,9 +165,10 @@ public:
 	int doJediSelfBuffCommand(CreatureObject* creature) const {
 		// first and foremost, we need to toggle this buff off if we already have it
 		if (creature->hasBuff(buffCRC)) {
-			logForceRunTrace(creature, "toggle_remove_before");
+			if (buffCRC == BuffCRC::JEDI_FORCE_RUN_1 || buffCRC == BuffCRC::JEDI_FORCE_RUN_2 || buffCRC == BuffCRC::JEDI_FORCE_RUN_3)
+				return toggleForceRunOff(creature);
+
 			creature->removeBuff(buffCRC);
-			logForceRunTrace(creature, "toggle_remove_after");
 			return SUCCESS;
 		}
 
