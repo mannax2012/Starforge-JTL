@@ -27,6 +27,7 @@ BACKUP_KEEP_COUNT="${CORE3_BACKUP_KEEP_COUNT:-5}"
 TAIL_LINES="${CORE3_TAIL_LINES:-400}"
 RUN_WAIT_SECONDS="${CORE3_RUN_WAIT_SECONDS:-90}"
 SHUTDOWN_WAIT_SECONDS="${CORE3_SHUTDOWN_WAIT_SECONDS:-180}"
+STOP_SHUTDOWN_WAIT_SECONDS="${CORE3_STOP_SHUTDOWN_WAIT_SECONDS:-15}"
 RUN_ARGUMENTS="${CORE3_RUN_ARGUMENTS:-}"
 EMAIL_ENABLED="${CORE3_EMAIL_ENABLED:-0}"
 EMAIL_TO="${CORE3_EMAIL_TO:-}"
@@ -180,6 +181,19 @@ wait_for_pid_exit() {
   return 1
 }
 
+wait_for_server_exit() {
+  local total_wait_seconds="${1:-20}"
+
+  for _ in $(seq 1 "${total_wait_seconds}"); do
+    if ! raw_server_running; then
+      return 0
+    fi
+    sleep 1
+  done
+
+  return 1
+}
+
 gdb_state() {
   if [[ -f "${GDB_STATE_FILE}" ]]; then
     <"${GDB_STATE_FILE}" tr -d '\r'
@@ -265,6 +279,52 @@ require_running_managed_session() {
 send_to_gdb() {
   local command="$1"
   screen -S "${SCREEN_SESSION}" -p 0 -X stuff "${command}"$'\r'
+}
+
+stop_unmanaged_server() {
+  local signal="$1"
+  local failure_message="$2"
+  local pid
+
+  for pid in $(raw_server_pids); do
+    log "Sending SIG${signal} to unmanaged core3 pid=${pid}"
+    kill "-${signal}" "${pid}" 2>/dev/null || true
+  done
+
+  if ! wait_for_server_exit 20; then
+    fail "${failure_message}"
+  fi
+}
+
+kill_managed_inferior() {
+  local state
+  state="$(gdb_state)"
+
+  if [[ "${state}" == "running" ]]; then
+    log "Interrupting managed inferior in ${SCREEN_SESSION} via Ctrl-C"
+    screen -S "${SCREEN_SESSION}" -p 0 -X stuff $'\003'
+    sleep 2
+  fi
+
+  if raw_server_running; then
+    log "Sending gdb kill to managed inferior in ${SCREEN_SESSION}"
+    send_to_gdb 'kill'
+    sleep 1
+    send_to_gdb 'y'
+  fi
+
+  if raw_server_running; then
+    stop_unmanaged_server TERM "managed core3 pid(s) did not stop after gdb kill; use force-stop if you need SIGKILL"
+  fi
+}
+
+teardown_session() {
+  if session_exists; then
+    log "Stopping screen session ${SCREEN_SESSION}"
+    screen -S "${SCREEN_SESSION}" -X quit || true
+  fi
+
+  rm -f "${GDB_STATE_FILE}"
 }
 
 configure_gdb_run_args() {
@@ -760,33 +820,43 @@ attach_session() {
 }
 
 stop_server() {
+  local stop_shutdown_wait_seconds="${STOP_SHUTDOWN_WAIT_SECONDS}"
+
   if ! session_exists; then
     if raw_server_running; then
-      local pid
-      for pid in $(raw_server_pids); do
-        log "Sending SIGTERM to unmanaged core3 pid=${pid}"
-        kill -TERM "${pid}" 2>/dev/null || true
-        if ! wait_for_pid_exit "${pid}"; then
-          fail "unmanaged core3 pid=${pid} did not stop after SIGTERM; refusing to send SIGKILL because it can leave Berkeley DB requiring recovery. Stop it from the server console if possible, or use force-stop if you accept the risk."
-        fi
-      done
+      stop_unmanaged_server TERM "unmanaged core3 pid(s) did not stop after SIGTERM; refusing to send SIGKILL because it can leave Berkeley DB requiring recovery. Stop it from the server console if possible, or use force-stop if you accept the risk."
     else
       log "stop requested but screen session ${SCREEN_SESSION} does not exist"
     fi
+    rm -f "${GDB_STATE_FILE}"
     return 0
   fi
 
   local state
   state="$(gdb_state)"
 
-  if [[ "${state}" == "running" ]]; then
-    log "stop requested while core3 is running; using managed shutdown to avoid Berkeley DB recovery"
-    shutdown_server 0
+  if raw_server_running || [[ "${state}" == "running" ]]; then
+    if gdb_prompt_contains_crash; then
+      log "stop requested while gdb is stopped on a crash; skipping managed shutdown and killing the inferior"
+      kill_managed_inferior
+    else
+      log "stop requested while core3 is running; attempting managed shutdown before tearing down the session"
+      send_to_gdb 'shutdown 0'
+
+      if wait_for_shutdown_state "${stop_shutdown_wait_seconds}"; then
+        log "Managed shutdown completed for ${SCREEN_SESSION}"
+      else
+        log "Managed shutdown timed out after ${stop_shutdown_wait_seconds}s; killing the managed inferior instead"
+        kill_managed_inferior
+      fi
+    fi
   fi
 
-  log "Stopping screen session ${SCREEN_SESSION}"
-  screen -S "${SCREEN_SESSION}" -X quit || true
-  rm -f "${GDB_STATE_FILE}"
+  teardown_session
+
+  if raw_server_running; then
+    stop_unmanaged_server TERM "core3 pid(s) remained after stopping the managed session; use force-stop if you need SIGKILL"
+  fi
 }
 
 force_stop_server() {
@@ -816,9 +886,19 @@ force_stop_server() {
     sleep 2
   fi
 
-  log "Stopping screen session ${SCREEN_SESSION}"
-  screen -S "${SCREEN_SESSION}" -X quit || true
-  rm -f "${GDB_STATE_FILE}"
+  teardown_session
+
+  if raw_server_running; then
+    local pid
+    for pid in $(raw_server_pids); do
+      log "Force-stopping remaining core3 pid=${pid} with SIGTERM"
+      kill -TERM "${pid}" 2>/dev/null || true
+      if ! wait_for_pid_exit "${pid}"; then
+        log "Remaining core3 pid=${pid} did not stop after SIGTERM; sending SIGKILL"
+        kill -KILL "${pid}" 2>/dev/null || true
+      fi
+    done
+  fi
 }
 
 recover_db() {
