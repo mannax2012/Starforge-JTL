@@ -3069,19 +3069,6 @@ bool CreatureObjectImplementation::removeBuff(uint32 buffcrc) {
 	if (traceForceRun) {
 		removePendingTask("forceRunEffect");
 		stopEffect("force_run");
-
-		StringBuffer msg;
-		msg << "[ForceRunTrace] phase=removeBuff_before"
-			<< " player=" << getDisplayedName()
-			<< " oid=" << getObjectID()
-			<< " requestCRC=0x" << hex << buffcrc << dec
-			<< " has1=" << hasBuff(BuffCRC::JEDI_FORCE_RUN_1)
-			<< " has2=" << hasBuff(BuffCRC::JEDI_FORCE_RUN_2)
-			<< " has3=" << hasBuff(BuffCRC::JEDI_FORCE_RUN_3)
-			<< " speedMulti=" << getSpeedMultiplierMod()
-			<< " accelMulti=" << getAccelerationMultiplierMod();
-
-		info(msg.toString(), true);
 	}
 
 	Reference<Buff*> buff = getBuff(buffcrc);
@@ -3095,22 +3082,6 @@ bool CreatureObjectImplementation::removeBuff(uint32 buffcrc) {
 		for (int i = 0; i < secondaryCRCs->size(); i++) {
 			removeBuff(secondaryCRCs->get(i));
 		}
-	}
-
-	if (traceForceRun) {
-		StringBuffer msg;
-		msg << "[ForceRunTrace] phase=removeBuff_after"
-			<< " player=" << getDisplayedName()
-			<< " oid=" << getObjectID()
-			<< " requestCRC=0x" << hex << buffcrc << dec
-			<< " removed=" << ret
-			<< " has1=" << hasBuff(BuffCRC::JEDI_FORCE_RUN_1)
-			<< " has2=" << hasBuff(BuffCRC::JEDI_FORCE_RUN_2)
-			<< " has3=" << hasBuff(BuffCRC::JEDI_FORCE_RUN_3)
-			<< " speedMulti=" << getSpeedMultiplierMod()
-			<< " accelMulti=" << getAccelerationMultiplierMod();
-
-		info(msg.toString(), true);
 	}
 
 	return ret;

@@ -42,7 +42,10 @@
 
 
 object_tangible_wearables_shirt_shirt_s28 = object_tangible_wearables_shirt_shared_shirt_s28:new {
-	playerRaces = { "object/creature/player/bothan_female.iff",
+	playerRaces = { "object/creature/player/aqualish_female.iff",
+				"object/creature/player/bith_female.iff",
+				"object/creature/player/bothan_female.iff",
+				"object/creature/player/chiss_female.iff",
 				"object/creature/player/human_female.iff",
 				"object/creature/player/moncal_female.iff",
 				"object/creature/player/rodian_female.iff",

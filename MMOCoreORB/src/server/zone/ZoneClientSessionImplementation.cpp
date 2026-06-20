@@ -187,7 +187,9 @@ void ZoneClientSessionImplementation::disconnect(bool doLock) {
 			}
 		}
 
-		closeConnection(true, false);
+		// Player cleanup is already queued in DisconnectClientEvent, so avoid
+		// taking the player lock while the networking layer is tearing down.
+		closeConnection(false, false);
 	} else if (player != nullptr) {
 		zoneClientSession = player->getClient();
 
@@ -214,7 +216,9 @@ void ZoneClientSessionImplementation::disconnect(bool doLock) {
 				//player->unlock();
 			}
 
-			closeConnection(true, true);
+			// Player state transitions are already queued above. Keep session
+			// teardown from cross-locking the player and client in reverse order.
+			closeConnection(false, true);
 		}
 	}
 
@@ -277,13 +281,17 @@ void ZoneClientSessionImplementation::closeConnection(bool lockPlayer, bool doLo
 	ManagedReference<CreatureObject*> play = player.get();
 
 	if (play != nullptr) {
-		Locker playerLocker(play, _this.getReferenceUnsafeStaticCast());
+		if (lockPlayer) {
+			Locker playerLocker(play, _this.getReferenceUnsafeStaticCast());
 
-		if (play->getClient() == _this.getReferenceUnsafeStaticCast()) {
-			play->setClient(nullptr);
+			if (play->getClient() == _this.getReferenceUnsafeStaticCast()) {
+				play->setClient(nullptr);
+			}
+
+			server = play->getZoneServer();
+		} else {
+			server = play->getZoneServer();
 		}
-
-		server = play->getZoneServer();
 
 		Reference<ClearClientEvent*> task = new ClearClientEvent(play, _this.getReferenceUnsafeStaticCast());
 		Core::getTaskManager()->executeTask(task);
