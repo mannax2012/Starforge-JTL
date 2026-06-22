@@ -126,6 +126,10 @@ public:
 		client->setSessionID(sessionID);
 		client->setAccountID(accountID);
 
+		// Extend the launchpad/session-id login token from the moment zone
+		// auth succeeds so longer play sessions do not age it out.
+		AccountManager::renewSession(accountID, sessionID, client->getIPAddress());
+
 		auto account = AccountManager::getAccount(accountID, true);
 
 		if (account == nullptr) {
