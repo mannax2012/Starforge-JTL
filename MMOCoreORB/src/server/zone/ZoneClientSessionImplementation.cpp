@@ -32,6 +32,7 @@ ZoneClientSessionImplementation::ZoneClientSessionImplementation(BaseClientProxy
 	packetLogging = false;
 
 	commandCount = 0;
+	lastSessionRenew.updateToCurrentTime();
 
 	characters.setNullValue(0);
 	characters.setAllowDuplicateInsertPlan();
@@ -99,6 +100,17 @@ void ZoneClientSessionImplementation::disconnect() {
 }
 
 void ZoneClientSessionImplementation::sendMessage(BasePacket* msg) {
+#ifndef WITH_SWGREALMS_API
+	if (accountID != 0 && !sessionID.isEmpty() && !ipAddress.isEmpty()) {
+		constexpr int renewIntervalMs = 5 * 60 * 1000;
+
+		if (lastSessionRenew.miliDifference() >= renewIntervalMs) {
+			AccountManager::renewSession(accountID, sessionID, ipAddress);
+			lastSessionRenew.updateToCurrentTime();
+		}
+	}
+#endif // !WITH_SWGREALMS_API
+
 	if (packetLogging && msg != nullptr && msg->size() >= 10) {
 		int hdrOffset = msg->parseShort(0) == 0x0900 ? 4 : 0;
 
