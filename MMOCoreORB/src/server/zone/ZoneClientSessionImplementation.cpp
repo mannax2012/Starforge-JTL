@@ -176,31 +176,27 @@ void ZoneClientSessionImplementation::disconnect(bool doLock) {
 
 	ManagedReference<CreatureObject*> player = this->player.get();
 	Reference<ZoneClientSession*> zoneClientSession;
-	if (session->hasError() || !session->isClientDisconnected()) {
-		if (player != nullptr) {
-			zoneClientSession = player->getClient();
+	if (player != nullptr) {
+		zoneClientSession = player->getClient();
 
+		Reference<PlayerObject*> ghost = player->getSlottedObject("ghost").castTo<PlayerObject*>();
+
+		if (ghost != nullptr && ghost->isLoggingOut() && zoneClientSession == _this.getReferenceUnsafeStaticCast()) {
+			//((CreatureObject*)player.get())->logout(true);
+			Reference<DisconnectClientEvent*> task = new DisconnectClientEvent(player, _this.getReferenceUnsafeStaticCast(), DisconnectClientEvent::LOGOUT);
+			Core::getTaskManager()->executeTask(task);
+		}
+		else if (session->hasError() || !session->isClientDisconnected()) {
 			if (zoneClientSession == _this.getReferenceUnsafeStaticCast()) {
 				//((CreatureObject*)player.get())->disconnect(false, true);
 				Reference<DisconnectClientEvent*> task = new DisconnectClientEvent(player, _this.getReferenceUnsafeStaticCast(), DisconnectClientEvent::DISCONNECT);
 				Core::getTaskManager()->executeTask(task);
 			}
-		}
 
-		// Player cleanup is already queued in DisconnectClientEvent, so avoid
-		// taking the player lock while the networking layer is tearing down.
-		closeConnection(false, false);
-	} else if (player != nullptr) {
-		zoneClientSession = player->getClient();
-
-		Reference<PlayerObject*> ghost = player->getSlottedObject("ghost").castTo<PlayerObject*>();
-
-		if (ghost->isLoggingOut() && zoneClientSession == _this.getReferenceUnsafeStaticCast()) {
-			//((CreatureObject*)player.get())->logout(true);
-			Reference<DisconnectClientEvent*> task = new DisconnectClientEvent(player, _this.getReferenceUnsafeStaticCast(), DisconnectClientEvent::LOGOUT);
-			Core::getTaskManager()->executeTask(task);
-		}
-		else {
+			// Player cleanup is already queued in DisconnectClientEvent, so avoid
+			// taking the player lock while the networking layer is tearing down.
+			closeConnection(false, false);
+		} else {
 			try {
 				//player->wlock();
 				zoneClientSession = player->getClient();
@@ -220,6 +216,8 @@ void ZoneClientSessionImplementation::disconnect(bool doLock) {
 			// teardown from cross-locking the player and client in reverse order.
 			closeConnection(false, true);
 		}
+	} else if (session->hasError() || !session->isClientDisconnected()) {
+		closeConnection(false, false);
 	}
 
 

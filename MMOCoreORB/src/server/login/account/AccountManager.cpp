@@ -603,13 +603,13 @@ void AccountManager::expireSession(Reference<Account*> account, const String& se
 		return;
 	}
 
+	String escapedSessionID = sessionID;
+	Database::escapeString(escapedSessionID);
+
 	StringBuffer delQuery;
-	delQuery << "DELETE FROM sessions WHERE account_id = " << account->getAccountID();
-
-	if (!account->getSessionId().isEmpty()) {
-		delQuery << " AND `expires` < NOW()";
-	}
-
+	delQuery << "DELETE FROM sessions WHERE account_id = " << account->getAccountID()
+		<< " AND `expires` < NOW()"
+		<< " AND session_id != '" << escapedSessionID << "'";
 	delQuery << ";";
 
 	try {
