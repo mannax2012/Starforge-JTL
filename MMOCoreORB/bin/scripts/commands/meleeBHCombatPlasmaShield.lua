@@ -45,7 +45,6 @@ MeleeBHCombatPlasmaShieldCommand = {
         name = "meleebhcombatplasmashield",
         cooldown = 300000,
         defaultPriority = "immediate",
-        clientEffect = "clienteffect/bh_plasma_shield_gold.cef",
 }
 
 AddCommand(MeleeBHCombatPlasmaShieldCommand)
