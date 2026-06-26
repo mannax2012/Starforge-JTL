@@ -2,6 +2,7 @@
 includeFile("draft_schematic/clothing/custom/objects.lua")
 
 --starforge
+includeFile("draft_schematic/clothing/custom/backpack_mando_cape_schematic.lua")
 includeFile("draft_schematic/clothing/custom/starforge_backpack_schematic.lua")
 
 -- Tusken
@@ -15,6 +16,7 @@ includeFile("draft_schematic/clothing/custom/clothing_hat_tusken_raider_schemati
 
 includeFile("draft_schematic/clothing/custom/clothing_robe_tusken_raider_s01_schematic.lua")
 includeFile("draft_schematic/clothing/custom/clothing_robe_tusken_raider_s02_schematic.lua")
+includeFile("draft_schematic/clothing/custom/clothing_robe_necrosis_schematic.lua")
 
 includeFile("draft_schematic/clothing/custom/clothing_bandolier_tusken_raider_s01_schematic.lua")
 includeFile("draft_schematic/clothing/custom/clothing_bandolier_tusken_raider_s02_schematic.lua")

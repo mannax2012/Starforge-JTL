@@ -97,6 +97,9 @@ schematics = {
 	{path="object/draft_schematic/weapon/lightsaber/lightsaber_two_hand_rey5_gen3.iff"},
 	{path="object/draft_schematic/weapon/lightsaber/lightsaber_two_hand_rey5_gen4.iff"},
 
+	--Jedi robes
+	{path="object/draft_schematic/clothing/custom/clothing_robe_necrosis_schematic.iff"},
+
 	--Tusken Clothing
 	{path="object/draft_schematic/clothing/custom/clothing_bandolier_tusken_raider_bag_s01_schematic.iff"},
 	{path="object/draft_schematic/clothing/custom/clothing_bandolier_tusken_raider_bag_s02_schematic.iff"},
@@ -112,7 +115,7 @@ schematics = {
   
 	--Starforge Bag
 	{path="object/draft_schematic/clothing/custom/starforge_backpack_schematic.iff"},
-
+	{path="object/draft_schematic/clothing/custom/backpack_mando_cape_schematic.iff"},
 	--Mechanic
 	{path="object/draft_schematic/vehicle/civilian/landspeeder_x31.iff"},
 	{path="object/draft_schematic/vehicle/civilian/speederbike_flash.iff"},
