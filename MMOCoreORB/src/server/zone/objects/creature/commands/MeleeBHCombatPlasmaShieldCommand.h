@@ -111,7 +111,7 @@ public:
 
 		creature->addBuff(reductionBuff);
 		creature->addBuff(shieldBuff);
-		creature->playEffect("clienteffect/bh_plasma_shield_gold.cef", "");
+		creature->playEffect("clienteffect/cyssc_grnshield.cef", "");
 
 		Locker batteryLocker(battery);
 		consumeRequiredItem(battery);
