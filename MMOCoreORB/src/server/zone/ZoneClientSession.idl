@@ -47,6 +47,9 @@ class ZoneClientSession extends ManagedObject {
 	transient protected Logger packetLogger;
 
 	@dereferenced
+	protected Time lastSessionRenew;
+
+	@dereferenced
 	protected Time commandSpamCooldown;
 
 	protected int commandCount;

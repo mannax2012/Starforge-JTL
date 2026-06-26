@@ -11,6 +11,7 @@
 #include "server/zone/objects/player/events/ClearClientEvent.h"
 #include "server/zone/objects/player/events/DisconnectClientEvent.h"
 #include "server/zone/managers/player/PlayerManager.h"
+#include "server/login/account/AccountManager.h"
 
 #include <cstdio>
 #include <sys/stat.h>
@@ -31,6 +32,7 @@ ZoneClientSessionImplementation::ZoneClientSessionImplementation(BaseClientProxy
 	packetLogging = false;
 
 	commandCount = 0;
+	lastSessionRenew.updateToCurrentTime();
 
 	characters.setNullValue(0);
 	characters.setAllowDuplicateInsertPlan();
@@ -98,6 +100,17 @@ void ZoneClientSessionImplementation::disconnect() {
 }
 
 void ZoneClientSessionImplementation::sendMessage(BasePacket* msg) {
+#ifndef WITH_SWGREALMS_API
+	if (accountID != 0 && !sessionID.isEmpty() && !ipAddress.isEmpty()) {
+		constexpr int renewIntervalMs = 5 * 60 * 1000;
+
+		if (lastSessionRenew.miliDifference() >= renewIntervalMs) {
+			AccountManager::renewSession(accountID, sessionID, ipAddress);
+			lastSessionRenew.updateToCurrentTime();
+		}
+	}
+#endif // !WITH_SWGREALMS_API
+
 	if (packetLogging && msg != nullptr && msg->size() >= 10) {
 		int hdrOffset = msg->parseShort(0) == 0x0900 ? 4 : 0;
 
@@ -176,31 +189,31 @@ void ZoneClientSessionImplementation::disconnect(bool doLock) {
 
 	ManagedReference<CreatureObject*> player = this->player.get();
 	Reference<ZoneClientSession*> zoneClientSession;
-	if (session->hasError() || !session->isClientDisconnected()) {
-		if (player != nullptr) {
-			zoneClientSession = player->getClient();
+	if (player != nullptr) {
+		zoneClientSession = player->getClient();
 
+		Reference<PlayerObject*> ghost = player->getSlottedObject("ghost").castTo<PlayerObject*>();
+
+		if (ghost != nullptr && ghost->isLoggingOut() && zoneClientSession == _this.getReferenceUnsafeStaticCast()) {
+			// Refresh the launchpad/session-id login token before tearing down
+			// the zone connection so character select can immediately reuse it.
+			AccountManager::renewSession(getAccountID(), getSessionID(), getIPAddress());
+
+			//((CreatureObject*)player.get())->logout(true);
+			Reference<DisconnectClientEvent*> task = new DisconnectClientEvent(player, _this.getReferenceUnsafeStaticCast(), DisconnectClientEvent::LOGOUT);
+			Core::getTaskManager()->executeTask(task);
+		}
+		else if (session->hasError() || !session->isClientDisconnected()) {
 			if (zoneClientSession == _this.getReferenceUnsafeStaticCast()) {
 				//((CreatureObject*)player.get())->disconnect(false, true);
 				Reference<DisconnectClientEvent*> task = new DisconnectClientEvent(player, _this.getReferenceUnsafeStaticCast(), DisconnectClientEvent::DISCONNECT);
 				Core::getTaskManager()->executeTask(task);
 			}
-		}
 
-		// Player cleanup is already queued in DisconnectClientEvent, so avoid
-		// taking the player lock while the networking layer is tearing down.
-		closeConnection(false, false);
-	} else if (player != nullptr) {
-		zoneClientSession = player->getClient();
-
-		Reference<PlayerObject*> ghost = player->getSlottedObject("ghost").castTo<PlayerObject*>();
-
-		if (ghost->isLoggingOut() && zoneClientSession == _this.getReferenceUnsafeStaticCast()) {
-			//((CreatureObject*)player.get())->logout(true);
-			Reference<DisconnectClientEvent*> task = new DisconnectClientEvent(player, _this.getReferenceUnsafeStaticCast(), DisconnectClientEvent::LOGOUT);
-			Core::getTaskManager()->executeTask(task);
-		}
-		else {
+			// Player cleanup is already queued in DisconnectClientEvent, so avoid
+			// taking the player lock while the networking layer is tearing down.
+			closeConnection(false, false);
+		} else {
 			try {
 				//player->wlock();
 				zoneClientSession = player->getClient();
@@ -220,6 +233,8 @@ void ZoneClientSessionImplementation::disconnect(bool doLock) {
 			// teardown from cross-locking the player and client in reverse order.
 			closeConnection(false, true);
 		}
+	} else if (session->hasError() || !session->isClientDisconnected()) {
+		closeConnection(false, false);
 	}
 
 

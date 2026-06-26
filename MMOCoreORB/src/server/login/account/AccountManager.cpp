@@ -190,18 +190,22 @@ Reference<Account*> AccountManager::validateAccountCredentials(LoginClient* clie
 		sessionIdQuery << "SELECT a.active, a.username, a.password, a.salt, a.account_id, a.station_id, "
 			     "UNIX_TIMESTAMP(a.created), a.admin_level, IFNULL(s.session_id, '') AS session_id "
 			     "FROM accounts a, sessions s "
-			     "WHERE s.account_id = a.account_id AND s.session_id = '" << password << "'";
+			     "WHERE s.account_id = a.account_id AND s.session_id = '" << password << "'"
+			     " AND s.expires > NOW()";
 
 		if (!username.isEmpty()) {
 			sessionIdQuery << " AND a.username = '" << username << "'";
 		}
 
-		sessionIdQuery << "LIMIT 1;";
+		sessionIdQuery << " LIMIT 1;";
 
 		account = getAccount(sessionIdQuery.toString(), passwordStored, true);
 
 		if (account != nullptr) {
 			isSessionIdLogin = true;
+		} else {
+			info(true) << "Session-id login lookup miss for user [" << (username.isEmpty() ? "<empty>" : username)
+				<< "] from " << client->getIPAddress() << " token_length=" << password.length();
 		}
 	}
 
@@ -246,6 +250,11 @@ Reference<Account*> AccountManager::validateAccountCredentials(LoginClient* clie
 		}
 
 		if (passwordStored != passwordHashed) {
+			if (ConfigManager::instance()->getLoginEnableSessionId()) {
+				info(true) << "Fell back to hashed-password auth and failed for user ["
+					<< account->getUsername() << "] from " << client->getIPAddress()
+					<< " supplied_length=" << password.length();
+			}
 			client->sendErrorMessage("Wrong Password", "The password you entered was incorrect.");
 
 			return nullptr;
@@ -585,10 +594,15 @@ void AccountManager::renewSession(uint32 accountID, const String& sessionID, con
 		return;
 	}
 
+	String escapedSessionID = sessionID;
+	String escapedIPAddress = ipAddress;
+	Database::escapeString(escapedSessionID);
+	Database::escapeString(escapedIPAddress);
+
 	String sessionDuration = ConfigManager::instance()->getString("Core3.Login.SessionDuration", "00:15");
 	StringBuffer sessionQuery;
 	sessionQuery << "REPLACE INTO sessions (account_id, session_id, ip, expires) VALUES (";
-	sessionQuery << accountID << ", '" << sessionID << "', '" << ipAddress << "' , ADDTIME(NOW(), '" << sessionDuration << "'));";
+	sessionQuery << accountID << ", '" << escapedSessionID << "', '" << escapedIPAddress << "' , ADDTIME(NOW(), '" << sessionDuration << "'));";
 
 	try {
 		ServerDatabase::instance()->executeStatement(sessionQuery);
@@ -603,13 +617,13 @@ void AccountManager::expireSession(Reference<Account*> account, const String& se
 		return;
 	}
 
+	String escapedSessionID = sessionID;
+	Database::escapeString(escapedSessionID);
+
 	StringBuffer delQuery;
-	delQuery << "DELETE FROM sessions WHERE account_id = " << account->getAccountID();
-
-	if (!account->getSessionId().isEmpty()) {
-		delQuery << " AND `expires` < NOW()";
-	}
-
+	delQuery << "DELETE FROM sessions WHERE account_id = " << account->getAccountID()
+		<< " AND `expires` < NOW()"
+		<< " AND session_id != '" << escapedSessionID << "'";
 	delQuery << ";";
 
 	try {
