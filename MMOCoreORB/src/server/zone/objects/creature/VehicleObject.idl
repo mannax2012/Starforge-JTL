@@ -210,32 +210,7 @@ class VehicleObject extends CreatureObject {
 	 * @return returns true if the creature object can attack this
 	 */
 	@dirty
-	public boolean isAttackableBy(CreatureObject object) {
-		CreatureObject creature = super.linkedCreature;
-		Zone attackerZone = null;
-		Zone vehicleZone = null;
-
-		if (object == null) {
-			return false;
-		}
-
-		if (!creature || isDestroyed()) {
-			return false;
-		}
-
-		if (getParentID() != 0) {
-			return false;
-		}
-
-		attackerZone = object.getLocalZone();
-		vehicleZone = getLocalZone();
-
-		if (!attackerZone || !vehicleZone || attackerZone != vehicleZone) {
-			return false;
-		}
-
-		return creature.isAttackableBy(object);
-	}
+	public native boolean isAttackableBy(CreatureObject object);
 
 	/**
 	 * Is called when this object is destroyed
