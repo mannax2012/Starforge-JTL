@@ -76,8 +76,26 @@ public:
 			Reference<PlanetTravelPoint*> travelPoint = planetManager->getNearestPlanetTravelPoint(strongShuttle, 128.f);
 
 			if (travelPoint == nullptr) {
+				// Some live shuttle placements sit farther from the static travel point than the
+				// normal boarding/search radius. Widen only this bootstrap lookup so startup can
+				// still bind the shuttle to its intended travel point and update the departure data.
+				travelPoint = planetManager->getNearestPlanetTravelPoint(strongShuttle, 512.f);
+			}
+
+			if (travelPoint == nullptr) {
+				// Final fallback: prefer associating the shuttle to the nearest configured point
+				// instead of leaving the route unusable after startup.
+				travelPoint = planetManager->getNearestPlanetTravelPoint(strongShuttle, 16000.f);
+			}
+
+			if (travelPoint == nullptr) {
 				error() << " Planet Travel Point (travelPoint) has a nullptr in Zone: " << zone->getZoneName();
 				return;
+			}
+
+			if (travelPoint->getArrivalPosition().distanceTo2d(strongShuttle->getWorldPosition()) > 128.f) {
+				warning() << " Bound shuttle " << strongShuttle->getObjectID() << " to fallback travel point "
+					<< travelPoint->toString() << " in Zone: " << zone->getZoneName();
 			}
 
 			auto oldShuttle = travelPoint->getShuttle();
