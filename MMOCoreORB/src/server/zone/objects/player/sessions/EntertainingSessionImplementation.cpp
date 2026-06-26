@@ -234,36 +234,42 @@ void EntertainingSessionImplementation::healWounds(CreatureObject* creature, flo
 
 	ManagedReference<CreatureObject*> entertainer = this->entertainer.get();
 
+	if (entertainer == nullptr)
+		return;
+
 	Locker clocker(creature, entertainer);
 
-	if (!canGiveEntertainBuff())
+	const bool canHealWounds = woundHeal > 0;
+	const bool canHealShock = shockHeal > 0 && canHealBattleFatigue();
+
+	if (!canHealWounds && !canHealShock)
 		return;
 
 	if (isInDenyServiceList(creature))
 		return;
 
-	if (shockHeal > 0 && creature->getShockWounds() > 0 && canHealBattleFatigue()) {
+	if (canHealShock && creature->getShockWounds() > 0) {
+		amountHealed += Math::min(shockHeal, (float) creature->getShockWounds());
 		creature->addShockWounds(-shockHeal, true, false);
-		amountHealed += shockHeal;
 	}
-	if (woundHeal > 0 && (creature->getWounds(CreatureAttribute::MIND) > 0
+	if (canHealWounds && (creature->getWounds(CreatureAttribute::MIND) > 0
 			|| creature->getWounds(CreatureAttribute::FOCUS) > 0
 			|| creature->getWounds(CreatureAttribute::WILLPOWER) > 0
 			|| creature->getWounds(CreatureAttribute::ACTION) > 0
 			|| creature->getWounds(CreatureAttribute::QUICKNESS) > 0
 			|| creature->getWounds(CreatureAttribute::STAMINA) > 0)) {
-		creature->healWound(entertainer, CreatureAttribute::MIND, woundHeal, true, false);
-		creature->healWound(entertainer, CreatureAttribute::FOCUS, woundHeal, true, false);
-		creature->healWound(entertainer, CreatureAttribute::WILLPOWER, woundHeal, true, false);
-		creature->healWound(entertainer, CreatureAttribute::ACTION, woundHeal, true, false);
-		creature->healWound(entertainer, CreatureAttribute::QUICKNESS, woundHeal, true, false);
-		creature->healWound(entertainer, CreatureAttribute::STAMINA, woundHeal, true, false);
-
-
-		amountHealed += woundHeal;
+		amountHealed += creature->healWound(entertainer, CreatureAttribute::MIND, woundHeal, true, false);
+		amountHealed += creature->healWound(entertainer, CreatureAttribute::FOCUS, woundHeal, true, false);
+		amountHealed += creature->healWound(entertainer, CreatureAttribute::WILLPOWER, woundHeal, true, false);
+		amountHealed += creature->healWound(entertainer, CreatureAttribute::ACTION, woundHeal, true, false);
+		amountHealed += creature->healWound(entertainer, CreatureAttribute::QUICKNESS, woundHeal, true, false);
+		amountHealed += creature->healWound(entertainer, CreatureAttribute::STAMINA, woundHeal, true, false);
 	}
 
 	clocker.release();
+
+	if (amountHealed <= 0)
+		return;
 
 	if (entertainer->getGroup() != nullptr)
 		addHealingXpGroup(amountHealed);

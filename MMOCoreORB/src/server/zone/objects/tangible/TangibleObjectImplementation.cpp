@@ -34,9 +34,63 @@
 #include "server/zone/objects/player/events/StoreSpawnedChildrenTask.h"
 #include "server/zone/managers/gcw/GCWManager.h"
 #include "templates/faction/Factions.h"
+#include "templates/customization/CustomizationIdManager.h"
 #include "server/zone/objects/player/FactionStatus.h"
 #include "server/chat/ChatManager.h"
 #include "server/zone/objects/tangible/wearables/WearableContainerObject.h"
+
+namespace {
+constexpr const char* kHolocronLightsaberAppearance = "appearance/eqp_jedi_holocron_s02.apt";
+constexpr const char* kLightsaberLootSchematicPrefix = "object/tangible/loot/loot_schematic/lightsaber/";
+constexpr const char* kHolocronColorVariable = "/private/index_color_1";
+
+int16 getDefaultHolocronSchematicColor(const String& templatePath) {
+	if (templatePath.contains("lightsaber_two_hand_"))
+		return 6;
+
+	if (templatePath.contains("lightsaber_polearm_"))
+		return 9;
+
+	if (templatePath.contains("lightsaber_one_hand_"))
+		return 3;
+
+	return -1;
+}
+
+void applyDefaultHolocronSchematicColor(TangibleObjectImplementation* object, bool overwriteExisting = false) {
+	if (object == nullptr)
+		return;
+
+	SharedObjectTemplate* templateObject = object->getObjectTemplate();
+
+	if (templateObject == nullptr)
+		return;
+
+	const String& templatePath = templateObject->getFullTemplateString();
+
+	if (!templatePath.beginsWith(kLightsaberLootSchematicPrefix))
+		return;
+
+	if (templateObject->getAppearanceFilename() != kHolocronLightsaberAppearance)
+		return;
+
+	const uint8 variableId = CustomizationIdManager::instance()->getCustomizationId(kHolocronColorVariable);
+
+	if (!overwriteExisting && object->getCustomizationVariables()->contains(variableId))
+		return;
+
+	const int16 defaultColor = getDefaultHolocronSchematicColor(templatePath);
+
+	if (defaultColor < 0)
+		return;
+
+	object->setCustomizationVariable(kHolocronColorVariable, defaultColor, false);
+	object->info() << "holocron schematic color set oid=" << object->getObjectID()
+		<< " template=" << templatePath
+		<< " color=" << defaultColor
+		<< " overwrite=" << overwriteExisting;
+}
+}
 
 void TangibleObjectImplementation::initializeTransientMembers() {
 	SceneObjectImplementation::initializeTransientMembers();
@@ -49,6 +103,8 @@ void TangibleObjectImplementation::initializeTransientMembers() {
 	if (faction !=  Factions::FACTIONREBEL && faction != Factions::FACTIONIMPERIAL) {
 		faction = 0;
 	}
+
+	applyDefaultHolocronSchematicColor(this);
 }
 
 void TangibleObjectImplementation::loadTemplateData(SharedObjectTemplate* templateData) {
@@ -160,6 +216,8 @@ void TangibleObjectImplementation::destroyObjectFromDatabase(bool destroyContain
 
 void TangibleObjectImplementation::sendBaselinesTo(SceneObject* player) {
 	TangibleObject* thisPointer = asTangibleObject();
+
+	applyDefaultHolocronSchematicColor(this, true);
 
 	BaseMessage* tano3 = new TangibleObjectMessage3(thisPointer);
 	player->sendMessage(tano3);

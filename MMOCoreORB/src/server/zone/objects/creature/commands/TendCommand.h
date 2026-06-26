@@ -139,8 +139,15 @@ public:
 		playerManager->awardExperience(player, type, amount, true);
 	}
 
+	bool isTendWoundAttribute(uint8 attribute) const {
+		return attribute == CreatureAttribute::HEALTH || attribute == CreatureAttribute::STRENGTH || attribute == CreatureAttribute::CONSTITUTION;
+	}
+
 	uint8 findAttribute(CreatureObject* creature, uint8 startAttribute = 0) const {
 		for (int i = startAttribute; i < 9; ++i) {
+			if (!isTendWoundAttribute(i))
+				continue;
+
 			int wounds = creature->getWounds(i);
 
 			if (wounds != 0)
@@ -248,7 +255,7 @@ public:
 				attribute = findAttribute(creatureTarget);
 			}
 
-			if (attribute >= CreatureAttribute::MIND)
+			if (!isTendWoundAttribute(attribute))
 				attribute = CreatureAttribute::UNKNOWN;
 
 			if (attribute == CreatureAttribute::UNKNOWN || creatureTarget->getWounds(attribute) == 0) {

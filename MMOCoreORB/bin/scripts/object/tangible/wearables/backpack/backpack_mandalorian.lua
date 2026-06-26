@@ -79,6 +79,11 @@ object_tangible_wearables_backpack_backpack_mandalorian = object_tangible_wearab
 				"object/creature/player/smc_female.iff",
 				"object/creature/player/weequay_male.iff"},
 
+		skillMods = {
+				{"melee_defense", 10},
+				{"ranged_defense", 10}
+				},
+
 	numberExperimentalProperties = {1, 1, 1, 1},
 	experimentalProperties = {"XX", "XX", "XX", "XX"},
 	experimentalWeights = {1, 1, 1, 1},

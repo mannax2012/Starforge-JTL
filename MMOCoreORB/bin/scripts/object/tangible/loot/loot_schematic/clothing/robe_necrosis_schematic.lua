@@ -12,7 +12,7 @@
 --This program is distributed in the hope that it will be useful, 
 --but WITHOUT ANY WARRANTY; without even the implied warranty of 
 --MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
---See the GNU Lesser General Public License for
+--See the GNU Lesser General Public License fo
 --more details.
 
 --You should have received a copy of the GNU Lesser General 
@@ -41,39 +41,13 @@
 --this exception also makes it possible to release a modified version 
 
 
-object_tangible_food_crafted_drink_bespin_port = object_tangible_food_crafted_shared_drink_bespin_port:new {
-	templateType = CONSUMABLE,
-
-	duration = 10,
-	filling = 0,
-	nutrition = 10,
-
-	effectType = 4,
-
-	fillingMin = 0,
-	fillingMax = 0,
-	flavorMin = 720,
-	flavorMax = 1440,
-	nutritionMin = 3,
-	nutritionMax = 12,
-	quantityMin = 5,
-	quantityMax = 8,
-
-	modifiers = { "experiment_bonus", 0 },
-
-	buffName = "food.experiment_bonus",
-	buffCRC = 0x9B38A4CB,
-	speciesRestriction = "",
-
-	numberExperimentalProperties = {1, 1, 1, 1, 2, 2, 2, 2, 1},
-	experimentalProperties = {"XX", "XX", "XX", "XX", "OQ", "PE", "FL", "OQ", "DR", "PE", "DR", "OQ", "XX"},
-	experimentalWeights = {1, 1, 1, 1, 1, 2, 2, 1, 1, 3, 3, 1, 1},
-	experimentalGroupTitles = {"null", "null", "null", "null", "exp_nutrition", "exp_flavor", "exp_quantity", "exp_filling", "null"},
-	experimentalSubGroupTitles = {"null", "null", "hitpoints", "quantity_bonus", "nutrition", "flavor", "quantity", "filling", "stomach"},
-	experimentalMin = {0, 0, 1000, 0, 75, 60, 60, 0, 1},
-	experimentalMax = {0, 0, 1000, 0, 120, 120, 100, 0, 1},
-	experimentalPrecision = {0, 0, 0, 0, 10, 10, 10, 10, 0},
-	experimentalCombineType = {0, 0, 4, 1, 1, 1, 1, 1, 1},
+object_tangible_loot_loot_schematic_clothing_robe_necrosis_schematic = object_tangible_loot_loot_schematic_clothing_shared_robe_necrosis_schematic:new {
+	templateType = LOOTSCHEMATIC,
+	objectMenuComponent = "LootSchematicMenuComponent",
+	attributeListComponent = "LootSchematicAttributeListComponent",
+	requiredSkill = "crafting_tailor_master",
+	targetDraftSchematic = "object/draft_schematic/clothing/custom/clothing_robe_necrosis_schematic.iff",
+	targetUseCount = 1
 }
 
-ObjectTemplates:addTemplate(object_tangible_food_crafted_drink_bespin_port, "object/tangible/food/crafted/drink_bespin_port.iff")
+ObjectTemplates:addTemplate(object_tangible_loot_loot_schematic_clothing_robe_necrosis_schematic, "object/tangible/loot/loot_schematic/clothing/robe_necrosis_schematic.iff")

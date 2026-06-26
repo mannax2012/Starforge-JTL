@@ -41,39 +41,39 @@
 --this exception also makes it possible to release a modified version 
 
 
-object_tangible_food_crafted_drink_bespin_port = object_tangible_food_crafted_shared_drink_bespin_port:new {
-	templateType = CONSUMABLE,
+object_draft_schematic_clothing_custom_clothing_robe_necrosis_schematic = object_draft_schematic_clothing_custom_shared_clothing_robe_necrosis_schematic:new {
 
-	duration = 10,
-	filling = 0,
-	nutrition = 10,
+   templateType = DRAFTSCHEMATIC,
 
-	effectType = 4,
+   customObjectName = "Necrosis Robe TESTS",
 
-	fillingMin = 0,
-	fillingMax = 0,
-	flavorMin = 720,
-	flavorMax = 1440,
-	nutritionMin = 3,
-	nutritionMax = 12,
-	quantityMin = 5,
-	quantityMax = 8,
+   craftingToolTab = 8, -- (See DraftSchematicObjectTemplate.h)
+   complexity = 1, 
+   size = 2, 
 
-	modifiers = { "experiment_bonus", 0 },
+   xpType = "crafting_clothing_general", 
+   xp = 90, 
 
-	buffName = "food.experiment_bonus",
-	buffCRC = 0x9B38A4CB,
-	speciesRestriction = "",
+   assemblySkill = "clothing_assembly", 
+   experimentingSkill = "clothing_experimentation", 
+   customizationSkill = "clothing_customization", 
 
-	numberExperimentalProperties = {1, 1, 1, 1, 2, 2, 2, 2, 1},
-	experimentalProperties = {"XX", "XX", "XX", "XX", "OQ", "PE", "FL", "OQ", "DR", "PE", "DR", "OQ", "XX"},
-	experimentalWeights = {1, 1, 1, 1, 1, 2, 2, 1, 1, 3, 3, 1, 1},
-	experimentalGroupTitles = {"null", "null", "null", "null", "exp_nutrition", "exp_flavor", "exp_quantity", "exp_filling", "null"},
-	experimentalSubGroupTitles = {"null", "null", "hitpoints", "quantity_bonus", "nutrition", "flavor", "quantity", "filling", "stomach"},
-	experimentalMin = {0, 0, 1000, 0, 75, 60, 60, 0, 1},
-	experimentalMax = {0, 0, 1000, 0, 120, 120, 100, 0, 1},
-	experimentalPrecision = {0, 0, 0, 0, 10, 10, 10, 10, 0},
-	experimentalCombineType = {0, 0, 4, 1, 1, 1, 1, 1, 1},
+   customizationOptions = {2},
+   customizationStringNames = {"/private/index_color_1"},
+   customizationDefaults = {66},
+
+   ingredientTemplateNames = {"craft_clothing_ingredients_n", "craft_clothing_ingredients_n", "craft_clothing_ingredients_n", "craft_clothing_ingredients_n"},
+   ingredientTitleNames = {"body", "binding_and_hardware", "liner", "load_bearing_harness"},
+   ingredientSlotType = {1, 1, 0, 1},
+   resourceTypes = {"object/tangible/component/clothing/shared_reinforced_fiber_panels.iff", "object/tangible/component/clothing/shared_metal_fasteners.iff", "hide_wooly_tatooine", "object/tangible/component/clothing/shared_reinforced_fiber_panels.iff"},
+   resourceQuantities = {1, 1, 20, 1},
+   contribution = {100, 100, 100, 100},
+
+
+   targetTemplate = "object/tangible/wearables/robe/robe_necrosis.iff",
+
+   additionalTemplates = {
+             }
+
 }
-
-ObjectTemplates:addTemplate(object_tangible_food_crafted_drink_bespin_port, "object/tangible/food/crafted/drink_bespin_port.iff")
+ObjectTemplates:addTemplate(object_draft_schematic_clothing_custom_clothing_robe_necrosis_schematic, "object/draft_schematic/clothing/custom/clothing_robe_necrosis_schematic.iff")

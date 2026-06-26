@@ -111,7 +111,7 @@ public:
 
 		creature->addBuff(reductionBuff);
 		creature->addBuff(shieldBuff);
-		creature->playEffect("clienteffect/pl_force_armor_self.cef", "");
+		creature->playEffect("clienteffect/cyssc_grnshield.cef", "");
 
 		Locker batteryLocker(battery);
 		consumeRequiredItem(battery);

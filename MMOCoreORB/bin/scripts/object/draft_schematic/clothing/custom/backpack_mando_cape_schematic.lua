@@ -39,41 +39,42 @@
 --it is their choice whether to do so. The GNU Lesser General Public License 
 --gives permission to release a modified version without this exception; 
 --this exception also makes it possible to release a modified version 
+--REMAKE
+
+object_draft_schematic_clothing_custom_backpack_mando_cape_schematic = object_draft_schematic_clothing_custom_shared_backpack_mando_cape_schematic:new {
+
+   templateType = DRAFTSCHEMATIC,
+
+   customObjectName = "Mando Backpack",
+
+   craftingToolTab = 8, -- (See DraftSchematicObjectTemplate.h)
+   complexity = 1, 
+   size = 2,
+   factoryCrateSize = 0,
+
+   xpType = "crafting_general", 
+   xp = 1400, 
+
+   assemblySkill = "general_assembly", 
+   experimentingSkill = "general_experimentation", 
+   customizationSkill = "clothing_customization", 
+
+   customizationOptions = {2},
+   customizationStringNames = {"/private/index_color_1"},
+   customizationDefaults = {76},
+
+   ingredientTemplateNames = {"craft_clothing_ingredients_n", "craft_clothing_ingredients_n", "craft_clothing_ingredients_n", "craft_clothing_ingredients_n"},
+   ingredientTitleNames = {"primary_pocket", "secondary_pocket", "strap_pad", "strap_adjustment"},
+   ingredientSlotType = {0, 0, 0, 0},
+   resourceTypes = {"fiberplast", "petrochem_inert_polymer", "hide", "metal"},
+   resourceQuantities = {50, 10, 5, 5},
+   contribution = {100, 100, 100, 100},
 
 
-object_tangible_food_crafted_drink_bespin_port = object_tangible_food_crafted_shared_drink_bespin_port:new {
-	templateType = CONSUMABLE,
+   targetTemplate = "object/tangible/wearables/backpack/backpack_mando_cape.iff",
 
-	duration = 10,
-	filling = 0,
-	nutrition = 10,
+   additionalTemplates = {
+             }
 
-	effectType = 4,
-
-	fillingMin = 0,
-	fillingMax = 0,
-	flavorMin = 720,
-	flavorMax = 1440,
-	nutritionMin = 3,
-	nutritionMax = 12,
-	quantityMin = 5,
-	quantityMax = 8,
-
-	modifiers = { "experiment_bonus", 0 },
-
-	buffName = "food.experiment_bonus",
-	buffCRC = 0x9B38A4CB,
-	speciesRestriction = "",
-
-	numberExperimentalProperties = {1, 1, 1, 1, 2, 2, 2, 2, 1},
-	experimentalProperties = {"XX", "XX", "XX", "XX", "OQ", "PE", "FL", "OQ", "DR", "PE", "DR", "OQ", "XX"},
-	experimentalWeights = {1, 1, 1, 1, 1, 2, 2, 1, 1, 3, 3, 1, 1},
-	experimentalGroupTitles = {"null", "null", "null", "null", "exp_nutrition", "exp_flavor", "exp_quantity", "exp_filling", "null"},
-	experimentalSubGroupTitles = {"null", "null", "hitpoints", "quantity_bonus", "nutrition", "flavor", "quantity", "filling", "stomach"},
-	experimentalMin = {0, 0, 1000, 0, 75, 60, 60, 0, 1},
-	experimentalMax = {0, 0, 1000, 0, 120, 120, 100, 0, 1},
-	experimentalPrecision = {0, 0, 0, 0, 10, 10, 10, 10, 0},
-	experimentalCombineType = {0, 0, 4, 1, 1, 1, 1, 1, 1},
 }
-
-ObjectTemplates:addTemplate(object_tangible_food_crafted_drink_bespin_port, "object/tangible/food/crafted/drink_bespin_port.iff")
+ObjectTemplates:addTemplate(object_draft_schematic_clothing_custom_backpack_mando_cape_schematic, "object/draft_schematic/clothing/custom/backpack_mando_cape_schematic.iff")

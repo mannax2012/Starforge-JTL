@@ -1,0 +1,9 @@
+object_tangible_loot_loot_schematic_clothing_shared_robe_necrosis_schematic = SharedTangibleObjectTemplate:new {
+	clientTemplateFileName = "object/tangible/loot/loot_schematic/clothing/shared_robe_necrosis_schematic.iff"}
+ObjectTemplates:addClientTemplate(object_tangible_loot_loot_schematic_clothing_shared_robe_necrosis_schematic, 
+"object/tangible/loot/loot_schematic/clothing/shared_robe_necrosis_schematic.iff")
+
+object_tangible_loot_loot_schematic_clothing_shared_backpack_mando_cape_schematic = SharedTangibleObjectTemplate:new {
+	clientTemplateFileName = "object/tangible/loot/loot_schematic/clothing/shared_backpack_mando_cape_schematic.iff"}
+ObjectTemplates:addClientTemplate(object_tangible_loot_loot_schematic_clothing_shared_backpack_mando_cape_schematic, 
+"object/tangible/loot/loot_schematic/clothing/shared_backpack_mando_cape_schematic.iff")

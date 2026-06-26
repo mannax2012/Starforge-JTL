@@ -52,6 +52,12 @@ ObjectTemplates:addClientTemplate(object_tangible_wearables_robe_shared_robe_tus
 
 -- New Jedi Robes
 
+object_tangible_wearables_robe_shared_robe_necrosis = SharedTangibleObjectTemplate:new {
+	clientTemplateFileName = "object/tangible/wearables/robe/shared_robe_necrosis.iff"
+}
+ObjectTemplates:addClientTemplate(object_tangible_wearables_robe_shared_robe_necrosis, "object/tangible/wearables/robe/shared_robe_necrosis.iff")
+--*********************************************************************************
+
 object_tangible_wearables_robe_shared_robe_s32 = SharedTangibleObjectTemplate:new {
 	clientTemplateFileName = "object/tangible/wearables/robe/shared_robe_s32.iff"
 }

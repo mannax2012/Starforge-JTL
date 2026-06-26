@@ -281,6 +281,35 @@ int VehicleObjectImplementation::calculateRepairCost(CreatureObject* player) {
 	return getConditionDamage() * 4;
 }
 
+bool VehicleObjectImplementation::isAttackableBy(CreatureObject* object) {
+	if (object == nullptr || isDestroyed()) {
+		return false;
+	}
+
+	if (getParentID() != 0) {
+		return false;
+	}
+
+	ManagedReference<CreatureObject*> owner = linkedCreature.get();
+
+	if (owner == nullptr) {
+		owner = getVehicleOwnerFromDevice(_this.getReferenceUnsafeStaticCast());
+	}
+
+	if (owner == nullptr) {
+		return false;
+	}
+
+	ManagedReference<Zone*> attackerZone = object->getLocalZone();
+	ManagedReference<Zone*> vehicleZone = getLocalZone();
+
+	if (attackerZone == nullptr || vehicleZone == nullptr || attackerZone != vehicleZone) {
+		return false;
+	}
+
+	return owner->isAttackableBy(object);
+}
+
 int VehicleObjectImplementation::inflictDamage(TangibleObject* attacker, int damageType, float damage, bool destroy, bool notifyClient, bool isCombatAction) {
 	return TangibleObjectImplementation::inflictDamage(attacker, damageType, damage, destroy, notifyClient, isCombatAction);
 }
