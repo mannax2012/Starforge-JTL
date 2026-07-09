@@ -85,7 +85,7 @@ MeleeBHSearingSweepCommand = {
 	  )
 	},
 
-	weaponType = ONEHANDMELEEWEAPON,
+	weaponType = UNARMEDWEAPON + ONEHANDMELEEWEAPON,
 
 	range = -1
 }
