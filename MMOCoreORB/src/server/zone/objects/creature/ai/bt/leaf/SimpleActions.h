@@ -703,8 +703,10 @@ public:
 			Time* healDelay = agent->getHealDelay();
 
 			if (healDelay != nullptr) {
+				int healCooldown = Math::max(0, (int) round(agent->getHealCooldown() * 1000.f));
+
 				healDelay->updateToCurrentTime();
-				healDelay->addMiliTime(20 * 1000);
+				healDelay->addMiliTime(healCooldown);
 			}
 
 			agent->eraseBlackboard("healTarget");

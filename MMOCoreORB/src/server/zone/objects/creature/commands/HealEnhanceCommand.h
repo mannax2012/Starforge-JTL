@@ -14,6 +14,7 @@
 #include "server/zone/objects/creature/BuffAttribute.h"
 #include "server/zone/objects/creature/buffs/DelayedBuff.h"
 #include "server/zone/managers/collision/CollisionManager.h"
+#include "templates/SharedObjectTemplate.h"
 
 class HealEnhanceCommand : public QueueCommand {
 	float mindCost;
@@ -88,15 +89,26 @@ public:
 			return false;
 		}
 
+		ManagedReference<SceneObject*> root = enhancer->getRootParent();
+		bool isStaticCantina = false;
+
+		if (root != nullptr && !root->isClientObject()) {
+			SharedObjectTemplate* objectTemplate = root->getObjectTemplate();
+
+			if (objectTemplate != nullptr) {
+				const PlanetMapCategory* category = objectTemplate->getPlanetMapCategory();
+
+				isStaticCantina = category != nullptr && category->getName() == "cantina";
+			}
+		}
+
 		int medicalRatingNotIncludingCityBonus = enhancer->getSkillMod("private_medical_rating") - enhancer->getSkillModOfType("private_medical_rating", SkillModManager::CITY);
 
-		if (medicalRatingNotIncludingCityBonus <= 0) {
+		if (medicalRatingNotIncludingCityBonus <= 0 && !isStaticCantina) {
 			enhancer->sendSystemMessage("@healing_response:must_be_near_droid"); // You must be in a hospital, at a campsite, or near a surgical droid to do that.
 			return false;
 		} else {
 			// Building private medical rating always takes precedence, If it a client object structure, no medical rating will prevent buffs/wound healing.
-			ManagedReference<SceneObject*> root = enhancer->getRootParent();
-
 			if (root != nullptr && root->isClientObject()) {
 				if (enhancer->getSkillModOfType("private_medical_rating", SkillModManager::STRUCTURE) == 0) {
 					enhancer->sendSystemMessage("@healing_response:must_be_in_hospital"); // You must be in a hospital or at a campsite to do that.
