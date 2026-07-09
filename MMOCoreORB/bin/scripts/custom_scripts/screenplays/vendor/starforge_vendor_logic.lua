@@ -38,6 +38,14 @@ StarforgeVendorLogic = ScreenPlay:new {
 
 registerScreenPlay("StarforgeVendorLogic", false)
 
+function StarforgeVendorLogic:getUsingObjectFromSui(pSui)
+	if (pSui == nil) then
+		return nil
+	end
+
+	return LuaSuiBox(pSui):getUsingObject()
+end
+
 function StarforgeVendorLogic:openSUIArmorSchematics(pCreatureObject, pUsingObject)
 	local sui = SuiListBox.new(self.scriptName, "defaultCallbackArmorSchematics")
 
@@ -88,6 +96,7 @@ end
 
 function StarforgeVendorLogic:defaultCallbackArmorSchematics(pPlayer, pSui, eventIndex, args)
 	local cancelPressed = (eventIndex == 1)
+	local pUsingObject = self:getUsingObjectFromSui(pSui)
 
 	if (cancelPressed) then
 		return
@@ -95,16 +104,19 @@ function StarforgeVendorLogic:defaultCallbackArmorSchematics(pPlayer, pSui, even
 
 	if (args == "-1") then
 		CreatureObject(pPlayer):sendSystemMessage("No option was selected, please try again.")
+		self:openSUIArmorSchematics(pPlayer, pUsingObject)
 		return
 	end
 
 	local selectedOption = tonumber(args) + 1
 
 	self:buyItemArmorSchematics(pPlayer, selectedOption)
+	self:openSUIArmorSchematics(pPlayer, pUsingObject)
 end
 
 function StarforgeVendorLogic:defaultCallbackArmorsmithSegments(pPlayer, pSui, eventIndex, args)
 	local cancelPressed = (eventIndex == 1)
+	local pUsingObject = self:getUsingObjectFromSui(pSui)
 
 	if (cancelPressed) then
 		return
@@ -112,12 +124,14 @@ function StarforgeVendorLogic:defaultCallbackArmorsmithSegments(pPlayer, pSui, e
 
 	if (args == "-1") then
 		CreatureObject(pPlayer):sendSystemMessage("No option was selected, please try again.")
+		self:openSUIArmorsmithSegments(pPlayer, pUsingObject)
 		return
 	end
 
 	local selectedOption = tonumber(args) + 1
 
 	self:buyItemArmorsmithSegments(pPlayer, selectedOption)
+	self:openSUIArmorsmithSegments(pPlayer, pUsingObject)
 end
 
 function StarforgeVendorLogic:buyItemArmorSchematics(pPlayer, itemSelected)

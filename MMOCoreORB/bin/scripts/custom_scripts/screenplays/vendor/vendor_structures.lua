@@ -17,6 +17,14 @@ StructuresVendorLogic = ScreenPlay:new {
 
 registerScreenPlay("StructuresVendorLogic", false)
 
+function StructuresVendorLogic:getUsingObjectFromSui(pSui)
+	if (pSui == nil) then
+		return nil
+	end
+
+	return LuaSuiBox(pSui):getUsingObject()
+end
+
 --GEN3
 function StructuresVendorLogic:openSUIStructures(pCreatureObject, pUsingObject)
 	local sui = SuiListBox.new(self.scriptName, "defaultCallbackStructures")
@@ -44,6 +52,7 @@ end
 
 function StructuresVendorLogic:defaultCallbackStructures(pPlayer, pSui, eventIndex, args)
 	local cancelPressed = (eventIndex == 1)
+	local pUsingObject = self:getUsingObjectFromSui(pSui)
 
 	if (cancelPressed) then
 		return
@@ -51,12 +60,14 @@ function StructuresVendorLogic:defaultCallbackStructures(pPlayer, pSui, eventInd
 
 	if (args == "-1") then
 		CreatureObject(pPlayer):sendSystemMessage("No option was selected, please try again.")
+		self:openSUIStructures(pPlayer, pUsingObject)
 		return
 	end
 
 	local selectedOption = tonumber(args) + 1
 
 	self:buyItemStructures(pPlayer, selectedOption)
+	self:openSUIStructures(pPlayer, pUsingObject)
 end
 
 function StructuresVendorLogic:buyItemStructures(pPlayer, itemSelected)

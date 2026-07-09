@@ -11,11 +11,19 @@ BackpacksVendorLogic = ScreenPlay:new {
 		        },
 
 		merchandise_backpacks = { -- Displayed name, full template string (without the shared_), cost {} - follow same order as the currencies setup previously
-		{name = "Starforge Backpack", template = "object/tangible/loot/loot_schematic/starforge_backpack_schematic.iff", cost = {0, 10000}},
+		{name = "Schematic: Starforge Backpack", template = "object/tangible/loot/loot_schematic/starforge_backpack_schematic.iff", cost = {0, 10000}},
 	    },
 }
 
 registerScreenPlay("BackpacksVendorLogic", false)
+
+function BackpacksVendorLogic:getUsingObjectFromSui(pSui)
+	if (pSui == nil) then
+		return nil
+	end
+
+	return LuaSuiBox(pSui):getUsingObject()
+end
 
 --GEN3
 function BackpacksVendorLogic:openSUIBackpacks(pCreatureObject, pUsingObject)
@@ -44,6 +52,7 @@ end
 
 function BackpacksVendorLogic:defaultCallbackBackpacks(pPlayer, pSui, eventIndex, args)
 	local cancelPressed = (eventIndex == 1)
+	local pUsingObject = self:getUsingObjectFromSui(pSui)
 
 	if (cancelPressed) then
 		return
@@ -51,12 +60,14 @@ function BackpacksVendorLogic:defaultCallbackBackpacks(pPlayer, pSui, eventIndex
 
 	if (args == "-1") then
 		CreatureObject(pPlayer):sendSystemMessage("No option was selected, please try again.")
+		self:openSUIBackpacks(pPlayer, pUsingObject)
 		return
 	end
 
 	local selectedOption = tonumber(args) + 1
 
 	self:buyItemBackpacks(pPlayer, selectedOption)
+	self:openSUIBackpacks(pPlayer, pUsingObject)
 end
 
 function BackpacksVendorLogic:buyItemBackpacks(pPlayer, itemSelected)
