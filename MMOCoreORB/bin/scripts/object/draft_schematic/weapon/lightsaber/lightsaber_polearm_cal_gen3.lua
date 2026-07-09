@@ -45,7 +45,7 @@ object_draft_schematic_weapon_lightsaber_lightsaber_polearm_cal_gen3 = object_dr
 
    templateType = DRAFTSCHEMATIC,
 
-   customObjectName = "Fourth Generation Lightsaber",
+   customObjectName = "Third Generation Lightsaber",
 
    craftingToolTab = 2048, -- (See DraftSchematicObjectTemplate.h)
    complexity = 19, 

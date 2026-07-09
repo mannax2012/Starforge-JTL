@@ -130,6 +130,9 @@ object_weapon_melee_sword_crafted_saber_sword_lightsaber_one_handed_unstable_gen
 	maxRange = 5,
 	maxRangeAccuracy = 5,
 
+	minDamage = 140,
+	maxDamage = 230,
+
 	attackSpeed = 4.5,	
 
 	woundsRatio = 37,

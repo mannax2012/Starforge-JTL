@@ -41,7 +41,7 @@
 --this exception also makes it possible to release a modified version 
 
 
-object_weapon_melee_sword_crafted_saber_sword_lightsaber_one_handed_cal_gen3 = object_weapon_melee_sword_crafted_saber_shared_sword_lightsaber_one_handed_cal_gen3:new {
+object_weapon_melee_sword_crafted_saber_sword_lightsaber_dw_right_unstable_s01_gen4 = object_weapon_melee_sword_crafted_saber_shared_sword_lightsaber_dw_right_unstable_s01_gen4:new {
 	
 	playerRaces = {
 		"object/creature/player/bothan_male.iff",
@@ -98,7 +98,7 @@ object_weapon_melee_sword_crafted_saber_sword_lightsaber_one_handed_cal_gen3 = o
 	xpType = "jedi_general",
 	
 	-- See http://www.ocdsoft.com/files/certifications.xls
-	certificationsRequired = { "cert_onehandlightsaber_gen3" },
+	certificationsRequired = { "cert_onehandlightsaber_gen4" },
 	-- See http://www.ocdsoft.com/files/accuracy.xls
 	creatureAccuracyModifiers = { "onehandlightsaber_accuracy" },
 
@@ -119,7 +119,7 @@ object_weapon_melee_sword_crafted_saber_sword_lightsaber_one_handed_cal_gen3 = o
 	healthAttackCost = 0,
 	actionAttackCost = 350,
 	mindAttackCost = 0,
-	forceCost = 36,
+	forceCost = 40,
 
 	pointBlankRange = 0,
 	pointBlankAccuracy = 20,
@@ -130,16 +130,19 @@ object_weapon_melee_sword_crafted_saber_sword_lightsaber_one_handed_cal_gen3 = o
 	maxRange = 5,
 	maxRangeAccuracy = 5,
 
-	attackSpeed = 4.5,	
+	minDamage = 140,
+	maxDamage = 230,
 
-	woundsRatio = 25,
+	attackSpeed = 4.5,
+
+	woundsRatio = 37,
 
 	defenderToughnessModifiers = { "lightsaber_toughness" },
 	
 	noTrade = 1,
 	
 	childObjects = {
-		{templateFile = "object/tangible/inventory/lightsaber_inventory_3.iff", x = 0, z = 0, y = 0, ox = 0, oy = 0, oz = 0, ow = 0, cellid = -1, containmentType = 4}
+		{templateFile = "object/tangible/inventory/lightsaber_inventory_4.iff", x = 0, z = 0, y = 0, ox = 0, oy = 0, oz = 0, ow = 0, cellid = -1, containmentType = 4}
 	},
 
 	numberExperimentalProperties = {1, 1, 2, 2, 2, 2, 2, 1, 1, 1},
@@ -147,10 +150,10 @@ object_weapon_melee_sword_crafted_saber_sword_lightsaber_one_handed_cal_gen3 = o
 	experimentalWeights = {1, 1, 1, 2, 1, 2, 1, 1, 1, 1, 1, 2, 1, 1, 1},
 	experimentalGroupTitles = {"null", "null", "expDamage", "expDamage", "expDamage", "expDamage", "expEffeciency", "expEffeciency", "expEffeciency", "expEffeciency"},
 	experimentalSubGroupTitles = {"null", "null", "mindamage", "maxdamage", "attackspeed", "woundchance", "forcecost", "attackhealthcost", "attackactioncost", "attackmindcost"},
-	experimentalMin = {0, 0, 130, 220, 4.5, 19, 40, 0, 300, 0},
-	experimentalMax = {0, 0, 150, 260, 4.2, 31, 36, 0, 330, 0},
+	experimentalMin = {0, 0, 140, 230, 4.5, 25, 55, 0, 300, 0},
+	experimentalMax = {0, 0, 160, 270, 4.2, 50, 48, 0, 330, 0},
 	experimentalPrecision = {0, 0, 0, 0, 1, 0, 1, 0, 0, 0},
 	experimentalCombineType = {0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
 }
 
-ObjectTemplates:addTemplate(object_weapon_melee_sword_crafted_saber_sword_lightsaber_one_handed_cal_gen3, "object/weapon/melee/sword/crafted_saber/sword_lightsaber_one_handed_cal_gen3.iff")
+ObjectTemplates:addTemplate(object_weapon_melee_sword_crafted_saber_sword_lightsaber_dw_right_unstable_s01_gen4, "object/weapon/melee/sword/crafted_saber/sword_lightsaber_dw_right_unstable_s01_gen4.iff")
