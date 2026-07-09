@@ -181,29 +181,51 @@ Reference<Account*> AccountManager::validateAccountCredentials(LoginClient* clie
 		return nullptr;
 	}
 
+	auto sendExpiredSessionError = [&]() {
+		client->sendErrorMessage("Login Error",
+			"Your session key is invalid, or has expired. Please exit the client and log in again.");
+	};
+
 	bool isSessionIdLogin = false;
+	bool sessionIdLookupAttempted = false;
+	bool tokenLooksLikeSessionId = false;
 	String passwordStored;
 	Reference<Account*> account = nullptr;
 
 	if (ConfigManager::instance()->getLoginEnableSessionId()) {
-		StringBuffer sessionIdQuery;
-		sessionIdQuery << "SELECT a.active, a.username, a.password, a.salt, a.account_id, a.station_id, "
-			     "UNIX_TIMESTAMP(a.created), a.admin_level, IFNULL(s.session_id, '') AS session_id "
-			     "FROM accounts a, sessions s "
-			     "WHERE s.account_id = a.account_id AND s.session_id = '" << password << "'"
-			     " AND s.expires > NOW()";
+		sessionIdLookupAttempted = true;
+		tokenLooksLikeSessionId = (password.length() >= 64);
 
-		if (!username.isEmpty()) {
-			sessionIdQuery << " AND a.username = '" << username << "'";
-		}
+		auto loadAccountBySessionId = [&](bool requireActiveSession) -> Reference<Account*> {
+			StringBuffer sessionIdQuery;
+			sessionIdQuery << "SELECT a.active, a.username, a.password, a.salt, a.account_id, a.station_id, "
+				     "UNIX_TIMESTAMP(a.created), a.admin_level, IFNULL(s.session_id, '') AS session_id "
+				     "FROM accounts a, sessions s "
+				     "WHERE s.account_id = a.account_id AND s.session_id = '" << password << "'";
 
-		sessionIdQuery << " LIMIT 1;";
+			if (requireActiveSession) {
+				sessionIdQuery << " AND s.expires > NOW()";
+			}
 
-		account = getAccount(sessionIdQuery.toString(), passwordStored, true);
+			sessionIdQuery << " LIMIT 1;";
+
+			return getAccount(sessionIdQuery.toString(), passwordStored, true);
+		};
+
+		account = loadAccountBySessionId(true);
 
 		if (account != nullptr) {
 			isSessionIdLogin = true;
 		} else {
+			auto staleSessionAccount = loadAccountBySessionId(false);
+
+			if (staleSessionAccount != nullptr) {
+				info(true) << "Expired session-id login for user [" << (username.isEmpty() ? "<empty>" : username)
+					<< "] from " << client->getIPAddress() << " token_length=" << password.length();
+				sendExpiredSessionError();
+				return nullptr;
+			}
+
 			info(true) << "Session-id login lookup miss for user [" << (username.isEmpty() ? "<empty>" : username)
 				<< "] from " << client->getIPAddress() << " token_length=" << password.length();
 		}
@@ -218,6 +240,11 @@ Reference<Account*> AccountManager::validateAccountCredentials(LoginClient* clie
 	}
 
 	if (account == nullptr) {
+		if (sessionIdLookupAttempted && (username.isEmpty() || tokenLooksLikeSessionId)) {
+			sendExpiredSessionError();
+			return nullptr;
+		}
+
 		// The user name didn't exist, so we check if auto registration is enabled and create a new account
 		if (isAutoRegistrationEnabled()) {
 			if (username.isEmpty()) {
@@ -236,6 +263,14 @@ Reference<Account*> AccountManager::validateAccountCredentials(LoginClient* clie
 
 			return nullptr;
 		}
+	}
+
+	if (sessionIdLookupAttempted && tokenLooksLikeSessionId && !isSessionIdLogin) {
+		info(true) << "Rejecting token-shaped fallback login for user ["
+			<< account->getUsername() << "] from " << client->getIPAddress()
+			<< " because the supplied session token was not found in the active sessions table.";
+		sendExpiredSessionError();
+		return nullptr;
 	}
 
 	// Handle username / password login
@@ -601,8 +636,9 @@ void AccountManager::renewSession(uint32 accountID, const String& sessionID, con
 
 	String sessionDuration = ConfigManager::instance()->getString("Core3.Login.SessionDuration", "00:15");
 	StringBuffer sessionQuery;
-	sessionQuery << "REPLACE INTO sessions (account_id, session_id, ip, expires) VALUES (";
-	sessionQuery << accountID << ", '" << escapedSessionID << "', '" << escapedIPAddress << "' , ADDTIME(NOW(), '" << sessionDuration << "'));";
+	sessionQuery << "INSERT INTO sessions (account_id, session_id, ip, expires) VALUES (";
+	sessionQuery << accountID << ", '" << escapedSessionID << "', '" << escapedIPAddress << "' , ADDTIME(NOW(), '" << sessionDuration << "')) ";
+	sessionQuery << "ON DUPLICATE KEY UPDATE ip = VALUES(ip), expires = VALUES(expires);";
 
 	try {
 		ServerDatabase::instance()->executeStatement(sessionQuery);

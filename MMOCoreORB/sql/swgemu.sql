@@ -2104,7 +2104,9 @@ CREATE TABLE  `swgemu`.`sessions` (
   `session_id` varchar(64) NOT NULL,
   `ip` varchar(15) NOT NULL,
   `expires` datetime NOT NULL,
-  PRIMARY KEY (`account_id`) USING BTREE
+  PRIMARY KEY (`session_id`) USING BTREE,
+  KEY `idx_sessions_account_ip_expires` (`account_id`,`ip`,`expires`) USING BTREE,
+  KEY `idx_sessions_account_expires` (`account_id`,`expires`) USING BTREE
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 --
