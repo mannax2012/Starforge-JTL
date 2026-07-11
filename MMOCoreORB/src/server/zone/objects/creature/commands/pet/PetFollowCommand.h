@@ -105,10 +105,7 @@ public:
 
 		pet->setFollowObject(targetCreature);
 		pet->storeFollowObject();
-
-		if (pet->isResting()) {
-			pet->setMovementState(AiAgent::FOLLOWING);
-		}
+		pet->setMovementState(AiAgent::FOLLOWING);
 
 		pet->notifyObservers(ObserverEventType::STARTCOMBAT, pet->getLinkedCreature().get());
 
