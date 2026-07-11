@@ -83,13 +83,13 @@ tusken_king_boss = Creature:new {
 			groups = {
 				{group = "tusken_king_rare", chance = 10000000}
 			},
-				lootChance = 1500000,
+				lootChance = 10000000,
 		},
 		{
 			groups = {
 				{group = "tusken_clothing_schematics", chance = 10000000}
 			},
-				lootChance = 400000,
+				lootChance = 600000,
 		},
 	},
 	primaryWeapon = "tusken_ranged",

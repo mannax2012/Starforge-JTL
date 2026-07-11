@@ -12,9 +12,11 @@ includeFile("groups/custom/fragmented_targeting_computer.lua")
 includeFile("groups/custom/unstable_crystal_pack.lua")
 includeFile("groups/custom/lewt_chest_common.lua")
 includeFile("groups/custom/lewt_chest_rare.lua")
---[[
+includeFile("groups/custom/lewt_chest_event.lua")
+includeFile("groups/custom/lewt_chest_common_drop.lua")
+includeFile("groups/custom/lewt_chest_rare_drop.lua")
 includeFile("groups/custom/tusken_king_rare.lua")
-]]
+includeFile("groups/custom/necrosis_robe_schematic.lua")
 
 includeFile("groups/custom/tusken_clothing/tusken_clothing_schematics.lua")
 includeFile("groups/custom/tusken_clothing/tusken_clothing_bandoliers.lua")

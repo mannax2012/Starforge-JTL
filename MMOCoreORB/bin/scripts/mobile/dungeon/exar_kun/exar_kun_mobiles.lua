@@ -17,8 +17,8 @@ local exarKunBonusLoot = {
 	{
 		groups = {
 			{group = "resource_deed_boss", 		chance = 1500000},
-			{group = "lewt_chest_common",  		chance = 2000000},
-			{group = "lewt_chest_rare",    		chance = 1500000},
+{group = "lewt_chest_common_drop",  		chance = 2000000},
+{group = "lewt_chest_rare_drop",    		chance = 1500000},
 			{group = "all_saber_schematics",    chance = 3000000},
 			{group = "blood_of_the_devout", chance = 3000000},
 		},
@@ -42,7 +42,7 @@ local exarKunBossLoot = {
 		groups = {
 			{ group = "all_saber_schematics", chance = 4000000 },
 			{ group = "resource_deed_boss", chance = 4000000 },
-			{ group = "lewt_chest_common", chance = 2000000 },
+{ group = "lewt_chest_common_drop", chance = 2000000 },
 		},
 		lootChance = 10000000,
 	},
@@ -56,7 +56,7 @@ local exarKunFinalBossLoot = {
 			{group = "clothing_attachments", chance = 1000000},
 			{group = "armor_attachments", chance = 1000000},
 			{group = "power_crystals", chance = 1000000},
-			{group = "lewt_chest_common", chance = 1500000},
+{group = "lewt_chest_common_drop", chance = 1500000},
 		},
 		lootChance = 10000000,
 	},
@@ -68,7 +68,7 @@ local exarKunFinalBossLoot = {
 			{group = "armor_attachments", chance = 1000000},
 			{group = "acid_vibro_unit", chance = 1000000},
 			{group = "blood_of_the_devout", chance = 2000000},
-			{group = "lewt_chest_rare", chance = 1000000},
+{group = "lewt_chest_rare_drop", chance = 1000000},
 		},
 		lootChance = 10000000,
 	},
@@ -101,6 +101,8 @@ exar_kun_cultist = Creature:new {
 	creatureBitmask = HERD + PACK + KILLER + HEALER,
 	optionsBitmask = AIENABLED,
 	diet = HERBIVORE,
+	healStrength = 0.5,
+	healCooldown = 20,
 	templates = { "object/mobile/exar_kun_cultist.iff" },
 		lootGroups = {
 		exarKunStandardLoot[1],
@@ -142,6 +144,8 @@ exar_kun_open_hand = Creature:new {
 	creatureBitmask = HERD + PACK + KILLER + HEALER,
 	optionsBitmask = AIENABLED,
 	diet = HERBIVORE,
+	healStrength = 0.5,
+	healCooldown = 20,
 	templates = { "object/mobile/exar_kun_open_hand.iff" },
 		lootGroups = {
 		exarKunStandardLoot[1],
@@ -185,6 +189,8 @@ exar_kun_minder = Creature:new {
 	creatureBitmask = HERD + PACK + KILLER + HEALER,
 	optionsBitmask = AIENABLED,
 	diet = HERBIVORE,
+	healStrength = 0.5,
+	healCooldown = 20,
 	templates = { "object/mobile/exar_kun_minder.iff" },
 		lootGroups = {
 		exarKunStandardLoot[1],
@@ -228,6 +234,8 @@ exar_kun_caretaker = Creature:new {
 	creatureBitmask = HERD + PACK + KILLER + HEALER,
 	optionsBitmask = AIENABLED,
 	diet = HERBIVORE,
+	healStrength = 0.5,
+	healCooldown = 20,
 	templates = { "object/mobile/exar_kun_caretaker.iff" },
 		lootGroups = {
 		exarKunStandardLoot[1],
@@ -270,6 +278,8 @@ exar_kun_warrior = Creature:new {
 	creatureBitmask = HERD + PACK + KILLER + HEALER,
 	optionsBitmask = AIENABLED,
 	diet = HERBIVORE,
+	healStrength = 0.5,
+	healCooldown = 20,
 	templates = { "object/mobile/exar_kun_warrior.iff" },
 		lootGroups = {
 		exarKunStandardLoot[1],
@@ -311,6 +321,8 @@ exar_kun_warrior_f = Creature:new {
 	creatureBitmask = HERD + PACK + KILLER + HEALER,
 	optionsBitmask = AIENABLED,
 	diet = HERBIVORE,
+	healStrength = 0.5,
+	healCooldown = 20,
 	templates = { "object/mobile/exar_kun_warrior_f.iff" },
 	lootGroups = {
 		exarKunStandardLoot[1],
@@ -352,6 +364,8 @@ exar_kun_fist_of_hate = Creature:new {
 	creatureBitmask = HERD + PACK + KILLER + HEALER,
 	optionsBitmask = AIENABLED,
 	diet = HERBIVORE,
+	healStrength = 0.5,
+	healCooldown = 20,
 	templates = { "object/mobile/exar_kun_fist_of_hate.iff" },
 	lootGroups = {
 		exarKunStandardLoot[1],
@@ -396,6 +410,8 @@ exar_kun = Creature:new {
 	creatureBitmask = HERD + PACK + KILLER + HEALER,
 	optionsBitmask = AIENABLED,
 	diet = HERBIVORE,
+	healStrength = 0.5,
+	healCooldown = 20,
 	templates = { "object/mobile/exar_kun.iff" },
 	lootGroups = {
 		exarKunStandardLoot[1],

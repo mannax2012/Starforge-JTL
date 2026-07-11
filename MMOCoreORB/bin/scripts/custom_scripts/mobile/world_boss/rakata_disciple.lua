@@ -63,7 +63,7 @@ rakata_disciple = Creature:new {
 
 		{
 		groups = {
-			{group = "lewt_chest_common", chance = 10000000}
+			{group = "lewt_chest_common_drop", chance = 10000000}
 		},
 		lootChance = 1500000,
 		},
