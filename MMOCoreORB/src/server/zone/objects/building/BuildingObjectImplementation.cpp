@@ -23,6 +23,7 @@
 #include "server/zone/managers/planet/PlanetManager.h"
 #include "server/zone/managers/vendor/VendorManager.h"
 #include "server/zone/managers/collision/CollisionManager.h"
+#include "server/zone/managers/player/PlayerManager.h"
 
 #include "server/zone/objects/player/sui/callbacks/StructurePayAccessFeeSuiCallback.h"
 #include "server/zone/objects/building/tasks/RevokePaidAccessTask.h"
@@ -1343,9 +1344,7 @@ void BuildingObjectImplementation::payAccessFee(CreatureObject* player) {
 		PlayerObject* ghost = owner->getPlayerObject();
 
 		if (ghost != nullptr) {
-			TransactionLog trxExperience(TrxCode::EXPERIENCE, owner);
-			trxExperience.groupWith(trx);
-			ghost->addExperience(trxExperience, "merchant", 50, true);
+			owner->getZoneServer()->getPlayerManager()->awardExperience(owner, "merchant", 50, false);
 		}
 	}
 
