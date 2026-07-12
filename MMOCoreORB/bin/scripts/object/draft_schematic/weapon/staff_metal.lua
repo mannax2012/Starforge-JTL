@@ -53,7 +53,7 @@ object_draft_schematic_weapon_staff_metal = object_draft_schematic_weapon_shared
    factoryCrateType = "object/factory/factory_crate_weapon.iff",
    
    xpType = "crafting_weapons_general", 
-   xp = 84, 
+   xp = 840, 
 
    assemblySkill = "weapon_assembly", 
    experimentingSkill = "weapon_experimentation", 
