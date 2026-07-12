@@ -45,7 +45,7 @@ object_draft_schematic_weapon_lightsaber_lightsaber_one_hand_rahm_gen3 = object_
 
    templateType = DRAFTSCHEMATIC,
 
-   customObjectName = "Fourth Generation Lightsaber",
+   customObjectName = "Third Generation Lightsaber",
 
    craftingToolTab = 2048, -- (See DraftSchematicObjectTemplate.h)
    complexity = 19, 

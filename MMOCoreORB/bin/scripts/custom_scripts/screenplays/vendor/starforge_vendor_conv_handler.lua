@@ -81,7 +81,7 @@ function VendorConvoHandler:runScreenHandlers(pConvTemplate, pPlayer, pNpc, sele
 
 	if (screenID == "start_sale_segment_aw") then
 		clonedScreen:setCustomDialogText(self.openSUItext)
-		self.vendorLogicType:openSUIArmorweaveSegments(pPlayer)
+		self.vendorLogicType:openSUIArmorweaveSegments(pPlayer, pNpc)
 	end
 
 	if (screenID == "start_sale_schematic_aw") then
@@ -91,12 +91,12 @@ function VendorConvoHandler:runScreenHandlers(pConvTemplate, pPlayer, pNpc, sele
 
 	if (screenID == "start_sale_segment_as") then
 		clonedScreen:setCustomDialogText(self.openSUItext)
-		self.vendorLogicType:openSUIArmorsmithSegments(pPlayer)
+		self.vendorLogicType:openSUIArmorsmithSegments(pPlayer, pNpc)
 	end
 
 	if (screenID == "start_sale_schematic_as") then
 		clonedScreen:setCustomDialogText(self.openSUItext)
-		self.vendorLogicType:openSUIArmorSchematics(pPlayer)
+		self.vendorLogicType:openSUIArmorSchematics(pPlayer, pNpc)
 	end
 
 	if (screenID == "buy_weapons") then
@@ -113,12 +113,12 @@ function VendorConvoHandler:runScreenHandlers(pConvTemplate, pPlayer, pNpc, sele
 
 	if (screenID == "buy_lightsaber_gen3") then
 		clonedScreen:setCustomDialogText(self.openSUItext)
-		self.weaponsSabersLogic:openSUILightsaberGenThree(pPlayer)
+		self.weaponsSabersLogic:openSUILightsaberGenThree(pPlayer, pNpc)
 	end
 
 	if (screenID == "buy_lightsaber_gen4") then
 		clonedScreen:setCustomDialogText(self.openSUItext)
-		self.weaponsSabersLogic:openSUILightsaberGenFour(pPlayer)
+		self.weaponsSabersLogic:openSUILightsaberGenFour(pPlayer, pNpc)
 	end
 
 	if (screenID == "buy_resources") then
@@ -128,22 +128,22 @@ function VendorConvoHandler:runScreenHandlers(pConvTemplate, pPlayer, pNpc, sele
 
 	if (screenID == "start_sale_resource_deeds") then
 		clonedScreen:setCustomDialogText(self.openSUItext)
-		self.resourceDeedsLogic:openSUIResourceDeeds(pPlayer)
+		self.resourceDeedsLogic:openSUIResourceDeeds(pPlayer, pNpc)
 	end
 
 	if (screenID == "buy_vehicles") then
 		clonedScreen:setCustomDialogText(self.openSUItext)
-		self.vehiclesLogic:openSUIVehicles(pPlayer)
+		self.vehiclesLogic:openSUIVehicles(pPlayer, pNpc)
 	end
 
 	if (screenID == "buy_backpacks") then
 		clonedScreen:setCustomDialogText(self.openSUItext)
-		self.backpacksLogic:openSUIBackpacks(pPlayer)
+		self.backpacksLogic:openSUIBackpacks(pPlayer, pNpc)
 	end
 
 		if (screenID == "buy_structures") then
 		clonedScreen:setCustomDialogText(self.openSUItext)
-		self.structuresLogic:openSUIStructures(pPlayer)
+		self.structuresLogic:openSUIStructures(pPlayer, pNpc)
 	end
 
 	if (screenID == "information_first") then

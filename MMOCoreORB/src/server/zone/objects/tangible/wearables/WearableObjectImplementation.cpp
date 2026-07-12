@@ -211,11 +211,9 @@ void WearableObjectImplementation::applySkillModsTo(CreatureObject* creature) co
 		return;
 	}
 
-	auto allMods = collectWearableMods(wearableSkillMods, getTemplateSkillMods());
-
-	for (int i = 0; i < allMods.size(); ++i) {
-		String name = allMods.elementAt(i).getKey();
-		int value = allMods.get(name);
+	for (int i = 0; i < wearableSkillMods.size(); ++i) {
+		String name = wearableSkillMods.elementAt(i).getKey();
+		int value = wearableSkillMods.get(name);
 
 		if (!SkillModManager::instance()->isWearableModDisabled(name))
 		{
@@ -232,11 +230,9 @@ void WearableObjectImplementation::removeSkillModsFrom(CreatureObject* creature)
 		return;
 	}
 
-	auto allMods = collectWearableMods(wearableSkillMods, getTemplateSkillMods());
-
-	for (int i = 0; i < allMods.size(); ++i) {
-		String name = allMods.elementAt(i).getKey();
-		int value = allMods.get(name);
+	for (int i = 0; i < wearableSkillMods.size(); ++i) {
+		String name = wearableSkillMods.elementAt(i).getKey();
+		int value = wearableSkillMods.get(name);
 
 		if (!SkillModManager::instance()->isWearableModDisabled(name))
 		{

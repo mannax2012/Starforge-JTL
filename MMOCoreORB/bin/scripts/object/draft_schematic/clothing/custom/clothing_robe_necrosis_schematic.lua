@@ -62,17 +62,18 @@ object_draft_schematic_clothing_custom_clothing_robe_necrosis_schematic = object
    customizationStringNames = {"/private/index_color_1"},
    customizationDefaults = {66},
 
-   ingredientTemplateNames = {"craft_clothing_ingredients_n", "craft_clothing_ingredients_n", "craft_clothing_ingredients_n", "craft_clothing_ingredients_n"},
-   ingredientTitleNames = {"body", "binding_and_hardware", "liner", "load_bearing_harness"},
-   ingredientSlotType = {1, 1, 0, 1},
-   resourceTypes = {"object/tangible/component/clothing/shared_reinforced_fiber_panels.iff", "object/tangible/component/clothing/shared_metal_fasteners.iff", "hide_wooly_tatooine", "object/tangible/component/clothing/shared_reinforced_fiber_panels.iff"},
-   resourceQuantities = {1, 1, 20, 1},
-   contribution = {100, 100, 100, 100},
+   ingredientTemplateNames = {"craft_clothing_ingredients_n", "craft_clothing_ingredients_n", "craft_clothing_ingredients_n", "craft_clothing_ingredients_n", "craft_clothing_ingredients_n"},
+   ingredientTitleNames = {"body", "body", "binding_and_hardware", "liner", "load_bearing_harness"},
+   ingredientSlotType = {0, 1, 1, 0, 1},
+   resourceTypes = {"copper", "object/tangible/component/clothing/shared_reinforced_fiber_panels.iff", "object/tangible/component/clothing/shared_metal_fasteners.iff", "hide_wooly", "object/tangible/component/clothing/shared_reinforced_fiber_panels.iff"},
+   resourceQuantities = {235, 2, 4, 200, 2},
+   contribution = {100, 100, 100, 100, 100},
 
 
    targetTemplate = "object/tangible/wearables/robe/robe_necrosis.iff",
 
    additionalTemplates = {
+      "object/tangible/wearables/robe/shared_robe_necrosis_d.iff"
              }
 
 }

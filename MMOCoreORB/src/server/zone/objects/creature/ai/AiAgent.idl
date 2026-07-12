@@ -1202,6 +1202,22 @@ class AiAgent extends CreatureObject {
 	}
 
 	@dirty
+	public float getHealStrength() {
+		if (npcTemplate.get() == null)
+			return 1.f;
+
+		return npcTemplate.get().getHealStrength();
+	}
+
+	@dirty
+	public float getHealCooldown() {
+		if (npcTemplate.get() == null)
+			return 20.f;
+
+		return npcTemplate.get().getHealCooldown();
+	}
+
+	@dirty
 	public float getChanceHit() {
 		if (petDeed) {
 			return petDeed.getHitChance();

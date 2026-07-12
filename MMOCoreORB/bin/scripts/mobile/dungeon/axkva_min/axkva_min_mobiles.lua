@@ -16,8 +16,8 @@ local axkvaMinBonusLoot = {
 	{
 		groups = {
 			{group = "resource_deed_boss", 		chance = 1500000},
-			{group = "lewt_chest_common",  		chance = 2000000},
-			{group = "lewt_chest_rare",    		chance = 1500000},
+{group = "lewt_chest_common_drop",  		chance = 2000000},
+{group = "lewt_chest_rare_drop",    		chance = 1500000},
 			{group = "all_saber_schematics",    chance = 5000000},
 		},
 		lootChance = 300000,
@@ -33,7 +33,7 @@ local axkvaMinBossLoot = {
 			{group = "clothing_attachments", chance = 1500000},
 			{group = "armor_attachments", chance = 1500000},
 			{group = "all_saber_schematics", chance = 1500000},
-			{group = "lewt_chest_common", chance = 500000},
+{group = "lewt_chest_common_drop", chance = 500000},
 		},
 		lootChance = 10000000,
 	},
@@ -47,7 +47,7 @@ local axkvaMinFinalBossLoot = {
 			{group = "clothing_attachments", chance = 1000000},
 			{group = "armor_attachments", chance = 1000000},
 			{group = "power_crystals", chance = 1000000},
-			{group = "lewt_chest_common", chance = 1500000},
+{group = "lewt_chest_common_drop", chance = 1500000},
 		},
 		lootChance = 10000000,
 	},
@@ -57,7 +57,7 @@ local axkvaMinFinalBossLoot = {
 			{group = "clothing_attachments", chance = 1000000},
 			{group = "armor_attachments", chance = 1000000},
 			{group = "acid_vibro_unit", chance = 1000000},
-			{group = "lewt_chest_rare", chance = 1500000},
+{group = "lewt_chest_rare_drop", chance = 1500000},
 		},
 		lootChance = 10000000,
 }
@@ -131,6 +131,8 @@ axkva_min_spell_weaver = Creature:new {
 	creatureBitmask = PACK + KILLER + HEALER,
 	optionsBitmask = AIENABLED,
 	diet = HERBIVORE,
+	healStrength = 0.5,
+	healCooldown = 20,
 	templates = {"object/mobile/dressed_dathomir_nightsister_spellweaver.iff"},
 	lootGroups = {
 		axkvaMinStandardLoot[1],
@@ -173,6 +175,8 @@ axkva_min_elder = Creature:new {
 	creatureBitmask = PACK + KILLER + HEALER,
 	optionsBitmask = AIENABLED,
 	diet = HERBIVORE,
+	healStrength = 0.5,
+	healCooldown = 20,
 	templates = {"object/mobile/dressed_dathomir_nightsister_elder.iff"},
 	lootGroups = {
 		axkvaMinStandardLoot[1],
@@ -298,6 +302,8 @@ axkva_min_nandina = Creature:new {
 	creatureBitmask = PACK + KILLER + HEALER,
 	optionsBitmask = AIENABLED,
 	diet = HERBIVORE,
+	healStrength = 0.5,
+	healCooldown = 20,
 	templates = {"object/mobile/dressed_dathomir_nightsister_spellweaver.iff"},
 	lootGroups = {
 		axkvaMinStandardLoot[1],
@@ -340,6 +346,8 @@ axkva_min_lelli_hi = Creature:new {
 	creatureBitmask = PACK + KILLER + HEALER,
 	optionsBitmask = AIENABLED,
 	diet = HERBIVORE,
+	healStrength = 0.5,
+	healCooldown = 20,
 	templates = {"object/mobile/dressed_dathomir_sing_mt_clan_councilwoman.iff"},
 	lootGroups = {
 		axkvaMinStandardLoot[1],
@@ -424,6 +432,8 @@ axkva_min_suin_chalo = Creature:new {
 	creatureBitmask = PACK + KILLER + HEALER,
 	optionsBitmask = AIENABLED,
 	diet = HERBIVORE,
+	healStrength = 0.5,
+	healCooldown = 20,
 	templates = {"object/mobile/dressed_dathomir_nightsister_protector.iff"},
 	lootGroups = {
 		axkvaMinStandardLoot[1],
@@ -467,6 +477,8 @@ axkva_min_boss = Creature:new {
 	creatureBitmask = PACK + KILLER + HEALER,
 	optionsBitmask = AIENABLED,
 	diet = HERBIVORE,
+	healStrength = 0.5,
+	healCooldown = 20,
 	templates = {"object/mobile/dressed_dathomir_nightsister_axkva.iff"},
 	lootGroups = {
 		axkvaMinStandardLoot[1],
@@ -510,6 +522,8 @@ axkva_min_mother_talzin = Creature:new {
 	creatureBitmask = PACK + KILLER + HEALER,
 	optionsBitmask = AIENABLED,
 	diet = HERBIVORE,
+	healStrength = 0.5,
+	healCooldown = 20,
 	scale = 1.1,
 	templates = {"object/mobile/dressed_dathomir_sing_mt_clan_arch_witch.iff"},
 	lootGroups = {

@@ -32,6 +32,14 @@ WeaponsLightsaberVendorLogic = ScreenPlay:new {
 
 registerScreenPlay("WeaponsLightsaberVendorLogic", false)
 
+function WeaponsLightsaberVendorLogic:getUsingObjectFromSui(pSui)
+	if (pSui == nil) then
+		return nil
+	end
+
+	return LuaSuiBox(pSui):getUsingObject()
+end
+
 --GEN3
 function WeaponsLightsaberVendorLogic:openSUILightsaberGenThree(pCreatureObject, pUsingObject)
 	local sui = SuiListBox.new(self.scriptName, "defaultCallbackLightsaberGenThree")
@@ -59,6 +67,7 @@ end
 
 function WeaponsLightsaberVendorLogic:defaultCallbackLightsaberGenThree(pPlayer, pSui, eventIndex, args)
 	local cancelPressed = (eventIndex == 1)
+	local pUsingObject = self:getUsingObjectFromSui(pSui)
 
 	if (cancelPressed) then
 		return
@@ -66,12 +75,14 @@ function WeaponsLightsaberVendorLogic:defaultCallbackLightsaberGenThree(pPlayer,
 
 	if (args == "-1") then
 		CreatureObject(pPlayer):sendSystemMessage("No option was selected, please try again.")
+		self:openSUILightsaberGenThree(pPlayer, pUsingObject)
 		return
 	end
 
 	local selectedOption = tonumber(args) + 1
 
 	self:buyItemLightsaberGenThree(pPlayer, selectedOption)
+	self:openSUILightsaberGenThree(pPlayer, pUsingObject)
 end
 
 function WeaponsLightsaberVendorLogic:buyItemLightsaberGenThree(pPlayer, itemSelected)
@@ -318,6 +329,7 @@ end
 
 function WeaponsLightsaberVendorLogic:defaultCallbackLightsaberGenFour(pPlayer, pSui, eventIndex, args)
 	local cancelPressed = (eventIndex == 1)
+	local pUsingObject = self:getUsingObjectFromSui(pSui)
 
 	if (cancelPressed) then
 		return
@@ -325,12 +337,14 @@ function WeaponsLightsaberVendorLogic:defaultCallbackLightsaberGenFour(pPlayer, 
 
 	if (args == "-1") then
 		CreatureObject(pPlayer):sendSystemMessage("No option was selected, please try again.")
+		self:openSUILightsaberGenFour(pPlayer, pUsingObject)
 		return
 	end
 
 	local selectedOption = tonumber(args) + 1
 
 	self:buyItemLightsaberGenFour(pPlayer, selectedOption)
+	self:openSUILightsaberGenFour(pPlayer, pUsingObject)
 end
 
 function WeaponsLightsaberVendorLogic:buyItemLightsaberGenFour(pPlayer, itemSelected)

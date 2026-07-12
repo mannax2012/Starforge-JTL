@@ -17,6 +17,14 @@ ResourceDeedsVendorLogic = ScreenPlay:new {
 
 registerScreenPlay("ResourceDeedsVendorLogic", false)
 
+function ResourceDeedsVendorLogic:getUsingObjectFromSui(pSui)
+	if (pSui == nil) then
+		return nil
+	end
+
+	return LuaSuiBox(pSui):getUsingObject()
+end
+
 function ResourceDeedsVendorLogic:openSUIResourceDeeds(pCreatureObject, pUsingObject)
 	local sui = SuiListBox.new(self.scriptName, "defaultCallbackResourceDeeds")
 
@@ -40,6 +48,7 @@ end
 
 function ResourceDeedsVendorLogic:defaultCallbackResourceDeeds(pPlayer, pSui, eventIndex, args)
 	local cancelPressed = (eventIndex == 1)
+	local pUsingObject = self:getUsingObjectFromSui(pSui)
 
 	if (cancelPressed) then
 		return
@@ -47,12 +56,14 @@ function ResourceDeedsVendorLogic:defaultCallbackResourceDeeds(pPlayer, pSui, ev
 
 	if (args == "-1") then
 		CreatureObject(pPlayer):sendSystemMessage("No option was selected, please try again.")
+		self:openSUIResourceDeeds(pPlayer, pUsingObject)
 		return
 	end
 
 	local selectedOption = tonumber(args) + 1
 
 	self:buyItemResourceDeeds(pPlayer, selectedOption)
+	self:openSUIResourceDeeds(pPlayer, pUsingObject)
 end
 
 function ResourceDeedsVendorLogic:buyItemResourceDeeds(pPlayer, itemSelected)

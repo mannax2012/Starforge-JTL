@@ -2785,9 +2785,16 @@ int PlayerManagerImplementation::awardExperience(CreatureObject* player, const S
 
 	float buffMultiplier = 1.f;
 
-	if (!player->containsActiveSession(SessionFacadeType::CRAFTING)) {
-		if (player->hasBuff(BuffCRC::FOOD_XP_INCREASE) || player->hasBuff(BuffCRC::STARFORGE_FOCUS)) {
-		buffMultiplier += player->getSkillModFromBuffs("xp_increase") / 100.f;
+	if (amount > 0) {
+		bool hasStarforgeFocus = player->hasBuff(BuffCRC::STARFORGE_FOCUS);
+
+		if (!player->containsActiveSession(SessionFacadeType::CRAFTING)) {
+			if (player->hasBuff(BuffCRC::FOOD_XP_INCREASE) || hasStarforgeFocus) {
+				buffMultiplier += player->getSkillModFromBuffs("xp_increase") / 100.f;
+			}
+		} else if (hasStarforgeFocus) {
+			// Starforge Focus should still boost crafting XP, but food XP buffs should not.
+			buffMultiplier += 0.2f;
 		}
 	}
 
@@ -2795,7 +2802,7 @@ int PlayerManagerImplementation::awardExperience(CreatureObject* player, const S
 
 	trx.addState("applyModifiers", applyModifiers);
 
-	if (applyModifiers) {
+	if (applyModifiers && amount > 0) {
 		trx.addState("speciesModifier", speciesModifier);
 		trx.addState("buffMultiplier", buffMultiplier);
 		trx.addState("localMultiplier", localMultiplier);

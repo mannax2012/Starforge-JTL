@@ -64,6 +64,8 @@ protected:
 	String faction;
 	int mobType;
 	String healerType;
+	float healStrength;
+	float healCooldown;
 
 	bool tauntable;
 
@@ -476,6 +478,14 @@ public:
 
 	inline const String& getHealerType() const {
 		return healerType;
+	}
+
+	inline float getHealStrength() const {
+		return healStrength;
+	}
+
+	inline float getHealCooldown() const {
+		return healCooldown;
 	}
 
 	inline bool isSpecialProtection(int resistType) const {

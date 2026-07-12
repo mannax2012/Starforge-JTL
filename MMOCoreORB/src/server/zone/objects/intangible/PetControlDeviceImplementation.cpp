@@ -29,6 +29,7 @@
 #include "server/zone/managers/frs/FrsManager.h"
 #include "server/zone/objects/creature/commands/QueueCommand.h"
 #include "server/zone/objects/intangible/tasks/PetControlDeviceStoreTask.h"
+#include "server/zone/objects/intangible/tasks/VerifyPetCallTask.h"
 
 void PetControlDeviceImplementation::callObject(CreatureObject* player, bool initialCall) {
 	if (player == nullptr) {
@@ -500,10 +501,12 @@ void PetControlDeviceImplementation::spawnObject(CreatureObject* player) {
 	pet->clearPatrolPoints();
 	clearPatrolPoints();
 
-	pet->setHomeLocation(player->getPositionX(), player->getPositionZ(), player->getPositionY(), player->getParent().get().castTo<CellObject*>());
-	pet->setNextPosition(player->getPositionX(), player->getPositionZ(), player->getPositionY(), player->getParent().get().castTo<CellObject*>());
+	pet->setHomeLocation(player->getPositionX(), player->getPositionZ(), player->getPositionY(), parent);
+	pet->setNextPosition(player->getPositionX(), player->getPositionZ(), player->getPositionY(), parent);
 
 	pet->setFollowObject(player);
+	pet->storeFollowObject();
+	pet->setMovementState(AiAgent::FOLLOWING);
 
 	if (petType == PetManager::CREATUREPET) {
 		pet->setCreatureBitmask(ObjectFlag::PET);
@@ -529,6 +532,12 @@ void PetControlDeviceImplementation::spawnObject(CreatureObject* player) {
 	setLastCommander(player);
 	setLastCommandTarget(nullptr);
 	setLastCommand(PetManager::FOLLOW);
+
+	Reference<Task*> verifyTask = new VerifyPetCallTask(player, pet, _this.getReferenceUnsafeStaticCast(), player->getPositionX(), player->getPositionZ(), player->getPositionY(), parent);
+
+	if (verifyTask != nullptr) {
+		verifyTask->schedule(1500);
+	}
 }
 
 void PetControlDeviceImplementation::cancelSpawnObject(CreatureObject* player) {

@@ -2386,7 +2386,7 @@ void AiAgentImplementation::healCreatureTarget(CreatureObject* healTarget) {
 	int actionDam = actionMax - healTarget->getHAM(CreatureAttribute::ACTION);
 	int mindDam = mindMax - healTarget->getHAM(CreatureAttribute::MIND);
 
-	int healAmount = getLevel() * 20;
+	int healAmount = Math::max(0, (int) round(getLevel() * 20.f * getHealStrength()));
 
 	if (healAmount > healthDam) {
 		healTarget->healDamage(asAiAgent(), CreatureAttribute::HEALTH, healthMax, true, false);
@@ -2820,9 +2820,14 @@ void AiAgentImplementation::activateHAMRegeneration(int latency) {
 	if (isIncapacitated() || isDead() || isHamRegenDisabled())
 		return;
 
-	uint32 healthTick = (uint32) Math::max(1.f, (float) ceil(getMaxHAM(CreatureAttribute::HEALTH) / 300000.f * latency));
-	uint32 actionTick = (uint32) Math::max(1.f, (float) ceil(getMaxHAM(CreatureAttribute::ACTION) / 300000.f * latency));
-	uint32 mindTick   = (uint32) Math::max(1.f, (float) ceil(getMaxHAM(CreatureAttribute::MIND) / 300000.f * latency));
+	if (isInCombat() || defenderList.size() > 0)
+		return;
+
+	constexpr float hamRegenDurationMs = 900000.f;
+
+	uint32 healthTick = (uint32) Math::max(1.f, (float) ceil(getMaxHAM(CreatureAttribute::HEALTH) / hamRegenDurationMs * latency));
+	uint32 actionTick = (uint32) Math::max(1.f, (float) ceil(getMaxHAM(CreatureAttribute::ACTION) / hamRegenDurationMs * latency));
+	uint32 mindTick   = (uint32) Math::max(1.f, (float) ceil(getMaxHAM(CreatureAttribute::MIND) / hamRegenDurationMs * latency));
 
 	healDamage(asCreatureObject(), CreatureAttribute::HEALTH, healthTick, true, false);
 	healDamage(asCreatureObject(), CreatureAttribute::ACTION, actionTick, true, false);

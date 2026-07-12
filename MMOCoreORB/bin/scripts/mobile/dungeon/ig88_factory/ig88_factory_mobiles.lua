@@ -16,8 +16,8 @@ local ig88FactoryBonusLoot = {
 	{
 		groups = {
 			{group = "resource_deed_boss", 		chance = 1500000},
-			{group = "lewt_chest_common",  		chance = 2000000},
-			{group = "lewt_chest_rare",    		chance = 1500000},
+{group = "lewt_chest_common_drop",  		chance = 2000000},
+{group = "lewt_chest_rare_drop",    		chance = 1500000},
 			{group = "droid_servo_motor",    	chance = 2500000},
 			{ group = "fragmented_targeting_computer", chance = 2500000 },		
 		},
@@ -29,7 +29,7 @@ local ig88FactoryBossLoot = {
 	{
 		groups = {
 			{ group = "power_crystals", chance = 2000000 },
-			{ group = "weapons_all", chance = 2000000 },
+			{ group = "lewt_chest_rare_drop", chance = 2000000 },
 			{ group = "clothing_attachments", chance = 1500000 },
 			{ group = "armor_attachments", chance = 1500000 },
 			{ group = "droid_servo_motor", chance = 1500000 },
@@ -44,7 +44,7 @@ local ig88FactoryBossLoot = {
 			{ group = "armor_attachments", chance = 1500000 },
 			{ group = "droid_servo_motor", chance = 2000000 },
 			{ group = "resource_deed_boss", chance = 1000000 },
-			{ group = "lewt_chest_common", chance = 1000000 },
+			{ group = "lewt_chest_common_drop", chance = 1000000 },
 			{ group = "fragmented_targeting_computer", chance = 200000 },
 		},
 		lootChance = 10000000,

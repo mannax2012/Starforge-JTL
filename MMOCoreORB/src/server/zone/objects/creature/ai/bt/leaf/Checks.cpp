@@ -605,6 +605,10 @@ template<> bool CheckIsHealer::check(AiAgent* agent) const {
 template<> bool CheckHealChance::check(AiAgent* agent) const {
 	Time* healDelay = agent->getHealDelay();
 
+	if (agent->getHealStrength() <= 0.f) {
+		return false;
+	}
+
 	if (healDelay == nullptr || !healDelay->isPast()) {
 		return false;
 	}

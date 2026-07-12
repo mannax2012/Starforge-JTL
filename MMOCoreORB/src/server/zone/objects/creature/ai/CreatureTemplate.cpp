@@ -62,6 +62,8 @@ CreatureTemplate::CreatureTemplate() {
 	customAiMap = 0;
 	tauntable = true;
 	healerType = "";
+	healStrength = 1.f;
+	healCooldown = 20.f;
 	lightsaberColor = 0;
 
 	primaryWeapon = "";
@@ -138,6 +140,8 @@ void CreatureTemplate::readObject(LuaObject* templateData) {
 	defaultWeapon = templateData->getStringField("defaultWeapon");
 	tauntable = templateData->getBooleanField("tauntable", true);
 	healerType = templateData->getStringField("healerType").trim();
+	healStrength = Math::max(0.f, templateData->getFloatField("healStrength", 1.f));
+	healCooldown = Math::max(0.f, templateData->getFloatField("healCooldown", 20.f));
 	lightsaberColor = templateData->getIntField("lightsaberColor");
 
 	if(!templateData->getStringField("defaultAttack").isEmpty())

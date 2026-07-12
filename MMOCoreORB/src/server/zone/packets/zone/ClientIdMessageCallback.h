@@ -69,9 +69,16 @@ public:
 			approveSession(zoneClient, zoneServer, approved_sessionID, approved_accountID);
 		});
 #else // WITH_SWGREALMS_API
+		String escapedSessionID = sessionID;
+		String escapedIPAddress = client->getSession()->getIPAddress();
+		Database::escapeString(escapedSessionID);
+		Database::escapeString(escapedIPAddress);
+
 		StringBuffer query;
 		query << "SELECT session_id FROM sessions WHERE account_id = " << accountID;
-		query << " AND  ip = '"<< client->getSession()->getIPAddress() <<"' AND expires > NOW();";
+		query << " AND session_id = '" << escapedSessionID << "'";
+		query << " AND ip = '" << escapedIPAddress << "'";
+		query << " AND expires > NOW() LIMIT 1;";
 		UniqueReference<ResultSet*> result(ServerDatabase::instance()->executeQuery(query));
 
 		if (result == nullptr || !result->next()) {
@@ -81,17 +88,6 @@ public:
 			return;
 		}
 
-		// Get the Session Key the client is using
-		String sessionKey = result->getString(0);
-
-		/*
-		info(true) << "got session id from db: " << sessionKey << endl
-			<< "parsed session id in packet: " << sessionID << endl
-			<< "Client Version: " << version << endl
-			<< "gameBits: " << gameBits;
-		*/
-
-		// Set the result null
 		result = nullptr;
 
 		// Check client version
@@ -99,14 +95,6 @@ public:
 
 		if (!version.contains(validClient)) {
 			ErrorMessage* errMsg = new ErrorMessage("Login Error", "You are using an improper client version.", 0x0);
-			client->sendMessage(errMsg);
-
-			return;
-		}
-
-		// Invalid Session Key
-		if (sessionKey != sessionID) {
-			ErrorMessage* errMsg = new ErrorMessage("Login Error", "Your session key is invalid, or has expired. Please re-login", 0x0);
 			client->sendMessage(errMsg);
 
 			return;

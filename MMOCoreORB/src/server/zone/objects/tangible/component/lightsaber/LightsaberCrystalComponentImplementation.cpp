@@ -27,6 +27,7 @@ namespace {
 	constexpr int JEDI_CRYSTAL_LEGENDARY_HP_BONUS = 1600;
 	constexpr int JEDI_CRYSTAL_DAMAGE_CAP = 70;
 	constexpr int JEDI_CRYSTAL_MAX_HP_CAP = 3000;
+	constexpr int JEDI_CRYSTAL_MAX_COLOR_INDEX = 63;
 
 	enum CrystalRollTier {
 		CRYSTAL_ROLL_NORMAL = 0,
@@ -517,7 +518,7 @@ void LightsaberCrystalComponentImplementation::updateCraftingValues(CraftingValu
 	int color = values->getCurrentValue("color");
 
 	if (colorMax != 31) {
-		int finalColor = Math::min(color, 11);
+		int finalColor = Math::max(0, Math::min(color, JEDI_CRYSTAL_MAX_COLOR_INDEX));
 		setColor(finalColor);
 		updateCrystal(finalColor);
 	} else {

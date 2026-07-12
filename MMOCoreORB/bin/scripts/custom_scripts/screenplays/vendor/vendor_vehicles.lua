@@ -22,6 +22,14 @@ VehiclesVendorLogic = ScreenPlay:new {
 
 registerScreenPlay("VehiclesVendorLogic", false)
 
+function VehiclesVendorLogic:getUsingObjectFromSui(pSui)
+	if (pSui == nil) then
+		return nil
+	end
+
+	return LuaSuiBox(pSui):getUsingObject()
+end
+
 --GEN3
 function VehiclesVendorLogic:openSUIVehicles(pCreatureObject, pUsingObject)
 	local sui = SuiListBox.new(self.scriptName, "defaultCallbackVehicles")
@@ -49,6 +57,7 @@ end
 
 function VehiclesVendorLogic:defaultCallbackVehicles(pPlayer, pSui, eventIndex, args)
 	local cancelPressed = (eventIndex == 1)
+	local pUsingObject = self:getUsingObjectFromSui(pSui)
 
 	if (cancelPressed) then
 		return
@@ -56,12 +65,14 @@ function VehiclesVendorLogic:defaultCallbackVehicles(pPlayer, pSui, eventIndex, 
 
 	if (args == "-1") then
 		CreatureObject(pPlayer):sendSystemMessage("No option was selected, please try again.")
+		self:openSUIVehicles(pPlayer, pUsingObject)
 		return
 	end
 
 	local selectedOption = tonumber(args) + 1
 
 	self:buyItemVehicles(pPlayer, selectedOption)
+	self:openSUIVehicles(pPlayer, pUsingObject)
 end
 
 function VehiclesVendorLogic:buyItemVehicles(pPlayer, itemSelected)
