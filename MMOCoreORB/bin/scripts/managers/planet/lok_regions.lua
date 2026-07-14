@@ -19,6 +19,7 @@ lok_regions = {
 	{"northedge_lok_nobuild", -8000, 7640, {RECTANGLE, 8000, 8000}, NOBUILDZONEAREA},
 	{"southedge_lok_nobuild", -8000, -8000, {RECTANGLE, 7999, -7640}, NOBUILDZONEAREA},
 	{"westedge_lok_nobuild", -8000, -7641, {RECTANGLE, -7641, 7640}, NOBUILDZONEAREA},
+	{"event_world_boss_vx9_nobuild", 3315, -5130, {RECTANGLE, 3838, -5000}, NOBUILDZONEAREA},
 
 	-- Named Regions, POIs and Decor
 	{"building_ruins", -226, -448, {CIRCLE, 30}, NOSPAWNAREA + NOBUILDZONEAREA},
