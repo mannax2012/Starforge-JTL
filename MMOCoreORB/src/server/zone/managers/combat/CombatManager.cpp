@@ -2512,10 +2512,11 @@ int CombatManager::getArmorReduction(TangibleObject* attacker, WeaponObject* wea
 	}
 
 	if (defender->isAiAgent()) {
-		float armorReduction = getArmorNpcReduction(cast<AiAgent*>(defender), damageType);
+		AiAgent* aiDefender = cast<AiAgent*>(defender);
+		float armorReduction = getArmorNpcReduction(aiDefender, damageType);
 
 		if (armorReduction >= 0)
-			damage *= getArmorPiercing(cast<AiAgent*>(defender), armorPiercing);
+			damage *= getArmorPiercing(aiDefender, armorPiercing);
 
 		if (armorReduction > 0) {
 			damage *= (1.f - (armorReduction / 100.f));

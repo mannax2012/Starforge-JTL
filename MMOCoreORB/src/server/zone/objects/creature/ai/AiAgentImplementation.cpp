@@ -5126,39 +5126,26 @@ float AiAgentImplementation::getReducedResist(float value) {
 		return newValue;
 	}
 
-	int totalHAM = 0;
-	int i = 0;
+	// Resist decay keys off health wounds so the armor-break mechanic tracks the
+	// wounded health pool players see in game.
+	int maxHealth = Math::max(1, getMaxHAM(CreatureAttribute::HEALTH));
+	int healthWounds = Math::max(0, getWounds(CreatureAttribute::HEALTH));
+	int effectiveMaxHealth = Math::max(0, maxHealth - healthWounds);
+	int currentHealth = Math::max(0, getHAM(CreatureAttribute::HEALTH));
 
-	// Get total of max HAM pools
-	while (i <= 6) {
-		totalHAM += getMaxHAM(i);
-		i += 3;
-	}
+	// Health wounds compared to the base max health pool.
+	float percentWounded = healthWounds / (float)maxHealth;
 
-	// Total damage that was not resisted by armor
-	int unmitigatedDamage = getUnmitigatedDamage();
-
-	// Damage not prevented by armor resists compared to totalHAM
-	float percentUnmitigated = unmitigatedDamage / (float)totalHAM;
-
-#ifdef DEBUG_RESIST_DECAY
-	info (true) << " Value of HAM mitigated = " << mitigatedAmount;
-#endif
-
-	// Decay resists when mitigated damage is greater than 25% totalHAM
-	if (percentUnmitigated > 0.25f) {
-		// Reduce resists 2% for every 1% of damage mitigated by armor valued greater than 25% of totalHAM.
-		// Reduction Range is from 75% to 50% of totalHAM. totaling a max 50% reduction of resists
-		float reduction = (percentUnmitigated - 0.25f) * 2.f;
+	// Decay resists when health wounds are greater than 10% max health.
+	if (percentWounded > 0.10f) {
+		// Reduce resists linearly from 10% to 50% health wounds, topping out at
+		// a 50% total resist reduction once wounds reach 50% of max health.
+		float reduction = (percentWounded - 0.10f) * 1.25f;
 
 		// Resists never drop below 50%
 		reduction = 1.f - (reduction > 0.50f ? 0.50f : reduction);
 
 		newValue = (value * reduction);
-
-#ifdef DEBUG_RESIST_DECAY
-		info(true) << "getReducedResist: totalHAM = " << totalHAM << " Resist Mitigation = " << unmitigatedDamage << " Start value: " << value << " New Value = " << newValue << " Reduction percent = " << reduction;
-#endif
 	}
 
 	return newValue;
