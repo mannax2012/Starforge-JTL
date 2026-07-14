@@ -1,6 +1,8 @@
 local ObjectManager = require("managers.object.object_manager")
 
 VendorTokenMenuComponent = {}
+VendorTokenMenuComponent.currencyExperienceType = "starforge_currency"
+VendorTokenMenuComponent.defaultCurrencyCap = 5100000
 
 function VendorTokenMenuComponent:fillObjectMenuResponse(pSceneObject, pMenuResponse, pPlayer)
     if pSceneObject == nil or pMenuResponse == nil or pPlayer == nil then
@@ -28,8 +30,26 @@ function VendorTokenMenuComponent:handleObjectMenuSelect(pSceneObject, pPlayer, 
             return 0
         end
 
+        local playerObject = CreatureObject(pPlayer):getPlayerObject()
+        if playerObject == nil then
+            return 0
+        end
+
+        local ghost = LuaPlayerObject(playerObject)
+        local currentXp = ghost:getExperience(self.currencyExperienceType)
+        local xpCap = ghost:getExperienceCap(self.currencyExperienceType)
+
+        if xpCap == nil or xpCap <= 0 then
+            xpCap = self.defaultCurrencyCap
+        end
+
+        if currentXp + xpAmount > xpCap then
+            CreatureObject(pPlayer):sendSystemMessage("You cannot use this token because it would exceed the Starforge Currency cap of " .. tostring(xpCap) .. ".")
+            return 0
+        end
+
         CreatureObject(pPlayer):sendSystemMessage("The Token disolves in your hand, giving you: " .. tostring(xpAmount) .. " Starforge Currency.")
-        CreatureObject(pPlayer):awardExperience("starforge_currency", xpAmount, true)
+        CreatureObject(pPlayer):awardExperience(self.currencyExperienceType, xpAmount, true)
         CreatureObject(pPlayer):playEffect("clienteffect/medic_heal.cef", "")
 
         SceneObject(pSceneObject):destroyObjectFromWorld(true)
