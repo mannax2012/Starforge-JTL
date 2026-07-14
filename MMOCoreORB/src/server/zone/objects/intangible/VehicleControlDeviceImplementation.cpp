@@ -50,6 +50,22 @@ String getDebugDisplayName(SceneObject* object) {
 	return getDebugTemplateName(object);
 }
 
+bool isValidVehicleOwner(CreatureObject* owner, VehicleObject* vehicle) {
+	if (owner == nullptr || vehicle == nullptr) {
+		return false;
+	}
+
+	if (!owner->isPlayerCreature()) {
+		return false;
+	}
+
+	if (owner == vehicle || owner->isVehicleObject()) {
+		return false;
+	}
+
+	return true;
+}
+
 void detachVehicleRider(VehicleObject* vehicle, bool notifyClient) {
 	if (vehicle == nullptr) {
 		return;
@@ -112,7 +128,38 @@ bool reconcileVehicleState(VehicleControlDevice* device, CreatureObject* owner, 
 	if (vehicle != nullptr) {
 		Locker vehicleLocker(vehicle, device);
 
-		if (owner != nullptr && vehicle->getLinkedCreature() != owner) {
+		ManagedReference<CreatureObject*> linkedOwner = vehicle->getLinkedCreature().get();
+
+		if (linkedOwner != nullptr && !isValidVehicleOwner(linkedOwner, vehicle)) {
+			device->error() << "VehicleControlDeviceImplementation::reconcileVehicleState clearing invalid linked owner -- deviceOID=" << device->getObjectID()
+				<< " deviceTemplate=" << getDebugTemplateName(device)
+				<< " vehicleOID=" << vehicle->getObjectID()
+				<< " vehicleName=" << getDebugDisplayName(vehicle)
+				<< " vehicleTemplate=" << getDebugTemplateName(vehicle)
+				<< " linkedOwnerOID=" << linkedOwner->getObjectID()
+				<< " linkedOwnerName=" << getDebugDisplayName(linkedOwner)
+				<< " linkedOwnerTemplate=" << getDebugTemplateName(linkedOwner)
+				<< " linkedOwnerIsPlayer=" << linkedOwner->isPlayerCreature()
+				<< " linkedOwnerIsVehicle=" << linkedOwner->isVehicleObject();
+			vehicle->setCreatureLink(nullptr, notifyClient);
+			linkedOwner = nullptr;
+		}
+
+		if (owner != nullptr && !isValidVehicleOwner(owner, vehicle)) {
+			device->error() << "VehicleControlDeviceImplementation::reconcileVehicleState ignoring invalid root owner -- deviceOID=" << device->getObjectID()
+				<< " deviceTemplate=" << getDebugTemplateName(device)
+				<< " vehicleOID=" << vehicle->getObjectID()
+				<< " vehicleName=" << getDebugDisplayName(vehicle)
+				<< " vehicleTemplate=" << getDebugTemplateName(vehicle)
+				<< " rootOwnerOID=" << owner->getObjectID()
+				<< " rootOwnerName=" << getDebugDisplayName(owner)
+				<< " rootOwnerTemplate=" << getDebugTemplateName(owner)
+				<< " rootOwnerIsPlayer=" << owner->isPlayerCreature()
+				<< " rootOwnerIsVehicle=" << owner->isVehicleObject();
+			owner = nullptr;
+		}
+
+		if (owner != nullptr && linkedOwner != owner) {
 			vehicle->setCreatureLink(owner, notifyClient);
 		}
 
@@ -172,6 +219,12 @@ void VehicleControlDeviceImplementation::notifyLoadFromDatabase() {
 	ControlDeviceImplementation::notifyLoadFromDatabase();
 
 	ManagedReference<CreatureObject*> owner = cast<CreatureObject*>(getRootParent());
+	ManagedReference<VehicleObject*> vehicle = controlledObject.get().castTo<VehicleObject*>();
+
+	if (!isValidVehicleOwner(owner, vehicle)) {
+		owner = nullptr;
+	}
+
 	const bool recovered = reconcileVehicleState(_this.getReferenceUnsafeStaticCast(), owner, false);
 
 	if (recovered && owner != nullptr) {

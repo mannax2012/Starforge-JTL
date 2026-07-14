@@ -19,6 +19,22 @@
 #include "templates/customization/AssetCustomizationManagerTemplate.h"
 
 namespace {
+bool isValidVehicleOwner(CreatureObject* owner, VehicleObject* vehicle) {
+	if (owner == nullptr || vehicle == nullptr) {
+		return false;
+	}
+
+	if (!owner->isPlayerCreature()) {
+		return false;
+	}
+
+	if (owner == vehicle || owner->isVehicleObject()) {
+		return false;
+	}
+
+	return true;
+}
+
 CreatureObject* getVehicleOwnerFromDevice(VehicleObject* vehicle) {
 	if (vehicle == nullptr) {
 		return nullptr;
@@ -30,7 +46,9 @@ CreatureObject* getVehicleOwnerFromDevice(VehicleObject* vehicle) {
 		return nullptr;
 	}
 
-	return cast<CreatureObject*>(device->getRootParent());
+	CreatureObject* owner = cast<CreatureObject*>(device->getRootParent());
+
+	return isValidVehicleOwner(owner, vehicle) ? owner : nullptr;
 }
 }
 
@@ -292,7 +310,14 @@ bool VehicleObjectImplementation::isAttackableBy(CreatureObject* object) {
 
 	ManagedReference<CreatureObject*> owner = linkedCreature.get();
 
-	if (owner == nullptr) {
+	if (!isValidVehicleOwner(owner, _this.getReferenceUnsafeStaticCast())) {
+		if (owner != nullptr) {
+			error() << "VehicleObjectImplementation::isAttackableBy invalid linked owner -- vehicleOID=" << getObjectID()
+				<< " ownerOID=" << owner->getObjectID()
+				<< " ownerTemplateVehicle=" << owner->isVehicleObject()
+				<< " ownerIsPlayer=" << owner->isPlayerCreature();
+		}
+
 		owner = getVehicleOwnerFromDevice(_this.getReferenceUnsafeStaticCast());
 	}
 
