@@ -19,6 +19,7 @@ yavin4_regions = {
 	{"westedge_yavin4_nobuild", -8000, -7640, {RECTANGLE, -7640, 7640}, NOSPAWNAREA + NOBUILDZONEAREA},
 	{"southedge_yavin4_nobuild", -8000, -8000, {RECTANGLE, 8000, -7640}, NOSPAWNAREA + NOBUILDZONEAREA},
 	{"eastedge_yavin4_nobuild", 7640, -7640, {RECTANGLE, 7999, 7640}, NOSPAWNAREA + NOBUILDZONEAREA},
+	{"event_world_boss_necrosis_nobuild", 1109, -6710, {RECTANGLE, 1637, -6261}, NOBUILDZONEAREA},
 	{"old_battlefield_nobuild_yav1", 3791, -2416, {CIRCLE, 256}, NOSPAWNAREA + NOBUILDZONEAREA},
 	{"old_battlefield_nobuild_yav2", -4230, 3755, {CIRCLE, 256}, NOSPAWNAREA + NOBUILDZONEAREA},
 

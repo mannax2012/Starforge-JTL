@@ -19,6 +19,7 @@ endor_regions = {
 	{"westedge_endor_nobuild", -8000, -7640, {RECTANGLE, -7640, 7640}, NOBUILDZONEAREA},
 	{"southedge_endor_nobuild", -8000, -8000, {RECTANGLE, 8000, -7640}, NOBUILDZONEAREA},
 	{"eastedge_endor_nobuild", 7640, -7640, {RECTANGLE, 8000, 7640}, NOBUILDZONEAREA},
+	{"event_world_boss_pride_nobuild", -4740, 4260, {RECTANGLE, -4620, 4385}, NOBUILDZONEAREA},
 	{"old_battlefield_nobuild_end1", -469, 3651, {CIRCLE, 256}, NOBUILDZONEAREA},
 	{"old_battlefield_nobuild_end2", -2790, -4457, {CIRCLE, 256}, NOBUILDZONEAREA},
 

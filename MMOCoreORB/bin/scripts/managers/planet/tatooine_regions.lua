@@ -19,6 +19,8 @@ tatooine_regions = {
 	{"westedge_tatooine_nobuild", -7980, -7641, {RECTANGLE, -7640, 7640}, NOBUILDZONEAREA},
 	{"southedge_tatooine_nobuild", -8000, -8000, {RECTANGLE, 8000, -7640}, NOBUILDZONEAREA},
 	{"eastedge_tatooine_nobuild", 7640, -7640, {RECTANGLE, 8000, 7640}, NOBUILDZONEAREA},
+	{"event_world_boss_kraytbone_nobuild", -5400, -4550, {RECTANGLE, -5200, -4350}, NOBUILDZONEAREA},
+	{"event_world_boss_krayt_queen_nobuild", 7280, 4420, {RECTANGLE, 7480, 4620}, NOBUILDZONEAREA},
 	{"old_battlefield_nobuild_tat1", 2488, 4388, {CIRCLE, 192}, NOSPAWNAREA + NOBUILDZONEAREA},
 	{"old_battlefield_nobuild_tat2", 4950, 4650, {CIRCLE, 256}, NOSPAWNAREA + NOBUILDZONEAREA},
 

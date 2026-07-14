@@ -2799,10 +2799,14 @@ int PlayerManagerImplementation::awardExperience(CreatureObject* player, const S
 	}
 
 	int xp = 0;
+	const bool bypassExperienceMultipliers = xpType == "starforge_currency";
 
 	trx.addState("applyModifiers", applyModifiers);
 
-	if (applyModifiers && amount > 0) {
+	if (bypassExperienceMultipliers) {
+		trx.addState("bypassExperienceMultipliers", true);
+		xp = playerObject->addExperience(trx, xpType, amount);
+	} else if (applyModifiers && amount > 0) {
 		trx.addState("speciesModifier", speciesModifier);
 		trx.addState("buffMultiplier", buffMultiplier);
 		trx.addState("localMultiplier", localMultiplier);

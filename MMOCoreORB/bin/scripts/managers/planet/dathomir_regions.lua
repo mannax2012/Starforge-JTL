@@ -19,6 +19,7 @@ dathomir_regions = {
 	{"westedge_dathomir_nobuild", -8000, -7640, {RECTANGLE, -7640, 7640}, NOBUILDZONEAREA},
 	{"southedge_dathomir_nobuild", -8000, -8000, {RECTANGLE, 8000, -7640}, NOBUILDZONEAREA},
 	{"eastedge_dathomir_nobuild", 7640, -7640, {RECTANGLE, 8000, 7640}, NOBUILDZONEAREA},
+	{"event_world_boss_mother_nharra_nobuild", -120, -140, {RECTANGLE, -60, -70}, NOBUILDZONEAREA},
 	{"old_battlefield_nobuild_dath1", 4162, -4279, {CIRCLE, 256}, NOBUILDZONEAREA},
 
 	-- Named Regions, POIs and Decor
