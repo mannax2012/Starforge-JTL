@@ -880,8 +880,19 @@ void PlayerCreationManager::addHair(CreatureObject* creature,
 	if (hairInfo == nullptr)
 		hairInfo = hairStyleInfo.get(0);
 
+	String targetServerTemplate;
+	String targetClientTemplate;
+	TemplateManager* templateManager = TemplateManager::instance();
+
+	if (creature != nullptr && creature->getObjectTemplate() != nullptr) {
+		targetServerTemplate = creature->getObjectTemplate()->getFullTemplateString();
+
+		if (templateManager != nullptr)
+			targetClientTemplate = templateManager->getTemplateFile(creature->getClientObjectCRC());
+	}
+
 	HairAssetData* hairAssetData =
-			CustomizationIdManager::instance()->getHairAssetData(hairTemplate);
+			CustomizationIdManager::instance()->getHairAssetData(hairTemplate, targetServerTemplate, targetClientTemplate);
 
 	if (hairAssetData == nullptr) {
 		error("no hair asset data detected for " + hairTemplate);
