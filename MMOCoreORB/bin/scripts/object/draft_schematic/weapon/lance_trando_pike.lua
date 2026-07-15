@@ -41,13 +41,60 @@
 --this exception also makes it possible to release a modified version 
 
 
+object_draft_schematic_weapon_lance_trando_pike = object_draft_schematic_weapon_shared_lance_trando_pike:new {
 
---Children folder includes
-includeFile("weapon/melee/baton/base/serverobjects.lua")
+   templateType = DRAFTSCHEMATIC,
 
--- Server Objects
-includeFile("weapon/melee/baton/baton_gaderiffi.lua")
-includeFile("weapon/melee/baton/baton_gaderiffi_elite.lua")
-includeFile("weapon/melee/baton/baton_stun.lua")
-includeFile("weapon/melee/baton/baton_stun_ranged.lua")
-includeFile("weapon/melee/baton/victor_baton_gaderiffi.lua")
+   customObjectName = "Hunting Lance Schematic",
+
+   craftingToolTab = 1, -- (See DraftSchematicObjectTemplate.h)
+   complexity = 35, 
+   size = 1, 
+	factoryCrateSize = 0,
+   factoryCrateType = "object/factory/factory_crate_weapon.iff",
+   
+   xpType = "crafting_weapons_general", 
+   xp = 250, 
+
+   assemblySkill = "weapon_assembly", 
+   experimentingSkill = "weapon_experimentation", 
+   customizationSkill = "weapon_customization", 
+
+   customizationOptions = {},
+   customizationStringNames = {},
+   customizationDefaults = {},
+
+   ingredientTemplateNames = {"craft_weapon_ingredients_n", "craft_weapon_ingredients_n", "craft_weapon_ingredients_n", "craft_weapon_ingredients_n"},
+   ingredientTitleNames = {"lance_shaft", "vibro_unit_and_power_cell_brackets", "grip", "vibration_generator"},
+   ingredientSlotType = {0, 0, 0, 1},
+   resourceTypes = {"steel_quadranium", "copper_polysteel", "hide", "object/tangible/component/weapon/shared_vibro_unit_advanced.iff",},
+   resourceQuantities = {160, 230, 150, 2},
+   contribution = {100, 100, 100, 100},
+
+
+   targetTemplate = "object/weapon/melee/polearm/lance_trando_pike.iff",
+
+   additionalTemplates = {
+             },
+
+	weaponDots = {
+		{
+			{"type", 1}, -- 1 = Poison, 2 = Disease, 3 = Fire, 4 = Bleed
+			{"attribute", 0}, -- See CreatureAttributes.h in src for numbers.
+			{"strength", 40},
+			{"duration", 1200},
+			{"potency", 70},
+			{"uses", 9000}
+		},
+		{
+			{"type", 4}, -- 1 = Poison, 2 = Disease, 3 = Fire, 4 = Bleed
+			{"attribute", 0}, -- See CreatureAttributes.h in src for numbers.
+			{"strength", 40},
+			{"duration", 1200},
+			{"potency", 70},
+			{"uses", 9000}
+		}
+	},
+
+}
+ObjectTemplates:addTemplate(object_draft_schematic_weapon_lance_trando_pike, "object/draft_schematic/weapon/lance_trando_pike.iff")

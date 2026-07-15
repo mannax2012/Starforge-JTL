@@ -41,6 +41,11 @@
 --which carries forward this exception.
 
 
+object_weapon_melee_baton_shared_baton_gaderiffi_elite = SharedWeaponObjectTemplate:new {
+	clientTemplateFileName = "object/weapon/melee/baton/shared_baton_gaderiffi_elite.iff"}
+ObjectTemplates:addClientTemplate(object_weapon_melee_baton_shared_baton_gaderiffi_elite, 
+"object/weapon/melee/baton/shared_baton_gaderiffi_elite.iff")
+
 object_weapon_melee_baton_shared_baton_gaderiffi = SharedWeaponObjectTemplate:new {
 	clientTemplateFileName = "object/weapon/melee/baton/shared_baton_gaderiffi.iff"
 	--Data below here is deprecated and loaded from the tres, keeping for easy lookups

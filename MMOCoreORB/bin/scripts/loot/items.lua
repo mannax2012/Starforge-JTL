@@ -75,11 +75,8 @@ includeFile("items/custom/tusken_bandolier_s01_schematic.lua")
 includeFile("items/custom/tusken_bandolier_s02_schematic.lua")
 includeFile("items/custom/tusken_bandolier_s03_schematic.lua")
 
---[[
 includeFile("items/custom/lance_trando_pike_schematic.lua")
 includeFile("items/custom/baton_gaderiffi_elite_schematic.lua")
-includeFile("items/custom/starforge_backpack_schematic.lua")
-]]
 
 --items folder
 includeFile("items/attachment_armor.lua")

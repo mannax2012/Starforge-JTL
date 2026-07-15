@@ -41,13 +41,58 @@
 --this exception also makes it possible to release a modified version 
 
 
+object_draft_schematic_weapon_baton_gaderiffi_elite = object_draft_schematic_weapon_shared_baton_gaderiffi_elite:new {
 
---Children folder includes
-includeFile("weapon/melee/baton/base/serverobjects.lua")
+   templateType = DRAFTSCHEMATIC,
 
--- Server Objects
-includeFile("weapon/melee/baton/baton_gaderiffi.lua")
-includeFile("weapon/melee/baton/baton_gaderiffi_elite.lua")
-includeFile("weapon/melee/baton/baton_stun.lua")
-includeFile("weapon/melee/baton/baton_stun_ranged.lua")
-includeFile("weapon/melee/baton/victor_baton_gaderiffi.lua")
+   customObjectName = "Gaderiffi Baton",
+
+   craftingToolTab = 1, -- (See DraftSchematicObjectTemplate.h)
+   complexity = 20, 
+   size = 4, 
+   factoryCrateType = "object/factory/factory_crate_weapon.iff",
+   factoryCrateSize = 0,
+   xpType = "crafting_weapons_general", 
+   xp = 90, 
+
+   assemblySkill = "weapon_assembly", 
+   experimentingSkill = "weapon_experimentation", 
+   customizationSkill = "weapon_customization", 
+
+   customizationOptions = {},
+   customizationStringNames = {},
+   customizationDefaults = {},
+
+   ingredientTemplateNames = {"craft_weapon_ingredients_n", "craft_weapon_ingredients_n", "craft_weapon_ingredients_n", "craft_weapon_ingredients_n"},
+   ingredientTitleNames = {"grip_unit", "reactive_striking_surface", "power_cell_brackets", "reinforcement_core"},
+   ingredientSlotType = {0, 0, 0, 1},
+   resourceTypes = {"iron_bronzium", "steel", "hide", "object/tangible/component/weapon/shared_reinforcement_core.iff"},
+   resourceQuantities = {20, 23, 5, 2},
+   contribution = {100, 100, 100, 100},
+
+
+   targetTemplate = "object/weapon/melee/baton/baton_gaderiffi_elite.iff",
+
+   additionalTemplates = {
+             },
+
+	weaponDots = {
+		{
+			{"type", 1}, -- 1 = Poison, 2 = Disease, 3 = Fire, 4 = Bleed
+			{"attribute", 0}, -- See CreatureAttributes.h in src for numbers.
+			{"strength", 40},
+			{"duration", 1200},
+			{"potency", 70},
+			{"uses", 9000}
+		},
+		{
+			{"type", 2}, -- 1 = Poison, 2 = Disease, 3 = Fire, 4 = Bleed
+			{"attribute", 0}, -- See CreatureAttributes.h in src for numbers.
+			{"strength", 40},
+			{"duration", 1200},
+			{"potency", 70},
+			{"uses", 9000}
+		}
+	},
+}
+ObjectTemplates:addTemplate(object_draft_schematic_weapon_baton_gaderiffi_elite, "object/draft_schematic/weapon/baton_gaderiffi_elite.iff")
