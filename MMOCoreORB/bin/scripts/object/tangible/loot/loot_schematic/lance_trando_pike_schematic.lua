@@ -41,13 +41,13 @@
 --this exception also makes it possible to release a modified version 
 
 
+object_tangible_loot_loot_schematic_lance_trando_pike_schematic = object_tangible_loot_loot_schematic_shared_lance_trando_pike_schematic:new {
+	templateType = LOOTSCHEMATIC,
+	objectMenuComponent = "LootSchematicMenuComponent",
+	attributeListComponent = "LootSchematicAttributeListComponent",
+	requiredSkill = "crafting_weaponsmith_master",
+	targetDraftSchematic = "object/draft_schematic/weapon/lance_trando_pike.iff",
+	targetUseCount = 1
+}
 
---Children folder includes
-includeFile("weapon/melee/baton/base/serverobjects.lua")
-
--- Server Objects
-includeFile("weapon/melee/baton/baton_gaderiffi.lua")
-includeFile("weapon/melee/baton/baton_gaderiffi_elite.lua")
-includeFile("weapon/melee/baton/baton_stun.lua")
-includeFile("weapon/melee/baton/baton_stun_ranged.lua")
-includeFile("weapon/melee/baton/victor_baton_gaderiffi.lua")
+ObjectTemplates:addTemplate(object_tangible_loot_loot_schematic_lance_trando_pike_schematic, "object/tangible/loot/loot_schematic/lance_trando_pike_schematic.iff")

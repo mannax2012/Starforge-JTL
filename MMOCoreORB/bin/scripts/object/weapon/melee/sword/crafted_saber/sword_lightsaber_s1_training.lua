@@ -145,16 +145,17 @@ object_weapon_melee_sword_crafted_saber_sword_lightsaber_s1_training = object_we
 	},
 
 
-	numberExperimentalProperties = {1, 1, 2, 2, 2, 2, 2, 1, 1, 1},
-	experimentalProperties = {"XX", "XX", "CD", "OQ", "CD", "OQ", "CD", "OQ", "SR", "UT", "CD", "OQ", "OQ", "OQ", "OQ"},
-	experimentalWeights = {1, 1, 1, 2, 1, 2, 1, 1, 1, 1, 1, 2, 1, 1, 1},
-	experimentalGroupTitles = {"null", "null", "expDamage", "expDamage", "expDamage", "expDamage", "expEffeciency", "expEffeciency", "expEffeciency", "expEffeciency"},
-	experimentalSubGroupTitles = {"null", "null", "mindamage", "maxdamage", "attackspeed", "woundchance", "forcecost", "attackhealthcost", "attackactioncost", "attackmindcost"},
-	experimentalMin = {0, 0, 50, 130, 4.8, 2, 18, 0, 300, 0},
-	experimentalMax = {0, 0, 70, 170, 4.5, 10, 15, 0, 330, 0},
-	experimentalPrecision = {0, 0, 0, 0, 1, 0, 1, 0, 0, 0},
-	experimentalCombineType = {0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
+	numberExperimentalProperties = {1, 1, 2, 2, 2, 2, 2, 1},
+	experimentalProperties = {"XX", "XX", "CD", "OQ", "CD", "OQ", "CD", "OQ", "SR", "UT", "CD", "OQ", "OQ"},
+	experimentalWeights = {1, 1, 1, 2, 1, 2, 1, 1, 1, 1, 1, 2, 1},
+	experimentalGroupTitles = {"null", "null", "expDamage", "expDamage", "expDamage", "expDamage", "expEffeciency", "expEffeciency"},
+	experimentalSubGroupTitles = {"null", "null", "mindamage", "maxdamage", "attackspeed", "woundchance", "forcecost", "attackactioncost"},
+	experimentalMin = {0, 0, 50, 130, 4.8, 2, 18, 300},
+	experimentalMax = {0, 0, 70, 170, 4.5, 10, 15, 330},
+	experimentalPrecision = {0, 0, 0, 0, 1, 0, 1, 0},
+	experimentalCombineType = {0, 0, 1, 1, 1, 1, 1, 1},
 
 }
 
 ObjectTemplates:addTemplate(object_weapon_melee_sword_crafted_saber_sword_lightsaber_s1_training, "object/weapon/melee/sword/crafted_saber/sword_lightsaber_s1_training.iff")
+

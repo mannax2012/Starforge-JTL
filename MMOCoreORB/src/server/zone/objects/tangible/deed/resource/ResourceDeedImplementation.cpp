@@ -44,6 +44,9 @@ void ResourceDeedImplementation::initializeTransientMembers() {
 	setLoggingName("ResourceDeed");
 }
 
+void ResourceDeedImplementation::updateCraftingValues(CraftingValues* values, bool firstUpdate) {
+}
+
 void ResourceDeedImplementation::fillObjectMenuResponse(ObjectMenuResponse* menuResponse, CreatureObject* player) {
 	DeedImplementation::fillObjectMenuResponse(menuResponse, player);
 

@@ -395,36 +395,118 @@ const Vector<CustomizationData>* ImageDesignManager::getCustomizationData(uint32
 
 TangibleObject* ImageDesignManager::createHairObject(CreatureObject* imageDesigner, CreatureObject* targetObject, const String& hairTemplate, const String& hairCustomization) {
 	Reference<TangibleObject*> oldHair = targetObject->getSlottedObject("hair").castTo<TangibleObject*>();
+	TemplateManager* templateManager = TemplateManager::instance();
 
-	HairAssetData* hairAssetData = CustomizationIdManager::instance()->getHairAssetData(hairTemplate);
+	auto normalizeTemplatePath = [](String templatePath) {
+		return templatePath.replaceAll("shared_", "");
+	};
+
+	String targetServerTemplate = "null";
+	String targetClientTemplate = "null";
+	String designerName = "null";
+	String targetName = "null";
+
+	if (targetObject != nullptr && targetObject->getObjectTemplate() != nullptr) {
+		targetServerTemplate = targetObject->getObjectTemplate()->getFullTemplateString();
+
+		if (templateManager != nullptr)
+			targetClientTemplate = templateManager->getTemplateFile(targetObject->getClientObjectCRC());
+
+		targetName = targetObject->getFirstName();
+	}
+
+	if (imageDesigner != nullptr)
+		designerName = imageDesigner->getFirstName();
+
+	HairAssetData* hairAssetData = CustomizationIdManager::instance()->getHairAssetData(hairTemplate, targetServerTemplate, targetClientTemplate == "null" ? "" : targetClientTemplate);
 
 	if (hairTemplate.isEmpty()) {
 		if (!CustomizationIdManager::instance()->canBeBald(targetObject->getServerObjectCRC())) {
+			error() << "ImageDesign hair apply rejected bald option for target=" << targetName
+					<< " targetServerTemplate=" << targetServerTemplate
+					<< " targetClientTemplate=" << targetClientTemplate
+					<< " canBeBald=false";
 			return oldHair;
 		} else {
+			info() << "ImageDesign hair apply removing hair for target=" << targetName
+					<< " targetServerTemplate=" << targetServerTemplate
+					<< " targetClientTemplate=" << targetClientTemplate
+					<< " designer=" << designerName;
 			removeHairObject(targetObject);
 			return nullptr;
 		}
 	}
 
 	if (hairAssetData == nullptr) {
+		error() << "ImageDesign hair apply missing asset data for hairTemplate=" << hairTemplate
+				<< " target=" << targetName
+				<< " targetServerTemplate=" << targetServerTemplate
+				<< " targetClientTemplate=" << targetClientTemplate
+				<< " designer=" << designerName;
 		return oldHair;
 	}
 
 	int skillMod = hairAssetData->getSkillModValue();
 
-	if (imageDesigner->getSkillMod("hair") < skillMod)
-		return oldHair;
-
-	if (hairAssetData->getServerPlayerTemplate().hashCode() != targetObject->getObjectTemplate()->getFullTemplateString().hashCode()) {
-		error("hair " + hairTemplate + " is not compatible with this creature player " + targetObject->getObjectTemplate()->getFullTemplateString());
+	if (imageDesigner->getSkillMod("hair") < skillMod) {
+		error() << "ImageDesign hair apply failed skill check for hairTemplate=" << hairTemplate
+				<< " target=" << targetName
+				<< " designer=" << designerName
+				<< " designerHairSkill=" << imageDesigner->getSkillMod("hair")
+				<< " requiredHairSkill=" << skillMod
+				<< " assetServerTemplate=" << hairAssetData->getServerTemplate()
+				<< " assetPlayerTemplate=" << hairAssetData->getPlayerTemplate()
+				<< " assetServerPlayerTemplate=" << hairAssetData->getServerPlayerTemplate();
 		return oldHair;
 	}
+
+	// Hair asset data may identify species/gender with either the server or client player template.
+	bool matchesServerTemplate = normalizeTemplatePath(hairAssetData->getServerPlayerTemplate()) == normalizeTemplatePath(targetServerTemplate);
+	bool matchesClientTemplate = !targetClientTemplate.isEmpty() && targetClientTemplate != "null" && normalizeTemplatePath(hairAssetData->getPlayerTemplate()) == normalizeTemplatePath(targetClientTemplate);
+
+	if (!matchesServerTemplate && !matchesClientTemplate) {
+		error() << "ImageDesign hair apply template mismatch for hairTemplate=" << hairTemplate
+				<< " target=" << targetName
+				<< " designer=" << designerName
+				<< " targetServerTemplate=" << targetServerTemplate
+				<< " targetClientTemplate=" << targetClientTemplate
+				<< " normalizedTargetServerTemplate=" << normalizeTemplatePath(targetServerTemplate)
+				<< " normalizedTargetClientTemplate=" << normalizeTemplatePath(targetClientTemplate)
+				<< " assetSharedTemplate=" << hairAssetData->getSharedTemplate()
+				<< " assetServerTemplate=" << hairAssetData->getServerTemplate()
+				<< " assetPlayerTemplate=" << hairAssetData->getPlayerTemplate()
+				<< " normalizedAssetPlayerTemplate=" << normalizeTemplatePath(hairAssetData->getPlayerTemplate())
+				<< " assetServerPlayerTemplate=" << hairAssetData->getServerPlayerTemplate()
+				<< " normalizedAssetServerPlayerTemplate=" << normalizeTemplatePath(hairAssetData->getServerPlayerTemplate())
+				<< " matchesServerTemplate=" << matchesServerTemplate
+				<< " matchesClientTemplate=" << matchesClientTemplate
+				<< " designerHairSkill=" << imageDesigner->getSkillMod("hair")
+				<< " requiredHairSkill=" << skillMod;
+		return oldHair;
+	}
+
+	info() << "ImageDesign hair apply accepted hairTemplate=" << hairTemplate
+			<< " target=" << targetName
+			<< " designer=" << designerName
+			<< " targetServerTemplate=" << targetServerTemplate
+			<< " targetClientTemplate=" << targetClientTemplate
+			<< " assetSharedTemplate=" << hairAssetData->getSharedTemplate()
+			<< " assetServerTemplate=" << hairAssetData->getServerTemplate()
+			<< " assetPlayerTemplate=" << hairAssetData->getPlayerTemplate()
+			<< " assetServerPlayerTemplate=" << hairAssetData->getServerPlayerTemplate()
+			<< " matchesServerTemplate=" << matchesServerTemplate
+			<< " matchesClientTemplate=" << matchesClientTemplate;
 
 	ManagedReference<SceneObject*> hair = imageDesigner->getZoneServer()->createObject(hairTemplate.hashCode(), 1);
 
 	//TODO: Validate hairCustomization
 	if (hair == nullptr || !hair->isTangibleObject()) {
+		error() << "ImageDesign hair apply failed to create hair object for hairTemplate=" << hairTemplate
+				<< " target=" << targetName
+				<< " designer=" << designerName
+				<< " hairIsNull=" << (hair == nullptr)
+				<< " hairIsTangible=" << (hair != nullptr && hair->isTangibleObject());
+
 		if (hair != nullptr) {
 			Locker locker(hair);
 			hair->destroyObjectFromDatabase(true);
@@ -446,11 +528,23 @@ TangibleObject* ImageDesignManager::createHairObject(CreatureObject* imageDesign
 
 	data.parseFromClientString(hairCustomization);
 
-	if (validateCustomizationString(&data, appearanceFilename))
+	if (validateCustomizationString(&data, appearanceFilename)) {
 		tanoHair->setCustomizationString(hairCustomization);
+	} else {
+		error() << "ImageDesign hair apply customization validation failed for hairTemplate=" << hairTemplate
+				<< " target=" << targetName
+				<< " designer=" << designerName
+				<< " hairAppearance=" << appearanceFilename
+				<< " hairCustomization=" << hairCustomization;
+	}
 
 	//Now that new hair is created and valid, remove the old hair
 	removeHairObject(targetObject);
+
+	info() << "ImageDesign hair apply created replacement hair object for hairTemplate=" << hairTemplate
+			<< " target=" << targetName
+			<< " designer=" << designerName
+			<< " hairAppearance=" << appearanceFilename;
 
 	return tanoHair;
 }

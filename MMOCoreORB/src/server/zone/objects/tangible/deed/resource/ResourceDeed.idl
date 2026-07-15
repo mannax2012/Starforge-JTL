@@ -8,6 +8,7 @@ import server.zone.objects.creature.CreatureObject;
 import server.zone.objects.tangible.deed.Deed;
 import server.zone.packets.object.ObjectMenuResponse;
 include server.zone.packets.scene.AttributeListMessage;
+include server.zone.objects.manufactureschematic.craftingvalues.CraftingValues;
 
 @json
 class ResourceDeed extends Deed {
@@ -17,6 +18,9 @@ class ResourceDeed extends Deed {
 	}
 
 	public native void initializeTransientMembers();
+
+	@local
+	public native void updateCraftingValues(CraftingValues values, boolean firstUpdate);
 
 	@local
 	@dirty

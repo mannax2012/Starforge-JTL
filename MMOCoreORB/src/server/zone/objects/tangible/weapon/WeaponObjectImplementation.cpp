@@ -19,6 +19,7 @@
 #include "server/zone/packets/object/WeaponRanges.h"
 #include "server/zone/ZoneProcessServer.h"
 #include "server/zone/managers/player/PlayerMap.h"
+#include "server/zone/managers/stringid/StringIdManager.h"
 #include "server/chat/ChatManager.h"
 
 
@@ -345,6 +346,55 @@ void WeaponObjectImplementation::fillAttributeList(AttributeListMessage* alm, Cr
 		alm->insertAttribute("cat_wpn_attack_cost.action", getActionAttackCost());
 
 		alm->insertAttribute("cat_wpn_attack_cost.mind", getMindAttackCost());
+	}
+
+	// Show the installed crystals and their remaining durability.
+	if (isJediWeapon()) {
+		ManagedReference<SceneObject*> saberInv = getSlottedObject("saber_inv");
+
+		if (saberInv != nullptr) {
+			auto addCrystalCondition = [alm](LightsaberCrystalComponent* crystal) {
+				int maxCrystalCondition = crystal->getMaxCondition();
+				int remainingCondition = maxCrystalCondition - (int)crystal->getConditionDamage();
+				int durability = 0;
+
+				if (maxCrystalCondition > 0) {
+					remainingCondition = Math::max(0, Math::min(remainingCondition, maxCrystalCondition));
+					durability = (remainingCondition * 100) / maxCrystalCondition;
+				}
+
+				if (crystal->getColor() == 31) {
+					StringBuffer crystalDisplayValue;
+					crystalDisplayValue << durability << "%";
+					alm->insertAttribute("power_crystal.power_crystal", crystalDisplayValue);
+				} else {
+					String colorString = "@jedi_spam:saber_color_" + String::valueOf(crystal->getColor());
+					String colorName;
+					StringIdManager::instance()->getStringId(StringId(colorString)).toString(colorName);
+
+					if (colorName.isEmpty())
+						colorName = "Color " + String::valueOf(crystal->getColor());
+					else
+						colorName = colorName.replaceAll("\"", "");
+
+					alm->insertAttribute("crystal_condition.color_mod", colorName);
+
+					StringBuffer condition;
+					condition << durability << "%";
+					alm->insertAttribute("crystal_condition.condition", condition);
+				}
+			};
+
+			// Always show the color crystal before the power crystals.
+			for (int pass = 0; pass < 2; ++pass) {
+				for (int i = 0; i < saberInv->getContainerObjectsSize(); ++i) {
+					ManagedReference<LightsaberCrystalComponent*> crystal = saberInv->getContainerObject(i).castTo<LightsaberCrystalComponent*>();
+
+					if (crystal != nullptr && ((pass == 0 && crystal->getColor() != 31) || (pass == 1 && crystal->getColor() == 31)))
+						addCrystalCondition(crystal);
+				}
+			}
+		}
 	}
 
 	//Anti Decay Kit
