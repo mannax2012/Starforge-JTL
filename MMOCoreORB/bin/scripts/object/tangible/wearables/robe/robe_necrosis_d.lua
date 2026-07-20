@@ -1,5 +1,5 @@
 object_tangible_wearables_robe_robe_necrosis_d = object_tangible_wearables_robe_shared_robe_necrosis_d:new {
-playerRaces = { 				
+	playerRaces = { 				
 				"object/creature/player/aqualish_female.iff",
 				"object/creature/player/aqualish_male.iff",
 				"object/creature/player/bith_female.iff",
@@ -14,6 +14,8 @@ playerRaces = {
 				"object/creature/player/human_male.iff",
 				"object/creature/player/human_female.iff",
 				"object/creature/player/ishi_tib_male.iff",
+				"object/creature/player/ithorian_male.iff",
+        		"object/creature/player/ithorian_female.iff",
 				"object/creature/player/moncal_male.iff",
 				"object/creature/player/moncal_female.iff",
 				"object/creature/player/nautolan_male.iff",
@@ -32,6 +34,8 @@ playerRaces = {
 				"object/creature/player/weequay_male.iff",
 				"object/creature/player/zabrak_male.iff",
 				"object/creature/player/zabrak_female.iff",
+				"object/creature/player/wookiee_male.iff",
+        		"object/creature/player/wookiee_female.iff",
 				"object/mobile/vendor/aqualish_female.iff",
 				"object/mobile/vendor/aqualish_male.iff",
 				"object/mobile/vendor/bith_female.iff",
@@ -58,6 +62,7 @@ playerRaces = {
 				"object/mobile/vendor/weequay_male.iff",
 				"object/mobile/vendor/zabrak_female.iff",
 				"object/mobile/vendor/zabrak_male.iff" },
+
 
 	maxCondition = 100,
 	volume = 1,
