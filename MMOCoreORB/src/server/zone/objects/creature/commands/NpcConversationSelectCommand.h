@@ -52,7 +52,9 @@ public:
 
 			Vector3 validCoords = validPosition->getWorldPosition(zoneServer);
 
-			if (object->isShipObject() || validCoords.squaredDistanceTo(object->getWorldPosition()) < 25.f) {
+			const float maxConversationDistanceSq = CreatureObject::CONVERSATION_MAX_DISTANCE * CreatureObject::CONVERSATION_MAX_DISTANCE;
+
+			if (object->isShipObject() || validCoords.squaredDistanceTo(object->getWorldPosition()) < maxConversationDistanceSq) {
 				object->selectConversationOption(option, creature);
 
 				object->notifyObservers(ObserverEventType::SELECTCONVERSATION, creature, option);

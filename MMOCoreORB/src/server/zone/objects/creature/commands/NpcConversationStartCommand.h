@@ -68,15 +68,17 @@ public:
 					return TOOFAR;
 				}
 
+				const float maxConversationDistanceSq = CreatureObject::CONVERSATION_MAX_DISTANCE * CreatureObject::CONVERSATION_MAX_DISTANCE;
+
 				// If the conversing NPC is outdoors, we will acount for distance based on x, y only. LoS also checked below
 				if (agentParentID == 0) {
 					// Calculate the distance squared without use of the z coordinate. We also check LoS below
 					float distanceSq = playerPosition.squaredDistanceTo2d(agentPosition);
 
-					if (distanceSq > 25) {
+					if (distanceSq > maxConversationDistanceSq) {
 						return TOOFAR;
 					}
-				} else if (playerPosition.squaredDistanceTo(agentPosition) > 25) {
+				} else if (playerPosition.squaredDistanceTo(agentPosition) > maxConversationDistanceSq) {
 					return TOOFAR;
 				}
 

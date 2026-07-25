@@ -748,3 +748,12 @@ object_tangible_container_loot_shared_player_loot_crate = SharedTangibleObjectTe
 }
 
 ObjectTemplates:addClientTemplate(object_tangible_container_loot_shared_player_loot_crate, "object/tangible/container/loot/shared_player_loot_crate.iff")
+
+---------------------------------------------------------------------------------------------------------------
+
+object_tangible_container_loot_shared_loot_briefcase = SharedTangibleObjectTemplate:new {
+	clientTemplateFileName = "object/tangible/container/loot/shared_loot_briefcase.iff"}
+ObjectTemplates:addClientTemplate(object_tangible_container_loot_shared_loot_briefcase,
+	"object/tangible/container/loot/shared_loot_briefcase.iff")
+
+---------------------------------------------------------------------------------------------------------------

@@ -57,6 +57,8 @@ object_tangible_wearables_robe_robe_tusken_raider_s01 = object_tangible_wearable
 				"object/creature/player/human_male.iff",
 				"object/creature/player/human_female.iff",
 				"object/creature/player/ishi_tib_male.iff",
+				"object/creature/player/ithorian_male.iff",
+        		"object/creature/player/ithorian_female.iff",
 				"object/creature/player/moncal_male.iff",
 				"object/creature/player/moncal_female.iff",
 				"object/creature/player/nautolan_male.iff",
@@ -75,6 +77,8 @@ object_tangible_wearables_robe_robe_tusken_raider_s01 = object_tangible_wearable
 				"object/creature/player/weequay_male.iff",
 				"object/creature/player/zabrak_male.iff",
 				"object/creature/player/zabrak_female.iff",
+				"object/creature/player/wookiee_male.iff",
+        		"object/creature/player/wookiee_female.iff",
 				"object/mobile/vendor/aqualish_female.iff",
 				"object/mobile/vendor/aqualish_male.iff",
 				"object/mobile/vendor/bith_female.iff",
@@ -101,6 +105,7 @@ object_tangible_wearables_robe_robe_tusken_raider_s01 = object_tangible_wearable
 				"object/mobile/vendor/weequay_male.iff",
 				"object/mobile/vendor/zabrak_female.iff",
 				"object/mobile/vendor/zabrak_male.iff" },
+
 }
 
 ObjectTemplates:addTemplate(object_tangible_wearables_robe_robe_tusken_raider_s01, "object/tangible/wearables/robe/robe_tusken_raider_s01.iff")

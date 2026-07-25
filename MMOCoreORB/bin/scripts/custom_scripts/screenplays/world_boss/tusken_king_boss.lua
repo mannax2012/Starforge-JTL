@@ -13,7 +13,7 @@ end
 
 
 function tusken_king_bossScreenplay:spawnMobiles()
-		local pBoss = spawnMobile("tatooine", "tusken_king_boss", -1, 37.2, 22.9, 19.7, 165, 1189182)
+		local pBoss = spawnMobile("tatooine", "tusken_king_boss", 3600, 37.2, 22.9, 19.7, 165, 1189182)
 		local creature = CreatureObject(pBoss)
 		print("Tusken King Spawned")
 		createObserver(DAMAGERECEIVED, "tusken_king_bossScreenplay", "npcDamageObserver", pBoss)    

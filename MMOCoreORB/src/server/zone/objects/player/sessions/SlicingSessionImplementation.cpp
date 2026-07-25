@@ -859,19 +859,40 @@ void SlicingSessionImplementation::handleContainerSlice() {
 	LootManager* lootManager = player->getZoneServer()->getLootManager();
 
 	if (tangibleObject->getGameObjectType() == SceneObjectType::PLAYERLOOTCRATE) {
-		Reference<SceneObject*> containerSceno = player->getZoneServer()->createObject(STRING_HASHCODE("object/tangible/container/loot/loot_crate.iff"), 1);
+		String unlockedContainerTemplate = "object/tangible/container/loot/loot_crate.iff";
 
-		if (containerSceno == nullptr)
+		String lockedContainerTemplate = tangibleObject->getObjectTemplate() != nullptr ? tangibleObject->getObjectTemplate()->getFullTemplateString() : "";
+		//player->info(true) << "SlicingSession: lockedContainerTemplate = " << lockedContainerTemplate << endl;
+
+		if (tangibleObject->getObjectTemplate() != nullptr && lockedContainerTemplate == "object/tangible/loot/misc/briefcase_s01.iff")
+			unlockedContainerTemplate = "object/tangible/container/loot/loot_briefcase.iff";
+
+		//player->info(true) << "SlicingSession: unlockedContainerTemplate = " << unlockedContainerTemplate << endl;
+
+		Reference<SceneObject*> containerSceno = player->getZoneServer()->createObject(unlockedContainerTemplate.hashCode(), 1);
+
+		if (containerSceno == nullptr) {
+			player->info(true) << "SlicingSession: failed to create unlocked container template = " << unlockedContainerTemplate << endl;
 			return;
+		}
+
+		String replacementTemplate = containerSceno->getObjectTemplate() != nullptr ? containerSceno->getObjectTemplate()->getFullTemplateString() : "<null>";
+
+		player->info(true) << "SlicingSession: created replacement class = " << containerSceno->_getClassName()
+				<< ", type = " << containerSceno->getGameObjectType()
+				<< ", template = " << replacementTemplate << endl;
 
 		Locker clocker(containerSceno, player);
 
 		Container* container = dynamic_cast<Container*>(containerSceno.get());
 
 		if (container == nullptr) {
+			player->info(true) << "SlicingSession: replacement is not a Container; original item was preserved." << endl;
 			containerSceno->destroyObjectFromDatabase(true);
 			return;
 		}
+
+		player->info(true) << "SlicingSession: replacement container volume = " << container->getContainerVolumeLimit() << endl;
 
 		TransactionLog trx(TrxCode::SLICECONTAINER, player, container);
 
@@ -879,7 +900,20 @@ void SlicingSessionImplementation::handleContainerSlice() {
 			lootManager->createLoot(trx, container, "looted_container");
 		}
 
-		inventory->transferObject(container, -1);
+		if (!inventory->transferObject(container, -1)) {
+			player->info(true) << "SlicingSession: failed to transfer replacement into inventory; original item was preserved." << endl;
+			container->destroyObjectFromWorld(true);
+			container->destroyObjectFromDatabase(true);
+			return;
+		}
+
+		if (!inventory->hasObjectInContainer(container->getObjectID())) {
+			player->info(true) << "SlicingSession: replacement transfer did not place object in inventory; original item was preserved." << endl;
+			container->destroyObjectFromWorld(true);
+			container->destroyObjectFromDatabase(true);
+			return;
+		}
+
 		container->sendTo(player, true);
 
 		trx.commit();
