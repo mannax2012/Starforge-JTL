@@ -41,23 +41,21 @@
 --this exception also makes it possible to release a modified version 
 
 
+object_tangible_deed_pet_deed_tukata_deed = object_tangible_deed_pet_deed_shared_bio_tukata_deed:new {
 
---Children folder includes
-includeFile("tangible/item/bounty_hunter/serverobjects.lua")
-includeFile("tangible/item/new_player/serverobjects.lua")
-includeFile("tangible/item/plant/serverobjects.lua")
-includeFile("tangible/item/quest/serverobjects.lua")
+	templateType = PETDEED,
+	numberExperimentalProperties = {1, 1},
+	experimentalProperties = {"XX", "XX"},
+	experimentalWeights = {1, 1},
+	experimentalGroupTitles = {"null", "null"},
+	experimentalSubGroupTitles = {"null", "null"},
+	experimentalMin = {0, 0},
+	experimentalMax = {0, 0},
+	experimentalPrecision = {0, 0},
+	experimentalCombineType = {0, 0},
+	generatedObjectTemplate = "mobile/tukata.iff",
+	controlDeviceObjectTemplate = "object/intangible/pet/bio_tukata_hue.iff",
+	mobileTemplate = "tukata_be",
+}
 
--- Server Objects
-includeFile("tangible/item/axkva_min_entrance.lua")
-includeFile("tangible/item/yavin4_exar_kun_entry.lua")
-includeFile("tangible/item/dath_disciple_alter.lua")
-includeFile("tangible/item/dath_disciple_skull.lua")
-includeFile("tangible/item/starforge_token_generic.lua")
-includeFile("tangible/item/con_drinking_glass_01.lua")
-includeFile("tangible/item/droid_customization.lua")
-includeFile("tangible/item/loot_credit_chip.lua")
-includeFile("tangible/item/lytus_family_artefact.lua")
-includeFile("tangible/item/vehicle_customization.lua")
-
-includeFile("tangible/item/force_infused_organ.lua")
+ObjectTemplates:addTemplate(object_tangible_deed_pet_deed_tukata_deed, "object/tangible/deed/pet_deed/bio_tukata_deed.iff")

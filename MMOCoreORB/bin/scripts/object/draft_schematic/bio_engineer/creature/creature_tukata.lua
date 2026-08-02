@@ -41,23 +41,41 @@
 --this exception also makes it possible to release a modified version 
 
 
+object_draft_schematic_bio_engineer_creature_creature_tukata = object_draft_schematic_bio_engineer_creature_shared_creature_tukata:new {
 
---Children folder includes
-includeFile("tangible/item/bounty_hunter/serverobjects.lua")
-includeFile("tangible/item/new_player/serverobjects.lua")
-includeFile("tangible/item/plant/serverobjects.lua")
-includeFile("tangible/item/quest/serverobjects.lua")
+   templateType = DRAFTSCHEMATIC,
+   factoryCrateSize = 0,	
 
--- Server Objects
-includeFile("tangible/item/axkva_min_entrance.lua")
-includeFile("tangible/item/yavin4_exar_kun_entry.lua")
-includeFile("tangible/item/dath_disciple_alter.lua")
-includeFile("tangible/item/dath_disciple_skull.lua")
-includeFile("tangible/item/starforge_token_generic.lua")
-includeFile("tangible/item/con_drinking_glass_01.lua")
-includeFile("tangible/item/droid_customization.lua")
-includeFile("tangible/item/loot_credit_chip.lua")
-includeFile("tangible/item/lytus_family_artefact.lua")
-includeFile("tangible/item/vehicle_customization.lua")
+   customObjectName = "Sith Tukata",
 
-includeFile("tangible/item/force_infused_organ.lua")
+   craftingToolTab = 256, -- (See DraftSchematicObjectTemplate.h)
+   complexity = 22, 
+   size = 1, 
+   factoryCrateType = "object/factory/factory_crate_clothing.iff",
+
+   xpType = "crafting_bio_engineer_creature", 
+   xp = 250, 
+
+   assemblySkill = "bio_engineer_assembly", 
+   experimentingSkill = "bio_engineer_experimentation", 
+   customizationSkill = "bio_engineer_experimentation", 
+
+   customizationOptions = {},
+   customizationStringNames = {},
+   customizationDefaults = {},
+
+   ingredientTemplateNames = {"craft_creature_ingredients_n", "craft_creature_ingredients_n", "craft_creature_ingredients_n", "starforge_n"},
+   ingredientTitleNames = {"dna_template", "protein_base", "organic_nutrition_materials", "force_infused_organ"},
+   ingredientSlotType = {1, 0, 0, 1},
+   resourceTypes = {"object/tangible/component/dna/shared_dna_template_generic.iff", "creature_food", "flora_food", "object/tangible/item/shared_force_infused_organ.iff"},
+   resourceQuantities = {1, 55, 75, 1},
+   contribution = {100, 100, 100, 100},
+
+
+   targetTemplate = "object/tangible/deed/pet_deed/tukata_deed.iff",
+
+   additionalTemplates = {
+             }
+
+}
+ObjectTemplates:addTemplate(object_draft_schematic_bio_engineer_creature_creature_tukata, "object/draft_schematic/bio_engineer/creature/creature_tukata.iff")

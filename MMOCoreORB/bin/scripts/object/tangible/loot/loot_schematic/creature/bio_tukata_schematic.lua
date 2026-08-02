@@ -12,7 +12,7 @@
 --This program is distributed in the hope that it will be useful, 
 --but WITHOUT ANY WARRANTY; without even the implied warranty of 
 --MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
---See the GNU Lesser General Public License for
+--See the GNU Lesser General Public License fo
 --more details.
 
 --You should have received a copy of the GNU Lesser General 
@@ -41,23 +41,13 @@
 --this exception also makes it possible to release a modified version 
 
 
+object_tangible_loot_loot_schematic_creature_bio_tukata_schematic = object_tangible_loot_loot_schematic_creature_shared_bio_tukata_schematic:new {
+	templateType = LOOTSCHEMATIC,
+	objectMenuComponent = "LootSchematicMenuComponent",
+	attributeListComponent = "LootSchematicAttributeListComponent",
+	requiredSkill = "outdoors_bio_engineer_master",
+	targetDraftSchematic = "object/draft_schematic/bio_engineer/creature/creature_tukata.iff",
+	targetUseCount = 1
+}
 
---Children folder includes
-includeFile("tangible/item/bounty_hunter/serverobjects.lua")
-includeFile("tangible/item/new_player/serverobjects.lua")
-includeFile("tangible/item/plant/serverobjects.lua")
-includeFile("tangible/item/quest/serverobjects.lua")
-
--- Server Objects
-includeFile("tangible/item/axkva_min_entrance.lua")
-includeFile("tangible/item/yavin4_exar_kun_entry.lua")
-includeFile("tangible/item/dath_disciple_alter.lua")
-includeFile("tangible/item/dath_disciple_skull.lua")
-includeFile("tangible/item/starforge_token_generic.lua")
-includeFile("tangible/item/con_drinking_glass_01.lua")
-includeFile("tangible/item/droid_customization.lua")
-includeFile("tangible/item/loot_credit_chip.lua")
-includeFile("tangible/item/lytus_family_artefact.lua")
-includeFile("tangible/item/vehicle_customization.lua")
-
-includeFile("tangible/item/force_infused_organ.lua")
+ObjectTemplates:addTemplate(object_tangible_loot_loot_schematic_creature_bio_tukata_schematic, "object/tangible/loot/loot_schematic/creature/bio_tukata_schematic.iff")
