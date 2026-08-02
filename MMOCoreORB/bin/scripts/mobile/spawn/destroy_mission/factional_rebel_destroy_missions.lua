@@ -194,6 +194,24 @@ factional_rebel_destroy_missions = {
 			maxDifficulty = 32,
 			size = 25,
 		},
+		{
+			lairTemplateName = "global_imperial_knight_trial_commando_camp_imperial_large_theater",
+			minDifficulty = 25,
+			maxDifficulty = 32,
+			size = 25,
+		},
+		{
+			lairTemplateName = "global_imperial_knight_trial_command_camp_imperial_large_theater",
+			minDifficulty = 25,
+			maxDifficulty = 32,
+			size = 25,
+		},
+		{
+			lairTemplateName = "global_imperial_knight_trial_officer_camp_imperial_large_theater",
+			minDifficulty = 25,
+			maxDifficulty = 32,
+			size = 25,
+		},
 	}
 }
 

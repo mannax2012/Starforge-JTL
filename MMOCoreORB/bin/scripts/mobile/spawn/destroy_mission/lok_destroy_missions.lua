@@ -158,6 +158,12 @@ lok_destroy_missions = {
 			maxDifficulty = 50,
 			size = 25,
 		},
+		{
+			lairTemplateName = "lok_enraged_kimogila_lair_neutral_medium_boss_01",
+			minDifficulty = 91,
+			maxDifficulty = 100,
+			size = 25,
+		},
 	}
 }
 
