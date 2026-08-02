@@ -610,6 +610,7 @@ function PadawanTrials:notifyEnteredMainLocSpawnArea(pArea, pPlayer)
 	end
 
 	local npcID = SceneObject(pNpc):getObjectID()
+	AiAgent(pNpc):addObjectFlag(STATIONARY)
 	CreatureObject(pNpc):setPvpStatusBitmask(0) -- Prevent attacking.
 	CreatureObject(pNpc):setOptionsBitmask(136)
 	CreatureObject(pNpc):setCustomObjectName(trialData.trialNpcName)
@@ -817,6 +818,9 @@ function PadawanTrials:notifyEnteredTargetLocSpawnArea(pArea, pPlayer)
 		end
 
 		local npcID = SceneObject(pNpc):getObjectID()
+		if (not string.find(trialData.targetNpc, ".iff")) then
+			AiAgent(pNpc):addObjectFlag(STATIONARY)
+		end
 		writeData(npcID .. ":ownerID", playerID)
 
 		if (isThirdLocation and trialData.thirdTargetName ~= nil) then
