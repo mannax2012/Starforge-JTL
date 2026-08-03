@@ -63,7 +63,7 @@ object_draft_schematic_clothing_custom_clothing_robe_necrosis_schematic = object
    customizationDefaults = {66},
 
    ingredientTemplateNames = {"craft_clothing_ingredients_n", "craft_clothing_ingredients_n", "craft_clothing_ingredients_n", "craft_clothing_ingredients_n", "craft_clothing_ingredients_n"},
-   ingredientTitleNames = {"body", "body", "binding_and_hardware", "liner", "load_bearing_harness"},
+   ingredientTitleNames = {"reinforcement", "body", "binding_and_hardware", "liner", "load_bearing_harness"},
    ingredientSlotType = {0, 1, 1, 0, 1},
    resourceTypes = {"copper", "object/tangible/component/clothing/shared_reinforced_fiber_panels.iff", "object/tangible/component/clothing/shared_metal_fasteners.iff", "hide_wooly", "object/tangible/component/clothing/shared_reinforced_fiber_panels.iff"},
    resourceQuantities = {235, 2, 4, 200, 2},
