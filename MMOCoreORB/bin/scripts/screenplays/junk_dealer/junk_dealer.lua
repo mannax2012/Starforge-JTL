@@ -34,7 +34,8 @@ function JunkDealer:getDealerNum(dealerType)
 
 	for i = 1, #self.junkTypes, 1 do
 		if string.find(dealerType, self.junkTypes[i][1]) ~= nil then
-			dealerNum = self.junkTypes[i][2]
+			-- Each dealer type has a distinct bit flag, so adding matches builds a multi-type mask.
+			dealerNum = dealerNum + self.junkTypes[i][2]
 		end
 	end
 

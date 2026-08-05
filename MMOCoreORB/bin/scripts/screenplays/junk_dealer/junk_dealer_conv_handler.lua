@@ -121,6 +121,14 @@ JunkDealerFineryConvoHandler = JunkDealerConvoHandler:new {
 	startSaleText = "@conversation/junk_dealer_finery:s_c86eba88"
 }
 
+-- City junk dealers buy the complete standard selection: general junk, finery, and arms.
+JunkDealerAllInOneConvoHandler = JunkDealerConvoHandler:new {
+	junkType = "generic finery arms",
+	noLootText = "@conversation/junk_dealer_generic:s_cd7a3f41",
+	startSaleText = "@conversation/junk_dealer_generic:s_54fab04f",
+	inventorText = "@conversation/junk_dealer_generic:s_3aa18b2d"
+}
+
 JunkDealerDenderConvoHandler = JunkDealerConvoHandler:new {
 	junkType = "gungan",
 	noLootText = "@conversation/junk_dender_rori:s_a753e4d6",
