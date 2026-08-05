@@ -15,6 +15,67 @@
 #include "server/zone/ZoneServer.h"
 #include "server/zone/managers/visibility/VisibilityManager.h"
 
+namespace {
+	const String NECROSIS_HOOD_UP_TEMPLATE = "object/tangible/wearables/robe/robe_necrosis.iff";
+	const char* const HOOD_SUPPRESSED_SLOTS[] = {"eyes", "hat", "head"};
+
+	bool isNecrosisHoodUpRobe(SceneObject* object) {
+		if (object == nullptr || !object->isRobeObject()) {
+			return false;
+		}
+
+		auto objectTemplate = object->getObjectTemplate();
+
+		return objectTemplate != nullptr && objectTemplate->getFullTemplateString() == NECROSIS_HOOD_UP_TEMPLATE;
+	}
+
+	bool hasNecrosisHoodUpEquipped(CreatureObject* creature, SceneObject* ignoredObject = nullptr) {
+		if (creature == nullptr) {
+			return false;
+		}
+
+		for (int i = 0; i < creature->getSlottedObjectsSize(); ++i) {
+			SceneObject* slottedObject = creature->getSlottedObject(i);
+
+			if (slottedObject == nullptr || slottedObject == ignoredObject) {
+				continue;
+			}
+
+			if (isNecrosisHoodUpRobe(slottedObject)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	void setHoodSuppressedWearablesVisible(CreatureObject* creature, bool visible) {
+		if (creature == nullptr) {
+			return;
+		}
+
+		for (const auto slotName : HOOD_SUPPRESSED_SLOTS) {
+			SceneObject* slottedObject = creature->getSlottedObject(slotName);
+
+			if (slottedObject == nullptr || !slottedObject->isTangibleObject()) {
+				continue;
+			}
+
+			TangibleObject* wearable = slottedObject->asTangibleObject();
+
+			if (wearable == nullptr) {
+				continue;
+			}
+
+			if (visible) {
+				creature->addWearableObject(wearable, true);
+			} else {
+				creature->removeWearableObject(wearable, true);
+			}
+		}
+	}
+}
+
 int PlayerContainerComponent::canAddObject(SceneObject* sceneObject, SceneObject* object, int containmentType, String& errorDescription) const {
 	CreatureObject* creo = dynamic_cast<CreatureObject*>(sceneObject);
 
@@ -151,6 +212,10 @@ int PlayerContainerComponent::notifyObjectInserted(SceneObject* sceneObject, Sce
 		}
 	}
 
+	if (hasNecrosisHoodUpEquipped(creo)) {
+		setHoodSuppressedWearablesVisible(creo, false);
+	}
+
 	// Jedi stuff below.
 	auto ghost = creo->getPlayerObject();
 
@@ -207,6 +272,12 @@ int PlayerContainerComponent::notifyObjectRemoved(SceneObject* sceneObject, Scen
 		if (arrangement != "mission_bag" && arrangement != "ghost" && arrangement != "bank") {
 			creo->removeWearableObject(object->asTangibleObject(), true);
 		}
+	}
+
+	if (hasNecrosisHoodUpEquipped(creo, object)) {
+		setHoodSuppressedWearablesVisible(creo, false);
+	} else if (isNecrosisHoodUpRobe(object)) {
+		setHoodSuppressedWearablesVisible(creo, true);
 	}
 
 	// Jedi stuff below.

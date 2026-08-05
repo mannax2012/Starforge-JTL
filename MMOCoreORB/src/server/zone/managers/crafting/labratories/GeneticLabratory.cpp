@@ -26,43 +26,60 @@ void GeneticLabratory::initialize(ZoneServer* server) {
 	SharedLabratory::initialize(server);
 }
 
-String GeneticLabratory::pickSpecialAttack(String a, String b, String c, String d, String e, int odds, String otherSpecial) {
-	String effectiveSpecial = "defaultattack";
-	// if no special was found in the first passed in slot pick one at random
-	if (a.isEmpty() || a == otherSpecial) {
-		int rand = System::random(3);
-		switch(rand) {
-			case 0:
-				effectiveSpecial = b;
+String GeneticLabratory::pickSpecialAttack(const String candidates[], int candidateCount, float quality, const String& otherSpecial) {
+	int eligibleCount = 0;
+
+	for (int i = 0; i < candidateCount; ++i) {
+		const String& candidate = candidates[i];
+
+		if (candidate.isEmpty() || candidate == "none" || candidate == "defaultattack" || candidate == otherSpecial)
+			continue;
+
+		bool duplicate = false;
+
+		for (int j = 0; j < i; ++j) {
+			if (candidates[j] == candidate) {
+				duplicate = true;
 				break;
-			case 1:
-				effectiveSpecial = c;
-				break;
-			case 2:
-				effectiveSpecial = d;
-				break;
-			case 3:
-				effectiveSpecial = e;
-				break;
-			default:
-				effectiveSpecial = "defaultattack";
-				break;
+			}
 		}
-	} else {
-		effectiveSpecial = a;
+
+		if (!duplicate)
+			++eligibleCount;
 	}
-	if (effectiveSpecial.contains("creature"))
-		effectiveSpecial = "defaultattack";
-	int roll = System::random(750);
-	// roll now determined by template quality
-	// we roll 0-800 if that number is < quality * 100 i.e. VHQ 100 VLQ 700 if we get less than the odds we dont stick the special
-	// VLQ has a 7% chance to stick a special VHQ has 87% chance to stick it
-	if (roll < odds ) {
-		effectiveSpecial = "defaultattack";
+
+	if (eligibleCount == 0)
+		return "defaultattack";
+
+	// Quality is inverse (1 is VHQ, 7 is VLQ).  Keep the quality benefit while
+	// raising special retention from the old 87%-7% range to 100%-40%.
+	const int chanceToKeep = Math::max(40, 100 - (int)((quality - 1.f) * 10.f));
+
+	if (System::random(100) >= chanceToKeep)
+		return "defaultattack";
+
+	int selected = System::random(eligibleCount);
+
+	for (int i = 0; i < candidateCount; ++i) {
+		const String& candidate = candidates[i];
+
+		if (candidate.isEmpty() || candidate == "none" || candidate == "defaultattack" || candidate == otherSpecial)
+			continue;
+
+		bool duplicate = false;
+
+		for (int j = 0; j < i; ++j) {
+			if (candidates[j] == candidate) {
+				duplicate = true;
+				break;
+			}
+		}
+
+		if (!duplicate && selected-- == 0)
+			return candidate;
 	}
-	if (effectiveSpecial == otherSpecial && effectiveSpecial != "defaultattack")
-		effectiveSpecial = pickSpecialAttack(effectiveSpecial,b,c,d,e,odds+100,otherSpecial);// pick another default mantis #5598 max loop count is 8 (i.e. odds starting at 100, at 8 calls it picks defaultattack
-	return effectiveSpecial;
+
+	return "defaultattack";
 }
 
 void GeneticLabratory::recalculateResistances(CraftingValues* craftingValues, float fortDiff) {
@@ -525,12 +542,25 @@ void GeneticLabratory::setInitialCraftingValues(TangibleObject* prototype, Manuf
 			ranged = true;
 	}
 
-	// Special Attacks
-	int odds = quality * 100;
+	// Special attacks are selected from both attack slots of every DNA sample.
+	// A creature can carry two unique specials, so both output slots draw from
+	// this complete pool rather than being restricted to matching input slots.
+	const String specialCandidates[] = {
+		physique->getSpecialAttackOne(),
+		physique->getSpecialAttackTwo(),
+		prowess->getSpecialAttackOne(),
+		prowess->getSpecialAttackTwo(),
+		mental->getSpecialAttackOne(),
+		mental->getSpecialAttackTwo(),
+		psychological->getSpecialAttackOne(),
+		psychological->getSpecialAttackTwo(),
+		aggression->getSpecialAttackOne(),
+		aggression->getSpecialAttackTwo()
+	};
 
-	// update crafting values, and/or experimentRow should handle resist calc changes. update crafting values should determine armor setup
-	String special1 = pickSpecialAttack(aggression->getSpecialAttackOne(), psychological->getSpecialAttackOne(), physique->getSpecialAttackOne(), mental->getSpecialAttackOne(), prowess->getSpecialAttackOne(), odds, "defaultattack");
-	String special2 = pickSpecialAttack(psychological->getSpecialAttackTwo(), prowess->getSpecialAttackTwo(), aggression->getSpecialAttackTwo(), mental->getSpecialAttackTwo(), physique->getSpecialAttackTwo(), odds, special1);
+	const int specialCandidateCount = sizeof(specialCandidates) / sizeof(specialCandidates[0]);
+	String special1 = pickSpecialAttack(specialCandidates, specialCandidateCount, quality, "defaultattack");
+	String special2 = pickSpecialAttack(specialCandidates, specialCandidateCount, quality, special1);
 
 	genetic->setSpecialAttackOne(special1);
 	genetic->setSpecialAttackTwo(special2);

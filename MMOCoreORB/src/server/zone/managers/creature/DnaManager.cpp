@@ -473,18 +473,22 @@ void DnaManager::generateSample(Creature* creature, CreatureObject* player, int 
 }
 
 float DnaManager::valueForLevel(int type, int level) {
+	// DNACharacteristics is a zero-indexed C++ vector whose first entry is
+	// level 1. Convert the game level before looking up the corresponding row.
+	int index = Math::max(0, level - 1);
+
 	float rc = 0;
 	switch(type) {
 		case HIT_LEVEL:
-			return dnaHit.get(level);
+			return dnaHit.get(index);
 		case DPS_LEVEL:
-			return dnaDPS.get(level);
+			return dnaDPS.get(index);
 		case HAM_LEVEL:
-			return dnaHam.get(level);
+			return dnaHam.get(index);
 		case ARM_LEVEL:
-			return dnaArmor.get(level);
+			return dnaArmor.get(index);
 		case REG_LEVEL:
-			return dnaRegen.get(level);
+			return dnaRegen.get(index);
 	}
 	return rc;
 }

@@ -78,14 +78,14 @@ void GeneticComponentImplementation::updateCraftingValues(CraftingValues* values
 	power = values->getCurrentValue("power");
 	hardiness = values->getCurrentValue("hardiness");
 
-	kinResist = values->getCurrentValue("dna_comp_armor_kinetic");
-	energyResist = values->getCurrentValue("dna_comp_armor_energy");
-	blastResist = values->getCurrentValue("dna_comp_armor_blast");
-	heatResist = values->getCurrentValue("dna_comp_armor_heat");
-	coldResist = values->getCurrentValue("dna_comp_armor_cold");
-	elecResist = values->getCurrentValue("dna_comp_armor_electric");
-	acidResist = values->getCurrentValue("dna_comp_armor_acid");
-	stunResist = values->getCurrentValue("dna_comp_armor_stun");
+	kinResist = Math::max(0.f, values->getCurrentValue("dna_comp_armor_kinetic"));
+	energyResist = Math::max(0.f, values->getCurrentValue("dna_comp_armor_energy"));
+	blastResist = Math::max(0.f, values->getCurrentValue("dna_comp_armor_blast"));
+	heatResist = Math::max(0.f, values->getCurrentValue("dna_comp_armor_heat"));
+	coldResist = Math::max(0.f, values->getCurrentValue("dna_comp_armor_cold"));
+	elecResist = Math::max(0.f, values->getCurrentValue("dna_comp_armor_electric"));
+	acidResist = Math::max(0.f, values->getCurrentValue("dna_comp_armor_acid"));
+	stunResist = Math::max(0.f, values->getCurrentValue("dna_comp_armor_stun"));
 	//saberResist = values->getCurrentValue("dna_comp_armor_saber");
 
 #ifdef DEBUG_GENETIC_LAB
@@ -211,6 +211,12 @@ void GeneticComponentImplementation::updateCraftingValues(CraftingValues* values
 	health = (hardiness * 15) + (dexterity * 3);
 	action = (dexterity * 15) + (intellect * 3);
 	mind = (intellect * 15) + (hardiness * 3);
+
+	// Mind is no longer displayed for pets, so apply its crafted value to the
+	// visible HAM pools. Preserve mind itself for systems that still use it.
+	const int healthMindContribution = round(mind * 0.6f);
+	health += healthMindContribution;
+	action += mind - healthMindContribution;
 
 	stamina = (dexterity * 15) + (endurance * 3);
 	willPower = (intellect * 15) + (cleverness * 3);

@@ -183,46 +183,73 @@ class PetDeed extends Deed {
 
 	@read
 	public float getKinetic() {
+		if (kinResist < 0.f)
+			return 0.f;
+
 		return kinResist;
 	}
 
 	@read
 	public float getEnergy() {
+		if (energyResist < 0.f)
+			return 0.f;
+
 		return energyResist;
 	}
 
 	@read
 	public float getBlast() {
+		if (blastResist < 0.f)
+			return 0.f;
+
 		return blastResist;
 	}
 
 	@read
 	public float getCold() {
+		if (coldResist < 0.f)
+			return 0.f;
+
 		return coldResist;
 	}
 
 	@read
 	public float getHeat() {
+		if (heatResist < 0.f)
+			return 0.f;
+
 		return heatResist;
 	}
 
 	@read
 	public float getElectric() {
+		if (elecResist < 0.f)
+			return 0.f;
+
 		return elecResist;
 	}
 
 	@read
 	public float getAcid() {
+		if (acidResist < 0.f)
+			return 0.f;
+
 		return acidResist;
 	}
 
 	@read
 	public float getStun() {
+		if (stunResist < 0.f)
+			return 0.f;
+
 		return stunResist;
 	}
 
 	@read
 	public float getSaber() {
+		if (saberResist < 0.f)
+			return 0.f;
+
 		return saberResist;
 	}
 
@@ -352,6 +379,8 @@ class PetDeed extends Deed {
 
 	@local
 	public native int calculatePetLevel();
+
+	private native void capStatsForLevel(int cappedLevel);
 
 	@local
 	public native void adjustPetLevel(CreatureObject player, CreatureObject pet);

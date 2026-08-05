@@ -171,7 +171,10 @@ public:
 				default:
 					break;
 			}
-			if (success && cl <= 75) {
+			// Eligibility was already checked against the player's DNA harvesting
+			// skill. Do not discard a successful sample solely because its source
+			// creature exceeds the old sampling ceiling; crafted pets are capped separately.
+			if (success) {
 				player->sendSystemMessage("@bio_engineer:harvest_dna_succeed");
 				creature->incDnaSampleCount();
 				award(cl,rollMod,skillMod);

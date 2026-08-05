@@ -976,7 +976,6 @@ void PetControlDeviceImplementation::fillAttributeList(AttributeListMessage* alm
 			alm->insertAttribute("challenge_level", droid->getLevel());
 			alm->insertAttribute("creature_health", droid->getBaseHAM(0));
 			alm->insertAttribute("creature_action", droid->getBaseHAM(3));
-			alm->insertAttribute("creature_mind", droid->getBaseHAM(6));
 
 			droid->fillAttributeList(alm, object);
 		}
@@ -1008,7 +1007,6 @@ void PetControlDeviceImplementation::fillAttributeList(AttributeListMessage* alm
 
 			alm->insertAttribute("creature_health", pet->getBaseHAM(0));
 			alm->insertAttribute("creature_action", pet->getBaseHAM(3));
-			alm->insertAttribute("creature_mind", pet->getBaseHAM(6));
 
 			int armor = pet->getArmor();
 			if (armor == 0)
