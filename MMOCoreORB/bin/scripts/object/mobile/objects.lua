@@ -45,6 +45,11 @@ object_mobile_shared_tusken_king_boss = SharedCreatureObjectTemplate:new {
 ObjectTemplates:addClientTemplate(object_mobile_shared_tusken_king_boss, 
 "object/mobile/shared_tusken_king_boss.iff")
 
+object_mobile_shared_atxt = SharedCreatureObjectTemplate:new {
+	clientTemplateFileName = "object/mobile/shared_atxt.iff"}
+ObjectTemplates:addClientTemplate(object_mobile_shared_atxt, 
+"object/mobile/shared_atxt.iff")
+
 object_mobile_shared_rakata_disciple = SharedCreatureObjectTemplate:new {
 	clientTemplateFileName = "object/mobile/shared_wod_third_sister.iff"}
 ObjectTemplates:addClientTemplate(object_mobile_shared_rakata_disciple, 
