@@ -32,6 +32,18 @@
 
 namespace {
 constexpr int MAX_CRAFTED_PET_LEVEL = 100;
+
+float applyTemplateResistanceBonus(float dnaResistance, float templateBonus, float resistanceCap) {
+	dnaResistance = Math::max(0.f, dnaResistance);
+	templateBonus = Math::max(0.f, templateBonus);
+
+	// DNA is authoritative once it is already above the normal cap. Otherwise,
+	// add the skin bonus and clamp the completed value to that cap.
+	if (templateBonus <= 0.f || dnaResistance >= resistanceCap)
+		return dnaResistance;
+
+	return Math::min(dnaResistance + templateBonus, resistanceCap);
+}
 }
 
 void PetDeedImplementation::loadTemplateData(SharedObjectTemplate* templateData) {
@@ -103,12 +115,7 @@ void PetDeedImplementation::fillAttributeList(AttributeListMessage* alm, Creatur
 	else
 		alm->insertAttribute("dna_comp_armor_stun", stunResist);
 
-	/*
-	if (saberResist < 0)
-		alm->insertAttribute("dna_comp_armor_saber", "Vulnerable");
-	else
-		alm->insertAttribute("dna_comp_armor_saber", saberResist);
-	*/
+	alm->insertAttribute("dna_comp_armor_saber", Math::min(80.f, Math::max(0.f, saberResist)));
 
 	StringBuffer attdisplayValue;
 	attdisplayValue << Math::getPrecision(attackSpeed, 2);
@@ -120,13 +127,13 @@ void PetDeedImplementation::fillAttributeList(AttributeListMessage* alm, Creatur
 	alm->insertAttribute("creature_damage", String::valueOf(damageMin) + " - " + String::valueOf(damageMax));
 
 	if (special1 != "none" && special1 != "defaultattack") {
-		String str = StringIdManager::instance()->getStringId(("@combat_effects:" + special1).hashCode()).toString();
+		String str = special1 == "creatureareaattack" ? "Creature Area Attack" : StringIdManager::instance()->getStringId(("@combat_effects:" + special1).hashCode()).toString();
 		alm->insertAttribute("spec_atk_1", str);
 	} else
 		alm->insertAttribute("spec_atk_1", "---");
 
 	if (special2 != "none" && special2 != "defaultattack") {
-		String str = StringIdManager::instance()->getStringId(("@combat_effects:" + special2).hashCode()).toString();
+		String str = special2 == "creatureareaattack" ? "Creature Area Attack" : StringIdManager::instance()->getStringId(("@combat_effects:" + special2).hashCode()).toString();
 		alm->insertAttribute("spec_atk_2", str);
 	} else
 		alm->insertAttribute("spec_atk_2", "---");
@@ -149,6 +156,7 @@ void PetDeedImplementation::fillAttributeList(AttributeListMessage* alm, Creatur
 
 void PetDeedImplementation::initializeTransientMembers() {
 	DeedImplementation::initializeTransientMembers();
+	applyTemplateResistanceBonuses();
 	setupAttacks();
 	setLoggingName("PetDeed");
 }
@@ -255,6 +263,8 @@ void PetDeedImplementation::updateCraftingValues(CraftingValues* values, bool fi
 		return;
 	}
 
+	setTemplateResistancesApplied(false);
+
 	// info(true) << "PetDeedImplementation::updateCraftingValues with Ingedient Slot Count: " << manufact->getSlotCount();
 
 	for (int i = 0; i < manufact->getSlotCount(); ++i) {
@@ -301,7 +311,7 @@ void PetDeedImplementation::updateCraftingValues(CraftingValues* values, bool fi
 		elecResist = round(component->getElectrical());
 		acidResist = round(component->getAcid());
 		stunResist = round(component->getStun());
-		saberResist = round(component->getSaber());
+		saberResist = Math::min(80.f, round(component->getSaber()));
 
 		// HAM
 		health = component->getHealth();
@@ -311,6 +321,11 @@ void PetDeedImplementation::updateCraftingValues(CraftingValues* values, bool fi
 		// Special Attacks
 		special1 = component->getSpecial1();
 		special2 = component->getSpecial2();
+
+		if (!Genetics::isCraftableSpecialAttack(special1))
+			special1 = "defaultattack";
+		if (!Genetics::isCraftableSpecialAttack(special2))
+			special2 = "defaultattack";
 		ranged = component->getRanged();
 
 		// Attributes
@@ -386,8 +401,54 @@ void PetDeedImplementation::updateCraftingValues(CraftingValues* values, bool fi
 		capStatsForLevel(MAX_CRAFTED_PET_LEVEL);
 	}
 
+	applyTemplateResistanceBonuses();
+
 	// setup attack map
 	setupAttacks();
+}
+
+void PetDeedImplementation::applyTemplateResistanceBonuses() {
+	// Lightsaber resistance is always a hard 80% maximum, including inherited
+	// DNA values from older samples or creature templates.
+	saberResist = Math::min(saberResist, 80.f);
+
+	if (templateResistancesApplied)
+		return;
+
+	// Template resistance bonuses are applied after level capping and stored on
+	// the deed, so the pet receives the same resistance values as the deed UI.
+	PetDeedTemplate* deedTemplate = dynamic_cast<PetDeedTemplate*>(getObjectTemplate());
+
+	if (deedTemplate != nullptr) {
+		const VectorMap<String, float>* baseResistances = deedTemplate->getBaseResistances();
+
+		for (int i = 0; i < baseResistances->size(); ++i) {
+			VectorMapEntry<String, float>* entry = &baseResistances->elementAt(i);
+			const String& resistanceType = entry->getKey();
+			float resistanceValue = entry->getValue();
+
+			if (resistanceType == "kinetic")
+				kinResist = applyTemplateResistanceBonus(kinResist, resistanceValue, 100.f);
+			else if (resistanceType == "energy")
+				energyResist = applyTemplateResistanceBonus(energyResist, resistanceValue, 100.f);
+			else if (resistanceType == "blast")
+				blastResist = applyTemplateResistanceBonus(blastResist, resistanceValue, 100.f);
+			else if (resistanceType == "heat")
+				heatResist = applyTemplateResistanceBonus(heatResist, resistanceValue, 100.f);
+			else if (resistanceType == "cold")
+				coldResist = applyTemplateResistanceBonus(coldResist, resistanceValue, 100.f);
+			else if (resistanceType == "electricity")
+				elecResist = applyTemplateResistanceBonus(elecResist, resistanceValue, 100.f);
+			else if (resistanceType == "acid")
+				acidResist = applyTemplateResistanceBonus(acidResist, resistanceValue, 100.f);
+			else if (resistanceType == "stun")
+				stunResist = applyTemplateResistanceBonus(stunResist, resistanceValue, 100.f);
+			else if (resistanceType == "lightsaber")
+				saberResist = applyTemplateResistanceBonus(saberResist, resistanceValue, 80.f);
+		}
+	}
+
+	setTemplateResistancesApplied(true);
 }
 
 void PetDeedImplementation::fillObjectMenuResponse(ObjectMenuResponse* menuResponse, CreatureObject* player) {
@@ -557,6 +618,7 @@ int PetDeedImplementation::handleObjectMenuSelect(CreatureObject* player, byte s
 			return 1;
 		}
 
+		applyTemplateResistanceBonuses();
 		pet->setPetDeed(_this.getReferenceUnsafeStaticCast());
 		pet->loadTemplateData(petTemplate);
 		pet->setCustomObjectName(StringIdManager::instance()->getStringId(*pet->getObjectName()), true);

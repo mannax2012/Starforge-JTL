@@ -4689,12 +4689,13 @@ bool AiAgentImplementation::isAttackableBy(TangibleObject* object) {
 	if (isPet() && !isMindTricked()) {
 		ManagedReference<PetControlDevice*> pcd = getControlDevice().get().castTo<PetControlDevice*>();
 
-		if (pcd != nullptr && pcd->getPetType() == PetManager::FACTIONPET && object->isNeutral())
-			return false;
-
 		ManagedReference<CreatureObject*> owner = getLinkedCreature().get();
 
 		if (owner == nullptr)
+			return false;
+
+		if (pcd != nullptr && pcd->getPetType() == PetManager::FACTIONPET && object->isNeutral() &&
+			(!owner->isPlayerCreature() || owner->getFactionStatus() != FactionStatus::OVERT))
 			return false;
 
 		return owner->isAttackableBy(object, true);
@@ -4744,13 +4745,15 @@ bool AiAgentImplementation::isAttackableBy(CreatureObject* creature) {
 	// Handle Pets - Check against owner
 	if (isPet() && !isMindTricked()) {
 		ManagedReference<PetControlDevice*> pcd = getControlDevice().get().castTo<PetControlDevice*>();
-		if (pcd != nullptr && pcd->getPetType() == PetManager::FACTIONPET && creature->isNeutral()) {
-			return false;
-		}
 
 		ManagedReference<CreatureObject*> owner = getLinkedCreature().get();
 
 		if (owner == nullptr) {
+			return false;
+		}
+
+		if (pcd != nullptr && pcd->getPetType() == PetManager::FACTIONPET && creature->isNeutral() &&
+			(!owner->isPlayerCreature() || owner->getFactionStatus() != FactionStatus::OVERT)) {
 			return false;
 		}
 

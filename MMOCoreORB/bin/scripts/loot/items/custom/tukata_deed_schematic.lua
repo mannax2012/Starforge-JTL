@@ -3,8 +3,8 @@
 tukata_deed_schematic = {
 	minimumLevel = 0,
 	maximumLevel = -1,
-	customObjectName = "Schematic: Starforge Backpack",
-	directObjectTemplate = "object/tangible/loot/loot_schematic/tukata_deed_schematic.iff",
+	--customObjectName = "Schematic: Starforge Backpack",
+	directObjectTemplate = "object/tangible/loot/loot_schematic/creature/bio_tukata_schematic.iff",
 	craftingValues = {},
 	customizationStringNames = {},
 	customizationValues = {}

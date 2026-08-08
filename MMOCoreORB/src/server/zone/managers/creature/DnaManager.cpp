@@ -421,7 +421,7 @@ void DnaManager::generateSample(Creature* creature, CreatureObject* player, int 
 	prototype->setCold(creatureTemplate->getCold());
 	prototype->setElectric(creatureTemplate->getElectricity());
 	prototype->setAcid(creatureTemplate->getAcid());
-	prototype->setSaber(creatureTemplate->getLightSaber());
+	prototype->setSaber(Math::min(creatureTemplate->getLightSaber(), 80.f));
 	prototype->setArmorRating(creatureTemplate->getArmor());
 
 	bool hasRanged = false;
@@ -455,13 +455,27 @@ void DnaManager::generateSample(Creature* creature, CreatureObject* player, int 
 		prototype->setSpecialResist(SharedWeaponObjectTemplate::LIGHTSABER);
 
 	auto attackMap = creatureTemplate->getPrimaryAttacks();
+	String specialAttackOne = "defaultattack";
+	String specialAttackTwo = "defaultattack";
 
-	if (attackMap->size() > 0) {
-		prototype->setSpecialAttackOne(String(attackMap->getCommand(0)));
-		if(attackMap->size() > 1) {
-			prototype->setSpecialAttackTwo(String(attackMap->getCommand(1)));
+	if (attackMap != nullptr) {
+		for (int i = 0; i < attackMap->size(); ++i) {
+			String attackName(attackMap->getCommand(i));
+
+			if (!Genetics::isCraftableSpecialAttack(attackName) || attackName == specialAttackOne)
+				continue;
+
+			if (specialAttackOne == "defaultattack")
+				specialAttackOne = attackName;
+			else {
+				specialAttackTwo = attackName;
+				break;
+			}
 		}
 	}
+
+	prototype->setSpecialAttackOne(specialAttackOne);
+	prototype->setSpecialAttackTwo(specialAttackTwo);
 
 	Locker locker(inventory);
 

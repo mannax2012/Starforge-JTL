@@ -29,11 +29,11 @@ public:
 	const static constexpr float BLAST_MAX = 100.0f;
 	const static constexpr float COLD_MAX = 100.0f;
 	const static constexpr float ELECTRICITY_MAX = 100.0f;
-	const static constexpr float ENERGY_MAX = 60.0f;
+	const static constexpr float ENERGY_MAX = 80.0f;
 	const static constexpr float HEAT_MAX = 100.0f;
-	const static constexpr float KINETIC_MAX = 60.0f;
+	const static constexpr float KINETIC_MAX = 80.0f;
 	const static constexpr float STUN_MAX = 100.0f;
-	//const static constexpr float LIGHTSABER_MAX = 100.f;
+	const static constexpr float LIGHTSABER_MAX = 80.0f;
 
 	// Hardiness and Fortiture
 	static float physiqueFormula(float physique, float prowess, float mental, float psychology, float aggression) {
@@ -70,6 +70,12 @@ public:
 	 */
 	static bool hasSpecialResist(DnaComponent* componentA, DnaComponent* componentB, DnaComponent* componentC, DnaComponent* componentD, DnaComponent* componentE, int type) {
 		return componentA->isSpecialResist(type) || componentB->isSpecialResist(type) || componentC->isSpecialResist(type) || componentD->isSpecialResist(type) || componentE->isSpecialResist(type);
+	}
+
+	// Filter only empty/default slots. Valid creature commands, including area
+	// attacks, may be inherited by a crafted pet.
+	static bool isCraftableSpecialAttack(const String& attackName) {
+		return !attackName.isEmpty() && attackName != "none" && attackName != "defaultattack";
 	}
 
 	/*
@@ -209,17 +215,17 @@ public:
 			dValue = getProperResistance(componentD->getStun(), componentD->isSpecialResist(type), override);
 			eValue = getProperResistance(componentE->getStun(), componentE->isSpecialResist(type), override);
 			break;
-			/*case SharedWeaponObjectTemplate::LIGHTSABER:
+			case SharedWeaponObjectTemplate::LIGHTSABER:
 	#ifdef DEBUG_GENETIC_LAB
 				Logger::console.info(true) << " - Lightsaber - ";
 	#endif
-				override = hasSpecialResist(componentA, componentB, componentC, componentD, componentE, type) || hasVulnerability(componentA->getSaber(), componentB->getSaber(), componentC->getSaber(), componentD->getSaber(), componentE->getSaber());
+				override = hasSpecialResist(componentA, componentB, componentC, componentD, componentE, type);
 				aValue = getProperResistance(componentA->getSaber(), componentA->isSpecialResist(type), override);
 				bValue = getProperResistance(componentB->getSaber(), componentB->isSpecialResist(type), override);
 				cValue = getProperResistance(componentC->getSaber(), componentC->isSpecialResist(type), override);
 				dValue = getProperResistance(componentD->getSaber(), componentD->isSpecialResist(type), override);
 				eValue = getProperResistance(componentE->getSaber(), componentE->isSpecialResist(type), override);
-				break;*/
+				break;
 		}
 
 

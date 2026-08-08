@@ -1560,14 +1560,15 @@ bool TangibleObjectImplementation::isAttackableBy(CreatureObject* creature) {
 		if (agent->isPet()) {
 			ManagedReference<PetControlDevice*> pcd = agent->getControlDevice().get().castTo<PetControlDevice*>();
 
-			if (pcd != nullptr && pcd->getPetType() == PetManager::FACTIONPET && isNeutral()) {
-				return false;
-			}
-
 			ManagedReference<CreatureObject*> owner = agent->getLinkedCreature().get();
 
 			if (owner == nullptr)
 				return false;
+
+			if (pcd != nullptr && pcd->getPetType() == PetManager::FACTIONPET && isNeutral() &&
+				(!owner->isPlayerCreature() || owner->getFactionStatus() != FactionStatus::OVERT)) {
+				return false;
+			}
 
 			return isAttackableBy(owner);
 		}

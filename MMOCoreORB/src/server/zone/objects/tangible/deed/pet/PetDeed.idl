@@ -42,6 +42,7 @@ class PetDeed extends Deed {
 	protected float acidResist;
 	protected float stunResist;
 	protected float saberResist;
+	protected boolean templateResistancesApplied;
 
 	// ham of the pet
 	protected int health;
@@ -88,6 +89,7 @@ class PetDeed extends Deed {
 		acidResist = 0;
 		stunResist = 0;
 		saberResist = -1;
+		templateResistancesApplied = false;
 		health = 10;
 		action = 10;
 		mind = 10;
@@ -117,6 +119,11 @@ class PetDeed extends Deed {
 	}
 	@dirty
 	public native void setSpecialResist(unsigned int type);
+
+	@dirty
+	public void setTemplateResistancesApplied(boolean applied) {
+		templateResistancesApplied = applied;
+	}
 
 	@read
 	public native boolean isSpecialResist(unsigned int type);
@@ -381,6 +388,8 @@ class PetDeed extends Deed {
 	public native int calculatePetLevel();
 
 	private native void capStatsForLevel(int cappedLevel);
+
+	private native void applyTemplateResistanceBonuses();
 
 	@local
 	public native void adjustPetLevel(CreatureObject player, CreatureObject pet);

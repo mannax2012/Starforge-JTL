@@ -18,6 +18,7 @@ object_tangible_deed_pet_deed_tukata_deed = object_tangible_deed_pet_deed_shared
 	generatedObjectTemplate = "mobile/pet/tukata_be.iff",
 	controlDeviceObjectTemplate = "object/intangible/pet/bio_tukata_hue.iff",
 	mobileTemplate = "tukata_be",
+	baseResistances = {"lightsaber", 30},
 }
 
 ObjectTemplates:addTemplate(object_tangible_deed_pet_deed_tukata_deed, "object/tangible/deed/pet_deed/tukata_deed.iff")

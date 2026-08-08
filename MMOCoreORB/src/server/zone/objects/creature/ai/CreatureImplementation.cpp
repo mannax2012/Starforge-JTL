@@ -147,15 +147,17 @@ void CreatureImplementation::fillAttributeList(AttributeListMessage* alm, Creatu
 		if (skillNum >= 1)
 			skillname = attackMap->getCommand(0);
 
-		if (skillname == "creatureareaattack")
-			skillname = "unknown_attack";
-		else if (skillname.isEmpty())
+		if (skillname.isEmpty())
 			skillname = "none";
 
-		StringBuffer skillMsg;
-		skillMsg << "@combat_effects:" << skillname;
+		if (skillname == "creatureareaattack") {
+			alm->insertAttribute("pet_command_18", "Creature Area Attack");
+		} else {
+			StringBuffer skillMsg;
+			skillMsg << "@combat_effects:" << skillname;
 
-		alm->insertAttribute("pet_command_18", skillMsg.toString());
+			alm->insertAttribute("pet_command_18", skillMsg.toString());
+		}
 	}
 
 	if (creaKnowledge >= 80) {
@@ -163,15 +165,17 @@ void CreatureImplementation::fillAttributeList(AttributeListMessage* alm, Creatu
 		if (skillNum >= 2)
 			skillname = attackMap->getCommand(1);
 
-		if (skillname == "creatureareaattack")
-			skillname = "unknown_attack";
-		else if (skillname.isEmpty())
+		if (skillname.isEmpty())
 			skillname = "none";
 
-		StringBuffer skillMsg;
-		skillMsg << "@combat_effects:" << skillname;
+		if (skillname == "creatureareaattack") {
+			alm->insertAttribute("pet_command_19", "Creature Area Attack");
+		} else {
+			StringBuffer skillMsg;
+			skillMsg << "@combat_effects:" << skillname;
 
-		alm->insertAttribute("pet_command_19", skillMsg.toString());
+			alm->insertAttribute("pet_command_19", skillMsg.toString());
+		}
 	}
 
 	if (creaKnowledge >= 90)

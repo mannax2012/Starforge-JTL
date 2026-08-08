@@ -3751,14 +3751,15 @@ bool CreatureObjectImplementation::isAttackableBy(CreatureObject* creature, bool
 			if (creature->isPet() && (agentCreo != nullptr && !agentCreo->isMindTricked())) {
 				ManagedReference<PetControlDevice*> pcd = creature->getControlDevice().get().castTo<PetControlDevice*>();
 
-				if (pcd != nullptr && pcd->getPetType() == PetManager::FACTIONPET && isNeutral()) {
-					return false;
-				}
-
 				ManagedReference<CreatureObject*> owner = creature->getLinkedCreature().get();
 
 				if (owner == nullptr)
 					return false;
+
+				if (pcd != nullptr && pcd->getPetType() == PetManager::FACTIONPET && isNeutral() &&
+					(!owner->isPlayerCreature() || owner->getFactionStatus() != FactionStatus::OVERT)) {
+					return false;
+				}
 
 				return isAttackableBy(owner);
 			}

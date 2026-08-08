@@ -17,7 +17,7 @@ String DnaComponentImplementation::convertSpecialAttack(String& attackName) {
 	if (attackName == "defaultattack")
 		return "@combat_effects:none";
 	else if (attackName == "creatureareaattack")
-		return "@combat_effects:unknown_attack";
+		return "Creature Area Attack";
 	else if (attackName.length() > 0)
 		return "@combat_effects:" + attackName;
 	else
@@ -93,7 +93,7 @@ void DnaComponentImplementation::fillAttributeList(AttributeListMessage* alm, Cr
 	alm->insertAttribute("dna_comp_armor_electric", resistValue(elecResist));
 	alm->insertAttribute("dna_comp_armor_acid", resistValue(acidResist));
 	alm->insertAttribute("dna_comp_armor_stun", resistValue(stunResist));
-	// alm->insertAttribute("dna_comp_armor_saber",resistValue(saberResist));
+	alm->insertAttribute("dna_comp_armor_saber",resistValue(saberResist));
 
 	// Special Attacks
 	alm->insertAttribute("spec_atk_1", convertSpecialAttack(special1));
