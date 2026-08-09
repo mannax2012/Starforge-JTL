@@ -67,17 +67,34 @@ local eventBossSpecificLoot = {
 			},
 			lootChance = 10000000,
 		},
+		{
+		groups = {
+
+			{group = "power_crystals", chance = 5000000},
+			{group = "color_crystals", 	 chance = 5000000},
+		},
+		lootChance = 10000000,
+		},
+		
 	},
 	kraytDragonQueen = {
 		{
 			groups = {
 				{group = "reinforcement_core_tusken", chance = 2500000},
-				{group = "krayt_dragon_tissue_rotten", chance = 1500000},
+				{group = "krayt_tissue_rare", chance = 1500000},
 				{group = "krayt_bone_shards_rare", chance = 2000000},
 				{group = "krayt_pearls", chance = 2000000},
 				{group = "lewt_chest_rare_drop", chance = 2000000},
 			},
 			lootChance = 10000000,
+		},
+		{
+		groups = {
+
+			{group = "krayt_pearls", chance = 5000000},
+			{group = "krayt_tissue_uncommon", 	 chance = 5000000},
+		},
+		lootChance = 10000000,
 		},
 	},
 	necrosis = {
@@ -114,6 +131,13 @@ local eventBossSpecificLoot = {
 				{group = "lewt_chest_rare_drop", chance = 2000000},
 			},
 			lootChance = 10000000,
+		},
+		{
+		groups = {
+
+			{group = "krayt_pearls", chance = 10000000},
+		},
+		lootChance = 10000000,
 		},
 	},
 }
@@ -226,7 +250,7 @@ event_boss_mother_nharra = Creature:new {
 	healStrength = 0.5,
 	healCooldown = 120,
 	templates = {"object/mobile/dressed_dathomir_nightsister_elder.iff"},
-	lootGroups = {eventBossSpecificLoot.motherNharra[1], eventBossAllLoot[1], eventBossAllLoot[2]},
+	lootGroups = {eventBossSpecificLoot.motherNharra[1], eventBossSpecificLoot.motherNharra[2], eventBossAllLoot[1], eventBossAllLoot[2]},
 	primaryWeapon = "force_sword",
 	secondaryWeapon = "force_sword_ranged",
 	conversationTemplate = "",
@@ -269,7 +293,7 @@ event_boss_necrosis = Creature:new {
 	scale = 1.18,
 	templates = {"object/mobile/necrosis.iff"},
 	outfit = "necrosis_outfit",
-	lootGroups = {eventBossSpecificLoot.necrosis[1], eventBossAllLoot[1], eventBossAllLoot[2]},
+	lootGroups = {eventBossSpecificLoot.necrosis[1], eventBossSpecificLoot.motherNharra[1], eventBossAllLoot[1], eventBossAllLoot[2]},
 	primaryWeapon = "necrosis_unstable_lightsabers",
 	lightsaberColor = 33,
 	secondaryWeapon = "unarmed",
@@ -310,7 +334,7 @@ event_boss_krayt_dragon_queen = Creature:new {
 	scale = 2.95,
 	templates = {"object/mobile/krayt_dragon_hue.iff"},
 	hues = {16, 17, 18, 19, 20, 21, 22, 23},
-	lootGroups = {eventBossSpecificLoot.kraytDragonQueen[1], eventBossAllLoot[1], eventBossAllLoot[2]},
+	lootGroups = {eventBossSpecificLoot.kraytDragonQueen[1], eventBossSpecificLoot.kraytDragonQueen[2], eventBossAllLoot[1], eventBossAllLoot[2]},
 	primaryWeapon = "unarmed",
 	secondaryWeapon = "none",
 	conversationTemplate = "",
@@ -349,7 +373,7 @@ event_boss_kharzun_sith_tukata = Creature:new {
 	scale = 2.95,
 	templates = {"object/mobile/tukata.iff"},
 	hues = {16, 17, 18, 19, 20, 21, 22, 23},
-	lootGroups = {eventBossSpecificLoot.tukataHounds[1], eventBossAllLoot[1], eventBossAllLoot[2]},
+	lootGroups = {eventBossSpecificLoot.tukataHounds[1], eventBossSpecificLoot.tukataHounds[2],  eventBossAllLoot[1], eventBossAllLoot[2]},
 	primaryWeapon = "unarmed",
 	secondaryWeapon = "none",
 	conversationTemplate = "",
@@ -388,7 +412,7 @@ event_boss_vhorak_sith_tukata = Creature:new {
 	scale = 2.95,
 	templates = {"object/mobile/tukata.iff"},
 	hues = {16, 17, 18, 19, 20, 21, 22, 23},
-	lootGroups = {eventBossSpecificLoot.tukataHounds[1], eventBossAllLoot[1], eventBossAllLoot[2]},
+	lootGroups = {eventBossSpecificLoot.tukataHounds[1], eventBossSpecificLoot.tukataHounds[2], eventBossAllLoot[1], eventBossAllLoot[2]},
 	primaryWeapon = "unarmed",
 	secondaryWeapon = "none",
 	conversationTemplate = "",
