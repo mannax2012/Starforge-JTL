@@ -43,6 +43,9 @@
 
 schematics = {
 
+	--Custom Pets
+	{path="object/draft_schematic/bio_engineer/creature/creature_tukata.iff"},
+	
 	--Bounty Hunting items
 	{path="object/draft_schematic/item/bounty_hunter/item_bh_plasma_battery.iff"},
 	{path="object/draft_schematic/item/bounty_hunter/item_bh_shock_dart.iff"},

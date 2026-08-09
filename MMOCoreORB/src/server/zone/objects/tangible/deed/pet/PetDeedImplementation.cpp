@@ -30,6 +30,22 @@
 #include "server/zone/objects/creature/events/SampleDeedTask.h"
 #include "server/zone/managers/crafting/labratories/Genetics.h"
 
+namespace {
+constexpr int MAX_CRAFTED_PET_LEVEL = 100;
+
+float applyTemplateResistanceBonus(float dnaResistance, float templateBonus, float resistanceCap) {
+	dnaResistance = Math::max(0.f, dnaResistance);
+	templateBonus = Math::max(0.f, templateBonus);
+
+	// DNA is authoritative once it is already above the normal cap. Otherwise,
+	// add the skin bonus and clamp the completed value to that cap.
+	if (templateBonus <= 0.f || dnaResistance >= resistanceCap)
+		return dnaResistance;
+
+	return Math::min(dnaResistance + templateBonus, resistanceCap);
+}
+}
+
 void PetDeedImplementation::loadTemplateData(SharedObjectTemplate* templateData) {
 	DeedImplementation::loadTemplateData(templateData);
 	PetDeedTemplate* deedData = dynamic_cast<PetDeedTemplate*>(templateData);
@@ -47,7 +63,6 @@ void PetDeedImplementation::fillAttributeList(AttributeListMessage* alm, Creatur
 	alm->insertAttribute("challenge_level", level);
 	alm->insertAttribute("creature_health", health);
 	alm->insertAttribute("creature_action", action);
-	alm->insertAttribute("creature_mind", mind);
 
 	// Armor Rating
 	if (armor == 0)
@@ -61,51 +76,46 @@ void PetDeedImplementation::fillAttributeList(AttributeListMessage* alm, Creatur
 
 	// Resistances
 	if (kinResist < 0)
-		alm->insertAttribute("dna_comp_armor_kinetic", "Vulnerable");
+		alm->insertAttribute("dna_comp_armor_kinetic", 0);
 	else
 		alm->insertAttribute("dna_comp_armor_kinetic", kinResist);
 
 	if (energyResist < 0)
-		alm->insertAttribute("dna_comp_armor_energy", "Vulnerable");
+		alm->insertAttribute("dna_comp_armor_energy", 0);
 	else
 		alm->insertAttribute("dna_comp_armor_energy", energyResist);
 
 	if (blastResist < 0)
-		alm->insertAttribute("dna_comp_armor_blast", "Vulnerable");
+		alm->insertAttribute("dna_comp_armor_blast", 0);
 	else
 		alm->insertAttribute("dna_comp_armor_blast", blastResist);
 
 	if (heatResist < 0)
-		alm->insertAttribute("dna_comp_armor_heat", "Vulnerable");
+		alm->insertAttribute("dna_comp_armor_heat", 0);
 	else
 		alm->insertAttribute("dna_comp_armor_heat", heatResist);
 
 	if (coldResist < 0)
-		alm->insertAttribute("dna_comp_armor_cold", "Vulnerable");
+		alm->insertAttribute("dna_comp_armor_cold", 0);
 	else
 		alm->insertAttribute("dna_comp_armor_cold", coldResist);
 
 	if (elecResist < 0)
-		alm->insertAttribute("dna_comp_armor_electric", "Vulnerable");
+		alm->insertAttribute("dna_comp_armor_electric", 0);
 	else
 		alm->insertAttribute("dna_comp_armor_electric", elecResist);
 
 	if (acidResist < 0)
-		alm->insertAttribute("dna_comp_armor_acid", "Vulnerable");
+		alm->insertAttribute("dna_comp_armor_acid", 0);
 	else
 		alm->insertAttribute("dna_comp_armor_acid", acidResist);
 
 	if (stunResist < 0)
-		alm->insertAttribute("dna_comp_armor_stun", "Vulnerable");
+		alm->insertAttribute("dna_comp_armor_stun", 0);
 	else
 		alm->insertAttribute("dna_comp_armor_stun", stunResist);
 
-	/*
-	if (saberResist < 0)
-		alm->insertAttribute("dna_comp_armor_saber", "Vulnerable");
-	else
-		alm->insertAttribute("dna_comp_armor_saber", saberResist);
-	*/
+	alm->insertAttribute("dna_comp_armor_saber", Math::min(80.f, Math::max(0.f, saberResist)));
 
 	StringBuffer attdisplayValue;
 	attdisplayValue << Math::getPrecision(attackSpeed, 2);
@@ -117,13 +127,13 @@ void PetDeedImplementation::fillAttributeList(AttributeListMessage* alm, Creatur
 	alm->insertAttribute("creature_damage", String::valueOf(damageMin) + " - " + String::valueOf(damageMax));
 
 	if (special1 != "none" && special1 != "defaultattack") {
-		String str = StringIdManager::instance()->getStringId(("@combat_effects:" + special1).hashCode()).toString();
+		String str = special1 == "creatureareaattack" ? "Creature Area Attack" : StringIdManager::instance()->getStringId(("@combat_effects:" + special1).hashCode()).toString();
 		alm->insertAttribute("spec_atk_1", str);
 	} else
 		alm->insertAttribute("spec_atk_1", "---");
 
 	if (special2 != "none" && special2 != "defaultattack") {
-		String str = StringIdManager::instance()->getStringId(("@combat_effects:" + special2).hashCode()).toString();
+		String str = special2 == "creatureareaattack" ? "Creature Area Attack" : StringIdManager::instance()->getStringId(("@combat_effects:" + special2).hashCode()).toString();
 		alm->insertAttribute("spec_atk_2", str);
 	} else
 		alm->insertAttribute("spec_atk_2", "---");
@@ -146,6 +156,7 @@ void PetDeedImplementation::fillAttributeList(AttributeListMessage* alm, Creatur
 
 void PetDeedImplementation::initializeTransientMembers() {
 	DeedImplementation::initializeTransientMembers();
+	applyTemplateResistanceBonuses();
 	setupAttacks();
 	setLoggingName("PetDeed");
 }
@@ -252,6 +263,8 @@ void PetDeedImplementation::updateCraftingValues(CraftingValues* values, bool fi
 		return;
 	}
 
+	setTemplateResistancesApplied(false);
+
 	// info(true) << "PetDeedImplementation::updateCraftingValues with Ingedient Slot Count: " << manufact->getSlotCount();
 
 	for (int i = 0; i < manufact->getSlotCount(); ++i) {
@@ -298,7 +311,7 @@ void PetDeedImplementation::updateCraftingValues(CraftingValues* values, bool fi
 		elecResist = round(component->getElectrical());
 		acidResist = round(component->getAcid());
 		stunResist = round(component->getStun());
-		saberResist = round(component->getSaber());
+		saberResist = Math::min(80.f, round(component->getSaber()));
 
 		// HAM
 		health = component->getHealth();
@@ -308,6 +321,11 @@ void PetDeedImplementation::updateCraftingValues(CraftingValues* values, bool fi
 		// Special Attacks
 		special1 = component->getSpecial1();
 		special2 = component->getSpecial2();
+
+		if (!Genetics::isCraftableSpecialAttack(special1))
+			special1 = "defaultattack";
+		if (!Genetics::isCraftableSpecialAttack(special2))
+			special2 = "defaultattack";
 		ranged = component->getRanged();
 
 		// Attributes
@@ -378,8 +396,59 @@ void PetDeedImplementation::updateCraftingValues(CraftingValues* values, bool fi
 		}
 	}
 
+	if (level > MAX_CRAFTED_PET_LEVEL) {
+		level = MAX_CRAFTED_PET_LEVEL;
+		capStatsForLevel(MAX_CRAFTED_PET_LEVEL);
+	}
+
+	applyTemplateResistanceBonuses();
+
 	// setup attack map
 	setupAttacks();
+}
+
+void PetDeedImplementation::applyTemplateResistanceBonuses() {
+	// Lightsaber resistance is always a hard 80% maximum, including inherited
+	// DNA values from older samples or creature templates.
+	saberResist = Math::min(saberResist, 80.f);
+
+	if (templateResistancesApplied)
+		return;
+
+	// Template resistance bonuses are applied after level capping and stored on
+	// the deed, so the pet receives the same resistance values as the deed UI.
+	PetDeedTemplate* deedTemplate = dynamic_cast<PetDeedTemplate*>(getObjectTemplate());
+
+	if (deedTemplate != nullptr) {
+		const VectorMap<String, float>* baseResistances = deedTemplate->getBaseResistances();
+
+		for (int i = 0; i < baseResistances->size(); ++i) {
+			VectorMapEntry<String, float>* entry = &baseResistances->elementAt(i);
+			const String& resistanceType = entry->getKey();
+			float resistanceValue = entry->getValue();
+
+			if (resistanceType == "kinetic")
+				kinResist = applyTemplateResistanceBonus(kinResist, resistanceValue, 100.f);
+			else if (resistanceType == "energy")
+				energyResist = applyTemplateResistanceBonus(energyResist, resistanceValue, 100.f);
+			else if (resistanceType == "blast")
+				blastResist = applyTemplateResistanceBonus(blastResist, resistanceValue, 100.f);
+			else if (resistanceType == "heat")
+				heatResist = applyTemplateResistanceBonus(heatResist, resistanceValue, 100.f);
+			else if (resistanceType == "cold")
+				coldResist = applyTemplateResistanceBonus(coldResist, resistanceValue, 100.f);
+			else if (resistanceType == "electricity")
+				elecResist = applyTemplateResistanceBonus(elecResist, resistanceValue, 100.f);
+			else if (resistanceType == "acid")
+				acidResist = applyTemplateResistanceBonus(acidResist, resistanceValue, 100.f);
+			else if (resistanceType == "stun")
+				stunResist = applyTemplateResistanceBonus(stunResist, resistanceValue, 100.f);
+			else if (resistanceType == "lightsaber")
+				saberResist = applyTemplateResistanceBonus(saberResist, resistanceValue, 80.f);
+		}
+	}
+
+	setTemplateResistancesApplied(true);
 }
 
 void PetDeedImplementation::fillObjectMenuResponse(ObjectMenuResponse* menuResponse, CreatureObject* player) {
@@ -549,6 +618,7 @@ int PetDeedImplementation::handleObjectMenuSelect(CreatureObject* player, byte s
 			return 1;
 		}
 
+		applyTemplateResistanceBonuses();
 		pet->setPetDeed(_this.getReferenceUnsafeStaticCast());
 		pet->loadTemplateData(petTemplate);
 		pet->setCustomObjectName(StringIdManager::instance()->getStringId(*pet->getObjectName()), true);
@@ -632,14 +702,58 @@ void PetDeedImplementation::setSpecialResist(unsigned int type) {
 void PetDeedImplementation::adjustPetLevel(CreatureObject* player, CreatureObject* pet) {
 	int newLevel = calculatePetLevel();
 
-	if (newLevel < 1 || newLevel > 75) {
+	if (newLevel < 1) {
 		player->sendSystemMessage("@bio_engineer:pet_sui_fix_error");
 		return;
 	}
 
-	level = newLevel;
+	level = Math::min(newLevel, MAX_CRAFTED_PET_LEVEL);
 	pet->reloadTemplate();
 	player->sendSystemMessage("@bio_engineer:pet_sui_level_fixed");
+}
+
+void PetDeedImplementation::capStatsForLevel(int cappedLevel) {
+	// Preserve the DNA-crafted stat profile when a pet exceeds the level cap.
+	// The generic DNA table is used for level calculations, not as a replacement
+	// stat block; replacing the block made strong crafted pets weaker than their
+	// pre-cap counterparts.
+	for (int i = 0; i < 4; ++i) {
+		int calculatedLevel = calculatePetLevel();
+
+		if (calculatedLevel <= cappedLevel)
+			return;
+
+		float scale = (float)cappedLevel / (float)calculatedLevel;
+
+		health = round(health * scale);
+		action = round(action * scale);
+		mind = round(mind * scale);
+		regen = round(regen * scale);
+		damageMin = round(damageMin * scale);
+		damageMax = round(damageMax * scale);
+		chanceHit = 0.19f + ((chanceHit - 0.19f) * scale);
+		fortitude = round(fortitude * scale);
+		armor = fortitude / 500;
+
+		if (!isSpecialResist(SharedWeaponObjectTemplate::KINETIC) && kinResist > 0)
+			kinResist = round(kinResist * scale);
+		if (!isSpecialResist(SharedWeaponObjectTemplate::ACID) && acidResist > 0)
+			acidResist = round(acidResist * scale);
+		if (!isSpecialResist(SharedWeaponObjectTemplate::BLAST) && blastResist > 0)
+			blastResist = round(blastResist * scale);
+		if (!isSpecialResist(SharedWeaponObjectTemplate::COLD) && coldResist > 0)
+			coldResist = round(coldResist * scale);
+		if (!isSpecialResist(SharedWeaponObjectTemplate::ELECTRICITY) && elecResist > 0)
+			elecResist = round(elecResist * scale);
+		if (!isSpecialResist(SharedWeaponObjectTemplate::ENERGY) && energyResist > 0)
+			energyResist = round(energyResist * scale);
+		if (!isSpecialResist(SharedWeaponObjectTemplate::HEAT) && heatResist > 0)
+			heatResist = round(heatResist * scale);
+		if (!isSpecialResist(SharedWeaponObjectTemplate::LIGHTSABER) && saberResist > 0)
+			saberResist = round(saberResist * scale);
+		if (!isSpecialResist(SharedWeaponObjectTemplate::STUN) && stunResist > 0)
+			stunResist = round(stunResist * scale);
+	}
 }
 
 bool PetDeedImplementation::adjustPetStats(CreatureObject* player, CreatureObject* pet) {
@@ -649,45 +763,8 @@ bool PetDeedImplementation::adjustPetStats(CreatureObject* player, CreatureObjec
 		return false;
 	}
 
-	if (oldLevel > 75) {
-		oldLevel = 75;
-	}
-
-	int ham = DnaManager::instance()->valueForLevel(DnaManager::HAM_LEVEL, oldLevel);
-	health = ham;
-	action = ham;
-	mind = ham;
-
-	regen = DnaManager::instance()->valueForLevel(DnaManager::REG_LEVEL, oldLevel);
-	float dps = DnaManager::instance()->valueForLevel(DnaManager::DPS_LEVEL, oldLevel);
-
-	damageMin = round((dps * 2.0) * 0.5);
-	attackSpeed = 2.0;
-	damageMax = round((dps * 2.0) * 1.5);
-	chanceHit = DnaManager::instance()->valueForLevel(DnaManager::HIT_LEVEL, oldLevel);
-
-	// Adjust Armor Now
-	fortitude = DnaManager::instance()->valueForLevel(DnaManager::ARM_LEVEL, oldLevel);
-	armor = fortitude / 500;
-	float effectiveness = (int)(((fortitude - (armor * 500)) / 50) * 5);
-	if (!isSpecialResist(SharedWeaponObjectTemplate::KINETIC) && kinResist > 0)
-		kinResist = effectiveness;
-	if (!isSpecialResist(SharedWeaponObjectTemplate::ACID) && acidResist > 0)
-		acidResist = effectiveness;
-	if (!isSpecialResist(SharedWeaponObjectTemplate::BLAST) && blastResist > 0)
-		blastResist = effectiveness;
-	if (!isSpecialResist(SharedWeaponObjectTemplate::COLD) && coldResist > 0)
-		coldResist = effectiveness;
-	if (!isSpecialResist(SharedWeaponObjectTemplate::ELECTRICITY) && elecResist > 0)
-		elecResist = effectiveness;
-	if (!isSpecialResist(SharedWeaponObjectTemplate::ENERGY) && energyResist > 0)
-		energyResist = effectiveness;
-	if (!isSpecialResist(SharedWeaponObjectTemplate::HEAT) && heatResist > 0)
-		heatResist = effectiveness;
-	if (!isSpecialResist(SharedWeaponObjectTemplate::LIGHTSABER) && saberResist > 0)
-		saberResist = effectiveness;
-	if (!isSpecialResist(SharedWeaponObjectTemplate::STUN) && stunResist > 0)
-		stunResist = effectiveness;
+	oldLevel = Math::min(oldLevel, MAX_CRAFTED_PET_LEVEL);
+	capStatsForLevel(oldLevel);
 
 	// ensure the stats are set
 	pet->reloadTemplate();

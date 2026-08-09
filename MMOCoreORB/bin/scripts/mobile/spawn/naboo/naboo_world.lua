@@ -154,6 +154,15 @@ naboo_world = {
 			size = 20,
 		},
 		{
+			lairTemplateName = "naboo_giant_peko_peko_eyrie_neutral_large",
+			spawnLimit = -1,
+			minDifficulty = 32,
+			maxDifficulty = 500,
+			numberToSpawn = 15,
+			weighting = 30,
+			size = 20,
+		},
+		{
 			lairTemplateName = "naboo_ikopi_herd_neutral_none",
 			spawnLimit = -1,
 			minDifficulty = 5,

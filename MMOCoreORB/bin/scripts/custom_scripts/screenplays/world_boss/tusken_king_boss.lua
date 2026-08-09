@@ -1,23 +1,53 @@
 tusken_king_bossScreenplay = ScreenPlay:new {
 	numberOfActs = 1,
-  	planet = "tatooine",
+	planet = "tatooine",
+	bossTemplate = "tusken_king_boss",
+	bossX = 37.2,
+	bossZ = 22.9,
+	bossY = 19.7,
+	bossDirection = 165,
+	bossCell = 1189182,
+	corpseDespawnDelay = 120 * 1000,
+	respawnMinimum = 7200 * 1000,
+	respawnMaximum = 10800 * 1000,
+	spawnRetryDelay = 60 * 1000,
+	spawnStateKey = "tusken_king_bossScreenplay:spawnState",
+	respawnScheduledKey = "tusken_king_bossScreenplay:respawnScheduled",
 }
 registerScreenPlay("tusken_king_bossScreenplay", true)
 
 function tusken_king_bossScreenplay:start()
 	if (isZoneEnabled(self.planet)) then
-		self:spawnMobiles()
+		-- Script events do not survive a zone restart, so begin each zone boot with
+		-- a fresh boss instead of honoring an orphaned scheduled-respawn flag.
+		writeData(self.respawnScheduledKey, 0)
+		self:spawnBoss()
 		print("Tusken King Loaded")
 	end
 end
 
-
 function tusken_king_bossScreenplay:spawnMobiles()
-		local pBoss = spawnMobile("tatooine", "tusken_king_boss", 3600, 37.2, 22.9, 19.7, 165, 1189182)
-		local creature = CreatureObject(pBoss)
-		print("Tusken King Spawned")
-		createObserver(DAMAGERECEIVED, "tusken_king_bossScreenplay", "npcDamageObserver", pBoss)    
-		createObserver(OBJECTDESTRUCTION, "tusken_king_bossScreenplay", "bossDead", pBoss)
+	self:spawnBoss()
+end
+
+function tusken_king_bossScreenplay:spawnBoss()
+	-- Use -1 because this screenplay owns the respawn timer. A positive
+	-- spawnMobile delay would create a second, independent respawn path.
+	local pBoss = spawnMobile(self.planet, self.bossTemplate, -1, self.bossX, self.bossZ, self.bossY, self.bossDirection, self.bossCell)
+
+	if (pBoss == nil) then
+		print("ERROR: Tusken King spawn failed; retrying in 60 seconds.")
+		writeData(self.respawnScheduledKey, 1)
+		createEvent(self.spawnRetryDelay, "tusken_king_bossScreenplay", "spawnBoss", "", "")
+		return 1
+	end
+
+	writeData(self.spawnStateKey, 0)
+	writeData(self.respawnScheduledKey, 0)
+	createObserver(DAMAGERECEIVED, "tusken_king_bossScreenplay", "npcDamageObserver", pBoss)
+	createObserver(OBJECTDESTRUCTION, "tusken_king_bossScreenplay", "bossDead", pBoss)
+	print("Tusken King Spawned")
+	return 0
 end
 
 function tusken_king_bossScreenplay:npcDamageObserver(bossObject, playerObject, damage)
@@ -25,16 +55,11 @@ function tusken_king_bossScreenplay:npcDamageObserver(bossObject, playerObject, 
 	local player = LuaCreatureObject(playerObject)
 	local boss = LuaCreatureObject(bossObject)
 
-	health = boss:getHAM(0)
-	action = boss:getHAM(3)
-	mind = boss:getHAM(6)
+	local health = boss:getHAM(0)
+	local maxHealth = boss:getMaxHAM(0)
 
-	maxHealth = boss:getMaxHAM(0)
-	maxAction = boss:getMaxHAM(3)
-	maxMind = boss:getMaxHAM(6)
-
-	if (((health <= (maxHealth * 0.9))) and readData("tusken_king_bossScreenplay:spawnState") == 0) then
-      			writeData("tusken_king_bossScreenplay:spawnState",1)
+	if (((health <= (maxHealth * 0.9))) and readData(self.spawnStateKey) == 0) then
+		writeData(self.spawnStateKey,1)
 			createEvent(0 * 1000, "tusken_king_bossScreenplay", "poisonbomb", playerObject, "")
  			createEvent(5 * 1000, "tusken_king_bossScreenplay", "poisonbomb", playerObject, "")
 			createEvent(10 * 1000, "tusken_king_bossScreenplay", "poisonbomb", playerObject, "")
@@ -43,8 +68,8 @@ function tusken_king_bossScreenplay:npcDamageObserver(bossObject, playerObject, 
       			CreatureObject(bossObject):playEffect("clienteffect/attacker_berserk.cef", "")
 	end
 
-	if (((health <= (maxHealth * 0.7))) and readData("tusken_king_bossScreenplay:spawnState") == 1) then
-      			writeData("tusken_king_bossScreenplay:spawnState",2)
+	if (((health <= (maxHealth * 0.7))) and readData(self.spawnStateKey) == 1) then
+		writeData(self.spawnStateKey,2)
 			createEvent(0 * 1000, "tusken_king_bossScreenplay", "poisonbomb", playerObject, "")
  			createEvent(5 * 1000, "tusken_king_bossScreenplay", "poisonbomb", playerObject, "")
 			createEvent(10 * 1000, "tusken_king_bossScreenplay", "poisonbomb", playerObject, "")
@@ -55,8 +80,8 @@ function tusken_king_bossScreenplay:npcDamageObserver(bossObject, playerObject, 
       			CreatureObject(bossObject):playEffect("clienteffect/attacker_berserk.cef", "")
 	end
 
-	if (((health <= (maxHealth * 0.5))) and readData("tusken_king_bossScreenplay:spawnState") == 2) then
-      			writeData("tusken_king_bossScreenplay:spawnState",3)
+	if (((health <= (maxHealth * 0.5))) and readData(self.spawnStateKey) == 2) then
+		writeData(self.spawnStateKey,3)
 			createEvent(0 * 1000, "tusken_king_bossScreenplay", "poisonbomb", playerObject, "")
  			createEvent(5 * 1000, "tusken_king_bossScreenplay", "poisonbomb", playerObject, "")
 			createEvent(10 * 1000, "tusken_king_bossScreenplay", "poisonbomb", playerObject, "")
@@ -67,8 +92,8 @@ function tusken_king_bossScreenplay:npcDamageObserver(bossObject, playerObject, 
       			CreatureObject(bossObject):playEffect("clienteffect/attacker_berserk.cef", "")
 	end
 
-	if (((health <= (maxHealth * 0.3))) and readData("tusken_king_bossScreenplay:spawnState") == 3) then
-      			writeData("tusken_king_bossScreenplay:spawnState",4)
+	if (((health <= (maxHealth * 0.3))) and readData(self.spawnStateKey) == 3) then
+		writeData(self.spawnStateKey,4)
 			createEvent(0 * 1000, "tusken_king_bossScreenplay", "poisonbomb", playerObject, "")
  			createEvent(5 * 1000, "tusken_king_bossScreenplay", "poisonbomb", playerObject, "")
 			createEvent(10 * 1000, "tusken_king_bossScreenplay", "poisonbomb", playerObject, "")
@@ -79,8 +104,8 @@ function tusken_king_bossScreenplay:npcDamageObserver(bossObject, playerObject, 
       			CreatureObject(bossObject):playEffect("clienteffect/attacker_berserk.cef", "")
 	end
 
-	if (((health <= (maxHealth * 0.1))) and readData("tusken_king_bossScreenplay:spawnState") == 4) then
-      			writeData("tusken_king_bossScreenplay:spawnState",5)
+	if (((health <= (maxHealth * 0.1))) and readData(self.spawnStateKey) == 4) then
+		writeData(self.spawnStateKey,5)
 			createEvent(0 * 1000, "tusken_king_bossScreenplay", "tuskenfinisher", playerObject, "")  
 				CreatureObject(playerObject):sendSystemMessage("The Tusken King roars and swings his Gaffi stick in a last ditch attempt to kill you.")			
       			CreatureObject(bossObject):playEffect("clienteffect/attacker_berserk.cef", "")
@@ -137,23 +162,21 @@ function tusken_king_bossScreenplay:spawnSupport(playerObject)
 end  
 
 function tusken_king_bossScreenplay:bossDead(pBoss)
+	if (pBoss == nil or readData(self.respawnScheduledKey) == 1) then
+		return 0
+	end
+
 	print("Tusken King has been killed.")
-	local creature = CreatureObject(pBoss)
-	local respawn = math.random(7200,10800)
-	createEvent(120 * 1000, "tusken_king_bossScreenplay", "KillBoss", pBoss, "") -- Corpse Despawn
-	createEvent(respawn * 1000, "tusken_king_bossScreenplay", "KillSpawn", pBoss, "") -- Respawn
+	writeData(self.respawnScheduledKey, 1)
+	local respawnDelay = math.random(self.respawnMinimum, self.respawnMaximum)
+
+	createEvent(self.corpseDespawnDelay, "tusken_king_bossScreenplay", "despawnBoss", pBoss, "")
+	createEvent(respawnDelay, "tusken_king_bossScreenplay", "spawnBoss", "", "")
 	return 0
 end
 
-function tusken_king_bossScreenplay:KillSpawn()
-		local pBoss = spawnMobile("tatooine", "tusken_king_boss", -1, 37.2, 22.9, 19.7, 165, 1189182)
-		print("Tusken King Respawned")
-		createObserver(DAMAGERECEIVED, "tusken_king_bossScreenplay", "npcDamageObserver", pBoss)
-		createObserver(OBJECTDESTRUCTION, "tusken_king_bossScreenplay", "bossDead", pBoss)
-end
-
-function tusken_king_bossScreenplay:KillBoss(pBoss)
-      	writeData("tusken_king_bossScreenplay:spawnState",0)  
+function tusken_king_bossScreenplay:despawnBoss(pBoss)
+	writeData(self.spawnStateKey, 0)
 	dropObserver(pBoss, OBJECTDESTRUCTION)
 	if SceneObject(pBoss) then
 		SceneObject(pBoss):destroyObjectFromWorld()

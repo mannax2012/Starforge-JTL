@@ -66,6 +66,11 @@ object_tangible_item_shared_starforge_token_generic = SharedTangibleObjectTempla
 ObjectTemplates:addClientTemplate(object_tangible_item_shared_starforge_token_generic, 
 "object/tangible/item/shared_starforge_token_generic.iff")
 
+object_tangible_item_shared_force_infused_organ = SharedTangibleObjectTemplate:new {
+	clientTemplateFileName = "object/tangible/item/shared_force_infused_organ.iff"}
+ObjectTemplates:addClientTemplate(object_tangible_item_shared_force_infused_organ, 
+"object/tangible/item/shared_force_infused_organ.iff")
+
 object_tangible_item_shared_con_drinking_glass_01 = SharedTangibleObjectTemplate:new {
 	clientTemplateFileName = "object/tangible/item/shared_con_drinking_glass_01.iff"
 	--Data below here is deprecated and loaded from the tres, keeping for easy lookups

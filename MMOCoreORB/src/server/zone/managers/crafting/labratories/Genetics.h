@@ -29,11 +29,11 @@ public:
 	const static constexpr float BLAST_MAX = 100.0f;
 	const static constexpr float COLD_MAX = 100.0f;
 	const static constexpr float ELECTRICITY_MAX = 100.0f;
-	const static constexpr float ENERGY_MAX = 60.0f;
+	const static constexpr float ENERGY_MAX = 80.0f;
 	const static constexpr float HEAT_MAX = 100.0f;
-	const static constexpr float KINETIC_MAX = 60.0f;
+	const static constexpr float KINETIC_MAX = 80.0f;
 	const static constexpr float STUN_MAX = 100.0f;
-	//const static constexpr float LIGHTSABER_MAX = 100.f;
+	const static constexpr float LIGHTSABER_MAX = 80.0f;
 
 	// Hardiness and Fortiture
 	static float physiqueFormula(float physique, float prowess, float mental, float psychology, float aggression) {
@@ -72,15 +72,16 @@ public:
 		return componentA->isSpecialResist(type) || componentB->isSpecialResist(type) || componentC->isSpecialResist(type) || componentD->isSpecialResist(type) || componentE->isSpecialResist(type);
 	}
 
-	/**
-	 * Any vulnerability int he line
-	 */
-	static bool hasVulnerability(float a, float b, float c, float d, float e) {
-		return a < 0 || b < 0 || c < 0 || d < 0 || e < 0;
+	// Filter only empty/default slots. Valid creature commands, including area
+	// attacks, may be inherited by a crafted pet.
+	static bool isCraftableSpecialAttack(const String& attackName) {
+		return !attackName.isEmpty() && attackName != "none" && attackName != "defaultattack";
 	}
 
 	/*
-		Get proper resistance for calculation
+		Get a resistance that can be inherited by a crafted pet. Negative template
+		resistances are vulnerabilities, not bonuses, and are intentionally not
+		carried into a mixed DNA result.
 	*/
 	static float getProperResistance(float value, bool special, bool override) {
 #ifdef DEBUG_GENETIC_LAB
@@ -91,16 +92,16 @@ public:
 		if (override)
 			Logger::console.info(true) << "  Override By Resist = TRUE";
 #endif
-		// Override - Special or Vuln resistance. Special Resistance uses its value directly. Vulnerable acts as special resist of -99.f.
+		if (value < 0.f)
+			return 0.f;
+
+		// A special resistance uses its source value directly. Other source
+		// resistances are suppressed when a special resistance is present.
 		if (override) {
-			// Vulnerable Resist
-			if (value < 0.f) {
-				value = -99.f;
-			// Effective Resist, overwritten to 0.f
-			} else if (!special) {
+			if (!special) {
 				value = 0.f;
 			}
-		} // else - Effective Resist not overwritten by Special or Vulnerable Resist or Special Resist
+		}
 
 #ifdef DEBUG_GENETIC_LAB
 		Logger::console.info(true) << "---- END Get Proper Resistance -- Value: " << value << " -----";
@@ -130,7 +131,7 @@ public:
 #ifdef DEBUG_GENETIC_LAB
 			Logger::console.info(true) << " - Acid - ";
 #endif
-			override = hasSpecialResist(componentA, componentB, componentC, componentD, componentE, type) || hasVulnerability(componentA->getAcid(), componentB->getAcid(), componentC->getAcid(), componentD->getAcid(), componentE->getAcid());
+			override = hasSpecialResist(componentA, componentB, componentC, componentD, componentE, type);
 			aValue = getProperResistance(componentA->getAcid(), componentA->isSpecialResist(type), override);
 			bValue = getProperResistance(componentB->getAcid(), componentB->isSpecialResist(type), override);
 			cValue = getProperResistance(componentC->getAcid(), componentC->isSpecialResist(type), override);
@@ -141,7 +142,7 @@ public:
 #ifdef DEBUG_GENETIC_LAB
 			Logger::console.info(true) << " - Blast - ";
 #endif
-			override = hasSpecialResist(componentA, componentB, componentC, componentD, componentE, type) || hasVulnerability(componentA->getBlast(), componentB->getBlast(), componentC->getBlast(), componentD->getBlast(), componentE->getBlast());
+			override = hasSpecialResist(componentA, componentB, componentC, componentD, componentE, type);
 			aValue = getProperResistance(componentA->getBlast(), componentA->isSpecialResist(type), override);
 			bValue = getProperResistance(componentB->getBlast(), componentB->isSpecialResist(type), override);
 			cValue = getProperResistance(componentC->getBlast(), componentC->isSpecialResist(type), override);
@@ -152,7 +153,7 @@ public:
 #ifdef DEBUG_GENETIC_LAB
 			Logger::console.info(true) << " - Cold - ";
 #endif
-			override = hasSpecialResist(componentA, componentB, componentC, componentD, componentE, type) || hasVulnerability(componentA->getCold(), componentB->getCold(), componentC->getCold(), componentD->getCold(), componentE->getCold());
+			override = hasSpecialResist(componentA, componentB, componentC, componentD, componentE, type);
 			aValue = getProperResistance(componentA->getCold(), componentA->isSpecialResist(type), override);
 			bValue = getProperResistance(componentB->getCold(), componentB->isSpecialResist(type), override);
 			cValue = getProperResistance(componentC->getCold(), componentC->isSpecialResist(type), override);
@@ -163,7 +164,7 @@ public:
 #ifdef DEBUG_GENETIC_LAB
 			Logger::console.info(true) << " - Electricity - ";
 #endif
-			override = hasSpecialResist(componentA, componentB, componentC, componentD, componentE, type) || hasVulnerability(componentA->getElectric(), componentB->getElectric(), componentC->getElectric(), componentD->getElectric(), componentE->getElectric());
+			override = hasSpecialResist(componentA, componentB, componentC, componentD, componentE, type);
 			aValue = getProperResistance(componentA->getElectric(), componentA->isSpecialResist(type), override);
 			bValue = getProperResistance(componentB->getElectric(), componentB->isSpecialResist(type), override);
 			cValue = getProperResistance(componentC->getElectric(), componentC->isSpecialResist(type), override);
@@ -174,7 +175,7 @@ public:
 #ifdef DEBUG_GENETIC_LAB
 			Logger::console.info(true) << " - Energy - ";
 #endif
-			override = hasSpecialResist(componentA, componentB, componentC, componentD, componentE, type) || hasVulnerability(componentA->getEnergy(), componentB->getEnergy(), componentC->getEnergy(), componentD->getEnergy(), componentE->getEnergy());
+			override = hasSpecialResist(componentA, componentB, componentC, componentD, componentE, type);
 			aValue = getProperResistance(componentA->getEnergy(), componentA->isSpecialResist(type), override);
 			bValue = getProperResistance(componentB->getEnergy(), componentB->isSpecialResist(type), override);
 			cValue = getProperResistance(componentC->getEnergy(), componentC->isSpecialResist(type), override);
@@ -185,7 +186,7 @@ public:
 #ifdef DEBUG_GENETIC_LAB
 			Logger::console.info(true) << " - Heat - ";
 #endif
-			override = hasSpecialResist(componentA, componentB, componentC, componentD, componentE, type) || hasVulnerability(componentA->getHeat(), componentB->getHeat(), componentC->getHeat(), componentD->getHeat(), componentE->getHeat());
+			override = hasSpecialResist(componentA, componentB, componentC, componentD, componentE, type);
 			aValue = getProperResistance(componentA->getHeat(), componentA->isSpecialResist(type), override);
 			bValue = getProperResistance(componentB->getHeat(), componentB->isSpecialResist(type), override);
 			cValue = getProperResistance(componentC->getHeat(), componentC->isSpecialResist(type), override);
@@ -196,7 +197,7 @@ public:
 #ifdef DEBUG_GENETIC_LAB
 			Logger::console.info(true) << " - Kinetic - ";
 #endif
-			override = hasSpecialResist(componentA, componentB, componentC, componentD, componentE, type) || hasVulnerability(componentA->getKinetic(), componentB->getKinetic(), componentC->getKinetic(), componentD->getKinetic(), componentE->getKinetic());
+			override = hasSpecialResist(componentA, componentB, componentC, componentD, componentE, type);
 			aValue = getProperResistance(componentA->getKinetic(), componentA->isSpecialResist(type), override);
 			bValue = getProperResistance(componentB->getKinetic(), componentB->isSpecialResist(type), override);
 			cValue = getProperResistance(componentC->getKinetic(), componentC->isSpecialResist(type), override);
@@ -207,28 +208,29 @@ public:
 #ifdef DEBUG_GENETIC_LAB
 			Logger::console.info(true) << " - Stun - ";
 #endif
-			override = hasSpecialResist(componentA, componentB, componentC, componentD, componentE, type) || hasVulnerability(componentA->getStun(), componentB->getStun(), componentC->getStun(), componentD->getStun(), componentE->getStun());
+			override = hasSpecialResist(componentA, componentB, componentC, componentD, componentE, type);
 			aValue = getProperResistance(componentA->getStun(), componentA->isSpecialResist(type), override);
 			bValue = getProperResistance(componentB->getStun(), componentB->isSpecialResist(type), override);
 			cValue = getProperResistance(componentC->getStun(), componentC->isSpecialResist(type), override);
 			dValue = getProperResistance(componentD->getStun(), componentD->isSpecialResist(type), override);
 			eValue = getProperResistance(componentE->getStun(), componentE->isSpecialResist(type), override);
 			break;
-			/*case SharedWeaponObjectTemplate::LIGHTSABER:
+			case SharedWeaponObjectTemplate::LIGHTSABER:
 	#ifdef DEBUG_GENETIC_LAB
 				Logger::console.info(true) << " - Lightsaber - ";
 	#endif
-				override = hasSpecialResist(componentA, componentB, componentC, componentD, componentE, type) || hasVulnerability(componentA->getSaber(), componentB->getSaber(), componentC->getSaber(), componentD->getSaber(), componentE->getSaber());
+				override = hasSpecialResist(componentA, componentB, componentC, componentD, componentE, type);
 				aValue = getProperResistance(componentA->getSaber(), componentA->isSpecialResist(type), override);
 				bValue = getProperResistance(componentB->getSaber(), componentB->isSpecialResist(type), override);
 				cValue = getProperResistance(componentC->getSaber(), componentC->isSpecialResist(type), override);
 				dValue = getProperResistance(componentD->getSaber(), componentD->isSpecialResist(type), override);
 				eValue = getProperResistance(componentE->getSaber(), componentE->isSpecialResist(type), override);
-				break;*/
+				break;
 		}
 
 
 		float result = (aValue * 0.4) + (bValue * 0.25) + (cValue * 0.05) + (dValue * 0.05) + (eValue * 0.25);
+		result = (result < 0.f) ? 0.f : result;
 		result = (result > max) ? max : result;
 
 #ifdef DEBUG_GENETIC_LAB

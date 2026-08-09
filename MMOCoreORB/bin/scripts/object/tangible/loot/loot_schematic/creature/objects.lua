@@ -1,0 +1,4 @@
+object_tangible_loot_loot_schematic_creature_shared_bio_tukata_schematic = SharedTangibleObjectTemplate:new {
+	clientTemplateFileName = "object/tangible/loot/loot_schematic/creature/shared_bio_tukata_schematic.iff"}
+ObjectTemplates:addClientTemplate(object_tangible_loot_loot_schematic_creature_shared_bio_tukata_schematic, 
+"object/tangible/loot/loot_schematic/creature/shared_bio_tukata_schematic.iff")

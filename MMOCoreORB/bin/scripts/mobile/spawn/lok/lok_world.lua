@@ -109,6 +109,15 @@ lok_world = {
 			size = 15,
 		},
 		{
+			lairTemplateName = "lok_enraged_kimogila_lair_neutral_medium_boss_01",
+			spawnLimit = -1,
+			minDifficulty = 91,
+			maxDifficulty = 500,
+			numberToSpawn = 15,
+			weighting = 20,
+			size = 15,
+		},
+		{
 			lairTemplateName = "lok_langlatch_pack_neutral_none",
 			spawnLimit = -1,
 			minDifficulty = 60,

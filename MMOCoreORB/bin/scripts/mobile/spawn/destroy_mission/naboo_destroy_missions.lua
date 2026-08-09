@@ -218,6 +218,12 @@ naboo_destroy_missions = {
 			maxDifficulty = 36,
 			size = 35,
 		},
+		{
+			lairTemplateName = "naboo_giant_peko_peko_eyrie_neutral_large",
+			minDifficulty = 32,
+			maxDifficulty = 36,
+			size = 35,
+		},
 	}
 }
 

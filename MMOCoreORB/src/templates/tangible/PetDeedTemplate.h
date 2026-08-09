@@ -14,10 +14,11 @@ class PetDeedTemplate : public DeedTemplate {
 private:
 	String controlDeviceObjectTemplate;
 	String mobileTemplate;
+	VectorMap<String, float> baseResistances;
 
 public:
 	PetDeedTemplate() {
-
+		baseResistances.setNullValue(0.f);
 	}
 
 	~PetDeedTemplate() {
@@ -28,6 +29,20 @@ public:
 		DeedTemplate::readObject(templateData);
 		controlDeviceObjectTemplate = templateData->getStringField("controlDeviceObjectTemplate");
 		mobileTemplate = templateData->getStringField("mobileTemplate");
+
+		baseResistances.removeAll();
+		LuaObject resists = templateData->getObjectField("baseResistances");
+
+		if (resists.isValidTable()) {
+			for (int i = 1; i < resists.getTableSize(); i += 2) {
+				String resistanceType = resists.getStringAt(i);
+				float resistanceValue = resists.getFloatAt(i + 1);
+
+				baseResistances.put(resistanceType, resistanceValue);
+			}
+		}
+
+		resists.pop();
     }
 
 	String getControlDeviceObjectTemplate() {
@@ -36,6 +51,14 @@ public:
 
 	String getMobileTemplate() {
 		return mobileTemplate;
+	}
+
+	const VectorMap<String, float>* getBaseResistances() const {
+		return &baseResistances;
+	}
+
+	float getBaseResistance(const String& resistanceType) const {
+		return baseResistances.get(resistanceType);
 	}
 
 };

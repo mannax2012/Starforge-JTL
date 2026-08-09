@@ -247,6 +247,10 @@ void PetControlDeviceImplementation::callObject(CreatureObject* player, bool ini
 		maxPets = 3;
 	}
 
+	auto isWalkerPet = [](const CreatureTemplate* creatureTemplate) {
+		return creatureTemplate != nullptr && (creatureTemplate->getTemplateName() == "at_st" || creatureTemplate->getTemplateName() == "at_xt");
+	};
+
 	for (int i = 0; i < ghost->getActivePetsSize(); ++i) {
 		ManagedReference<AiAgent*> object = ghost->getActivePet(i);
 
@@ -254,7 +258,7 @@ void PetControlDeviceImplementation::callObject(CreatureObject* player, bool ini
 			if (object->isCreature() && petType == PetManager::CREATUREPET) {
 				const CreatureTemplate* activePetTemplate = object->getCreatureTemplate();
 
-				if (activePetTemplate == nullptr || activePetTemplate->getTemplateName() == "at_st")
+				if (activePetTemplate == nullptr || isWalkerPet(activePetTemplate))
 					continue;
 
 				if (++currentlySpawned >= maxPets) {
@@ -277,10 +281,10 @@ void PetControlDeviceImplementation::callObject(CreatureObject* player, bool ini
 				const CreatureTemplate* activePetTemplate = object->getCreatureTemplate();
 				const CreatureTemplate* callingPetTemplate = pet->getCreatureTemplate();
 
-				if (activePetTemplate == nullptr || callingPetTemplate == nullptr || activePetTemplate->getTemplateName() != "at_st")
+				if (activePetTemplate == nullptr || callingPetTemplate == nullptr || !isWalkerPet(activePetTemplate))
 					continue;
 
-				if (++currentlySpawned >= maxPets || (activePetTemplate->getTemplateName() == "at_st" && callingPetTemplate->getTemplateName() == "at_st")) {
+				if (++currentlySpawned >= maxPets || (isWalkerPet(activePetTemplate) && isWalkerPet(callingPetTemplate))) {
 					player->sendSystemMessage("@pet/pet_menu:at_max"); // You already have the maximum number of pets of this type that you can call.
 					return;
 				}
@@ -976,7 +980,6 @@ void PetControlDeviceImplementation::fillAttributeList(AttributeListMessage* alm
 			alm->insertAttribute("challenge_level", droid->getLevel());
 			alm->insertAttribute("creature_health", droid->getBaseHAM(0));
 			alm->insertAttribute("creature_action", droid->getBaseHAM(3));
-			alm->insertAttribute("creature_mind", droid->getBaseHAM(6));
 
 			droid->fillAttributeList(alm, object);
 		}
@@ -1008,7 +1011,6 @@ void PetControlDeviceImplementation::fillAttributeList(AttributeListMessage* alm
 
 			alm->insertAttribute("creature_health", pet->getBaseHAM(0));
 			alm->insertAttribute("creature_action", pet->getBaseHAM(3));
-			alm->insertAttribute("creature_mind", pet->getBaseHAM(6));
 
 			int armor = pet->getArmor();
 			if (armor == 0)

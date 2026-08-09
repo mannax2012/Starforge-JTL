@@ -52,6 +52,7 @@ includeFile("mobile/vendor/serverobjects.lua")
 -- Server Objects
 includeFile("mobile/tusken_king_boss.lua")
 includeFile("mobile/rakata_disciple.lua")
+includeFile("mobile/atxt.lua")
 includeFile("mobile/21b_surgical_droid_crafted.lua")
 includeFile("mobile/21b_surgical_droid.lua")
 includeFile("mobile/3po_protocol.lua")

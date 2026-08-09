@@ -399,6 +399,11 @@ void SuiManager::handleCharacterBuilderSelectItem(CreatureObject* player, SuiBox
 						modName = "(Combat Medic)";
 						apron->addSkillMod(SkillModManager::WEARABLE, "combat_medicine_assembly", 25);
 						apron->addSkillMod(SkillModManager::WEARABLE, "combat_medicine_experimentation", 25);
+					} else if(templatePath == "crafting_apron_bio_engineer") {
+						modName = "(Bio-Engineer)";
+						apron->addSkillMod(SkillModManager::WEARABLE, "bio_engineer_assembly", 25);
+						apron->addSkillMod(SkillModManager::WEARABLE, "bio_engineer_experimentation", 25);
+						apron->addSkillMod(SkillModManager::WEARABLE, "dna_harvesting", 25);
 					}
 
 					UnicodeString apronName = "Crafting Apron " + modName;

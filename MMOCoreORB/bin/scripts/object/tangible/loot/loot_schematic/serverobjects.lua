@@ -48,6 +48,7 @@
 includeFile("tangible/loot/loot_schematic/lightsaber/serverobjects.lua")
 includeFile("tangible/loot/loot_schematic/vehicle/serverobjects.lua")
 includeFile("tangible/loot/loot_schematic/clothing/serverobjects.lua")
+includeFile("tangible/loot/loot_schematic/creature/serverobjects.lua")
 includeFile("tangible/loot/loot_schematic/structure/serverobjects.lua")
 
 includeFile("tangible/loot/loot_schematic/lance_trando_pike_schematic.lua")

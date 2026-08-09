@@ -5,6 +5,8 @@ randomWorldBossEvent = ScreenPlay:new {
 	initialDelayMs = 60 * 1000,
 	corpseCleanupMs = 120 * 1000,
 	spawnChance = 35,
+	twinHoundBondRange = 10,
+	twinHoundDamageReduction = 0.35,
 	bossConfigs = {
 		{
 			id = "kraytbone_chieftain",
@@ -36,6 +38,25 @@ randomWorldBossEvent = ScreenPlay:new {
 					maxX = 7480,
 					minY = 4420,
 					maxY = 4620,
+					heading = 0,
+					cell = 0,
+					useWorldFloor = true,
+				},
+			},
+		},
+		{
+			id = "kharzun_sith_tukata",
+			displayName = "Kharzun, Hound of the Sith",
+			template = "event_boss_kharzun_sith_tukata",
+			twinTemplate = "event_boss_vhorak_sith_tukata",
+			handler = "handleKharzunSithTukataDamage",
+			spawnAreas = {
+				{
+					planet = "dantooine",
+					minX = 4050,
+					maxX = 4300,
+					minY = -600,
+					maxY = -350,
 					heading = 0,
 					cell = 0,
 					useWorldFloor = true,
@@ -91,6 +112,24 @@ randomWorldBossEvent = ScreenPlay:new {
 					minY = -140,
 					maxY = -70,
 					heading = 0,
+					cell = 0,
+					useWorldFloor = true,
+				},
+			},
+		},
+		{
+			id = "pride_of_mandalore",
+			displayName = "Pride of Mandalore",
+			template = "event_boss_pride_of_mandalore",
+			handler = "handlePrideOfMandaloreDamage",
+			spawnAreas = {
+				{
+					planet = "endor",
+					minX = -4740,
+					maxX = -4620,
+					minY = 4260,
+					maxY = 4385,
+					heading = 180,
 					cell = 0,
 					useWorldFloor = true,
 				},
@@ -257,7 +296,7 @@ function randomWorldBossEvent:onBossDamaged(pBoss, pPlayer)
 		return 0
 	end
 
-	if self:getActiveBossID() ~= SceneObject(pBoss):getObjectID() then
+	if not self:isActiveBossMember(SceneObject(pBoss):getObjectID()) then
 		return 0
 	end
 
@@ -273,7 +312,14 @@ function randomWorldBossEvent:onBossDamaged(pBoss, pPlayer)
 		return 0
 	end
 
-	return handler(self, pBoss, self:getCombatTarget(pBoss, pPlayer))
+	local pTarget = self:getCombatTarget(pBoss, pPlayer)
+
+	if config.twinTemplate ~= nil then
+		self:summonTwinHound(pBoss, pTarget, config)
+		self:applyTwinHoundBond(pBoss, pTarget)
+	end
+
+	return handler(self, pBoss, pTarget)
 end
 
 function randomWorldBossEvent:onBossKilled(pBoss)
@@ -284,9 +330,25 @@ function randomWorldBossEvent:onBossKilled(pBoss)
 	local bossID = SceneObject(pBoss):getObjectID()
 	local config = self:getActiveBossConfig()
 	local planetName = readStringData(self:getGlobalKey("activeBossPlanet"))
+	local pTwin = self:getTwinHound(pBoss)
+
+	if config ~= nil and config.twinTemplate ~= nil and pTwin ~= nil then
+		local twinID = SceneObject(pTwin):getObjectID()
+
+		self:cleanupTrackedSupport(bossID)
+		self:breakTwinHoundBond(bossID, twinID)
+		writeData(self:getGlobalKey("activeBossID"), twinID)
+		self:broadcastGalaxy("One of the Sith hounds has been slain. The survivor's bonded hide has softened.", pBoss)
+		createEvent(self.corpseCleanupMs, self.screenplayName, "cleanupBossCorpse", pBoss, "")
+		return 0
+	end
 
 	if config ~= nil then
-		self:broadcastGalaxy(self:getDefeatedAnnouncement(config, planetName), pBoss)
+		if config.twinTemplate ~= nil then
+			self:broadcastGalaxy("Kharzun and Vhorak, Hounds of the Sith, have been slain on " .. self:formatPlanetName(planetName) .. ". Congratulations to the adventurers who defeated this menace!", pBoss)
+		else
+			self:broadcastGalaxy(self:getDefeatedAnnouncement(config, planetName), pBoss)
+		end
 	end
 
 	self:cleanupTrackedSupport(bossID)
@@ -310,15 +372,182 @@ function randomWorldBossEvent:cleanupBossCorpse(pBoss)
 	return 0
 end
 
-function randomWorldBossEvent:handleKraytboneChieftainDamage(pBoss, pTarget)
+function randomWorldBossEvent:isActiveBossMember(bossID)
+	return bossID == self:getActiveBossID() or bossID == self:getActiveBossTwinID()
+end
+
+function randomWorldBossEvent:summonTwinHound(pBoss, pTarget, config)
+	-- The second hound is a single encounter opener. Once either hound dies,
+	-- activeBossTwinID is intentionally cleared so the survivor can be the active
+	-- boss; do not mistake that state for permission to summon another Vhorak.
+	if pBoss == nil or config == nil or config.twinTemplate == nil
+		or self:getActiveBossTwinID() ~= 0
+		or readData(self:getGlobalKey("twinHoundSummoned")) == 1 then
+		return nil
+	end
+
 	local boss = LuaCreatureObject(pBoss)
+
+	if boss == nil then
+		return nil
+	end
+
+	local zoneName = SceneObject(pBoss):getZoneName()
+	local cellID = SceneObject(pBoss):getParentID()
+	local pTwin = spawnMobile(
+		zoneName,
+		config.twinTemplate,
+		0,
+		boss:getPositionX() + 8,
+		boss:getPositionZ(),
+		boss:getPositionY(),
+		180,
+		cellID
+	)
+
+	if pTwin == nil then
+		return nil
+	end
+
+	local bossID = SceneObject(pBoss):getObjectID()
+	local twinID = SceneObject(pTwin):getObjectID()
+
+	writeData(self:getGlobalKey("activeBossTwinID"), twinID)
+	writeData(self:getGlobalKey("twinHoundSummoned"), 1)
+	writeData(self:getBossKey(bossID, "twinID"), twinID)
+	writeData(self:getBossKey(twinID, "twinID"), bossID)
+	writeData(self:getBossKey(twinID, "phase"), 0)
+	writeData(self:getBossKey(twinID, "supportCount"), 0)
+	self:initializeTwinHoundPools(pBoss)
+	self:initializeTwinHoundPools(pTwin)
+
+	createObserver(DAMAGERECEIVED, self.screenplayName, "onBossDamaged", pTwin)
+	createObserver(OBJECTDESTRUCTION, self.screenplayName, "onBossKilled", pTwin)
+
+	spatialChat(pBoss, "A second hound answers my call!")
+	self:sendMessageToGroup(pTarget, "Kharzun howls. An answering howl splits the air as Vhorak comes to his aid!")
+
+	if pTarget ~= nil then
+		CreatureObject(pTwin):engageCombat(pTarget)
+	end
+
+	return pTwin
+end
+
+function randomWorldBossEvent:getTwinHound(pBoss)
+	if pBoss == nil then
+		return nil
+	end
+
+	local twinID = readData(self:getBossKey(SceneObject(pBoss):getObjectID(), "twinID"))
+
+	if twinID == 0 then
+		return nil
+	end
+
+	return getSceneObject(twinID)
+end
+
+function randomWorldBossEvent:applyTwinHoundBond(pBoss, pTarget)
+	local pTwin = self:getTwinHound(pBoss)
+
+	if pTwin == nil then
+		return
+	end
+
+	local bonded = SceneObject(pBoss):isInRangeWithObject(pTwin, self.twinHoundBondRange)
+	local bondKey = self:getGlobalKey("twinHoundBonded")
+	local wasBonded = readData(bondKey) == 1
+
+	if bonded then
+		self:reduceTwinHoundDamage(pBoss)
+
+		if not wasBonded then
+			writeData(bondKey, 1)
+			CreatureObject(pBoss):playEffect("clienteffect/pl_force_resist_states_self.cef", "")
+			CreatureObject(pTwin):playEffect("clienteffect/pl_force_resist_states_self.cef", "")
+			self:sendMessageToGroup(pTarget, "The twin hounds press together. Their Sith-forged hides harden, reducing incoming damage. Draw them more than 10m apart!")
+		end
+	elseif wasBonded then
+		writeData(bondKey, 0)
+		self:sendMessageToGroup(pTarget, "The twin hounds lose their shared protection as they are pulled apart.")
+	end
+end
+
+function randomWorldBossEvent:initializeTwinHoundPools(pHound)
+	if pHound == nil then
+		return
+	end
+
+	local houndID = SceneObject(pHound):getObjectID()
+	writeData(self:getBossKey(houndID, "lastHealth"), CreatureObject(pHound):getHAM(0))
+	writeData(self:getBossKey(houndID, "lastAction"), CreatureObject(pHound):getHAM(3))
+	writeData(self:getBossKey(houndID, "lastMind"), CreatureObject(pHound):getHAM(6))
+end
+
+function randomWorldBossEvent:reduceTwinHoundDamage(pHound)
+	if pHound == nil then
+		return
+	end
+
+	local houndID = SceneObject(pHound):getObjectID()
+	local pools = {
+		{0, "lastHealth"},
+		{3, "lastAction"},
+		{6, "lastMind"},
+	}
+
+	for i = 1, #pools, 1 do
+		local pool = pools[i][1]
+		local key = self:getBossKey(houndID, pools[i][2])
+		local lastPool = readData(key)
+		local currentPool = CreatureObject(pHound):getHAM(pool)
+
+		if lastPool > currentPool then
+			local restoredDamage = math.floor((lastPool - currentPool) * self.twinHoundDamageReduction)
+
+			if restoredDamage > 0 then
+				CreatureObject(pHound):setHAM(pool, math.min(CreatureObject(pHound):getMaxHAM(pool), currentPool + restoredDamage))
+			end
+		end
+
+		writeData(key, CreatureObject(pHound):getHAM(pool))
+	end
+end
+
+function randomWorldBossEvent:breakTwinHoundBond(firstHoundID, secondHoundID)
+	deleteData(self:getGlobalKey("activeBossTwinID"))
+	deleteData(self:getGlobalKey("twinHoundBonded"))
+
+	for _, houndID in ipairs({firstHoundID, secondHoundID}) do
+		deleteData(self:getBossKey(houndID, "twinID"))
+		deleteData(self:getBossKey(houndID, "lastHealth"))
+		deleteData(self:getBossKey(houndID, "lastAction"))
+		deleteData(self:getBossKey(houndID, "lastMind"))
+	end
+end
+
+function randomWorldBossEvent:getBossHealthDamage(pBoss)
+	local boss = LuaCreatureObject(pBoss)
+
+	if boss == nil then
+		return nil, 0, 0
+	end
+
+	-- Compare against the boss's full max health; health wounds reduce HAM and count as damage here.
+	local maxHealth = boss:getMaxHAM(0)
+	local healthDamage = math.max(0, maxHealth - boss:getHAM(0))
+
+	return boss, maxHealth, healthDamage
+end
+
+function randomWorldBossEvent:handleKraytboneChieftainDamage(pBoss, pTarget)
+	local boss, maxHealth, healthDamage = self:getBossHealthDamage(pBoss)
 
 	if boss == nil then
 		return 0
 	end
 
-	local health = boss:getHAM(0)
-	local maxHealth = boss:getMaxHAM(0)
 	local phaseKey = self:getBossKey(SceneObject(pBoss):getObjectID(), "phase")
 	local phase = readData(phaseKey)
 
@@ -326,33 +555,33 @@ function randomWorldBossEvent:handleKraytboneChieftainDamage(pBoss, pTarget)
 		return 0
 	end
 
-	if health <= (maxHealth * 0.9) and phase == 0 then
+	if healthDamage >= (maxHealth * 0.1) and phase == 0 then
 		writeData(phaseKey, 1)
 		spatialChat(pBoss, "The Kraytbone will strip your bones in the sand!")
 		self:scheduleTuskenPoisonVolley(pTarget)
 		CreatureObject(pBoss):playEffect("clienteffect/attacker_berserk.cef", "")
-	elseif health <= (maxHealth * 0.7) and phase == 1 then
+	elseif healthDamage >= (maxHealth * 0.3) and phase == 1 then
 		writeData(phaseKey, 2)
 		spatialChat(pBoss, "Bloodguards, drive them into the dust!")
 		self:scheduleTuskenPoisonVolley(pTarget)
 		self:spawnTuskenSupport(pBoss, pTarget)
 		self:sendMessageToGroup(pTarget, "You hear footsteps approaching!")
 		CreatureObject(pBoss):playEffect("clienteffect/attacker_berserk.cef", "")
-	elseif health <= (maxHealth * 0.5) and phase == 2 then
+	elseif healthDamage >= (maxHealth * 0.5) and phase == 2 then
 		writeData(phaseKey, 3)
 		spatialChat(pBoss, "More of my tribe come for your heads!")
 		self:scheduleTuskenPoisonVolley(pTarget)
 		self:spawnTuskenSupport(pBoss, pTarget)
 		self:sendMessageToGroup(pTarget, "You hear more footsteps approaching!")
 		CreatureObject(pBoss):playEffect("clienteffect/attacker_berserk.cef", "")
-	elseif health <= (maxHealth * 0.3) and phase == 3 then
+	elseif healthDamage >= (maxHealth * 0.7) and phase == 3 then
 		writeData(phaseKey, 4)
 		spatialChat(pBoss, "The dunes themselves rise against you!")
 		self:scheduleTuskenPoisonVolley(pTarget)
 		self:spawnTuskenSupport(pBoss, pTarget)
 		self:sendMessageToGroup(pTarget, "More footsteps echo in the tunnels.")
 		CreatureObject(pBoss):playEffect("clienteffect/attacker_berserk.cef", "")
-	elseif health <= (maxHealth * 0.1) and phase == 4 then
+	elseif healthDamage >= (maxHealth * 0.9) and phase == 4 then
 		writeData(phaseKey, 5)
 		spatialChat(pBoss, "I will bury you beneath the krayt graves!")
 		self:sendMessageToGroup(pTarget, "The Kraytbone Chieftain roars and charges in a final killing rush.")
@@ -374,14 +603,12 @@ function randomWorldBossEvent:handleVx9WardenPrimeDamage(pBoss, pTarget)
 		return 0
 	end
 
-	local boss = LuaCreatureObject(pBoss)
+	local boss, maxHealth, healthDamage = self:getBossHealthDamage(pBoss)
 
 	if boss == nil then
 		return 0
 	end
 
-	local health = boss:getHAM(0)
-	local maxHealth = boss:getMaxHAM(0)
 	local phaseKey = self:getBossKey(bossID, "phase")
 	local phase = readData(phaseKey)
 
@@ -389,14 +616,14 @@ function randomWorldBossEvent:handleVx9WardenPrimeDamage(pBoss, pTarget)
 		return 0
 	end
 
-	if health <= (maxHealth * 0.75) and phase == 0 then
+	if healthDamage >= (maxHealth * 0.25) and phase == 0 then
 		writeData(phaseKey, 1)
 		spatialChat(pBoss, "Threat threshold exceeded. Shield lattice online.")
 		self:activateWardenShield(pBoss, pTarget, {
 			{"ig88_factory_droideka", -4, -2, 60},
 			{"ig88_factory_droideka", 4, -2, -60},
 		})
-	elseif health <= (maxHealth * 0.5) and phase == 1 then
+	elseif healthDamage >= (maxHealth * 0.5) and phase == 1 then
 		writeData(phaseKey, 2)
 		spatialChat(pBoss, "Escalating to full perimeter lockdown.")
 		self:activateWardenShield(pBoss, pTarget, {
@@ -404,7 +631,7 @@ function randomWorldBossEvent:handleVx9WardenPrimeDamage(pBoss, pTarget)
 			{"ig88_factory_droideka", 5, 0, -45},
 			{"ig88_factory_flame_droid", 0, 6, 180},
 		})
-	elseif health <= (maxHealth * 0.25) and phase == 2 then
+	elseif healthDamage >= (maxHealth * 0.75) and phase == 2 then
 		writeData(phaseKey, 3)
 		spatialChat(pBoss, "Primary chassis compromised. All units converge.")
 		self:activateWardenShield(pBoss, pTarget, {
@@ -419,15 +646,13 @@ function randomWorldBossEvent:handleVx9WardenPrimeDamage(pBoss, pTarget)
 end
 
 function randomWorldBossEvent:handleKraytDragonQueenDamage(pBoss, pTarget)
-	local boss = LuaCreatureObject(pBoss)
+	local boss, maxHealth, healthDamage = self:getBossHealthDamage(pBoss)
 
 	if boss == nil then
 		return 0
 	end
 
 	local bossID = SceneObject(pBoss):getObjectID()
-	local health = boss:getHAM(0)
-	local maxHealth = boss:getMaxHAM(0)
 	local phaseKey = self:getBossKey(bossID, "phase")
 	local phase = readData(phaseKey)
 
@@ -435,12 +660,12 @@ function randomWorldBossEvent:handleKraytDragonQueenDamage(pBoss, pTarget)
 		return 0
 	end
 
-	if health <= (maxHealth * 0.9) and phase == 0 then
+	if healthDamage >= (maxHealth * 0.1) and phase == 0 then
 		writeData(phaseKey, 1)
 		CreatureObject(pBoss):playEffect("clienteffect/combat_special_defender_intimidate.cef", "")
 		self:sendMessageToGroup(pTarget, "The Krayt Dragon Queen unleashes a terror-shaking roar!")
 		self:applyGroupIntimidate(pBoss, pTarget, 18, nil)
-	elseif health <= (maxHealth * 0.75) and phase == 1 then
+	elseif healthDamage >= (maxHealth * 0.25) and phase == 1 then
 		writeData(phaseKey, 2)
 		CreatureObject(pBoss):playEffect("clienteffect/attacker_berserk.cef", "")
 		self:sendMessageToGroup(pTarget, "Venom sprays from the Krayt Dragon Queen's maw!")
@@ -449,7 +674,7 @@ function randomWorldBossEvent:handleKraytDragonQueenDamage(pBoss, pTarget)
 			{"event_boss_krayt_whelp", 10, -5, -20},
 			{"event_boss_krayt_whelp", -10, -5, 20},
 		})
-	elseif health <= (maxHealth * 0.5) and phase == 2 then
+	elseif healthDamage >= (maxHealth * 0.5) and phase == 2 then
 		writeData(phaseKey, 3)
 		CreatureObject(pBoss):playEffect("clienteffect/combat_special_defender_intimidate.cef", "")
 		self:sendMessageToGroup(pTarget, "The Krayt Dragon Queen bellows and her brood surges forward!")
@@ -459,7 +684,7 @@ function randomWorldBossEvent:handleKraytDragonQueenDamage(pBoss, pTarget)
 			{"event_boss_krayt_whelp", 8, -7, -30},
 			{"event_boss_krayt_whelp", -8, -7, 30},
 		})
-	elseif health <= (maxHealth * 0.3) and phase == 3 then
+	elseif healthDamage >= (maxHealth * 0.7) and phase == 3 then
 		writeData(phaseKey, 4)
 		CreatureObject(pBoss):playEffect("clienteffect/attacker_berserk.cef", "")
 		self:sendMessageToGroup(pTarget, "Toxic clouds billow out across the battlefield!")
@@ -468,7 +693,7 @@ function randomWorldBossEvent:handleKraytDragonQueenDamage(pBoss, pTarget)
 			{"event_boss_krayt_broodling", 7, 8, -45},
 			{"event_boss_krayt_broodling", -7, 8, 45},
 		})
-	elseif health <= (maxHealth * 0.1) and phase == 4 then
+	elseif healthDamage >= (maxHealth * 0.9) and phase == 4 then
 		writeData(phaseKey, 5)
 		CreatureObject(pBoss):playEffect("clienteffect/combat_special_defender_intimidate.cef", "")
 		self:sendMessageToGroup(pTarget, "The Krayt Dragon Queen enters a furious last stand!")
@@ -486,16 +711,15 @@ function randomWorldBossEvent:handleKraytDragonQueenDamage(pBoss, pTarget)
 	return 0
 end
 
-function randomWorldBossEvent:handleNecrosisDamage(pBoss, pTarget)
-	local boss = LuaCreatureObject(pBoss)
+-- Kharzun currently reuses the Krayt Queen encounter mechanics and temporary support templates.
+function randomWorldBossEvent:handleKharzunSithTukataDamage(pBoss, pTarget)
+	local boss, maxHealth, healthDamage = self:getBossHealthDamage(pBoss)
 
 	if boss == nil then
 		return 0
 	end
 
 	local bossID = SceneObject(pBoss):getObjectID()
-	local health = boss:getHAM(0)
-	local maxHealth = boss:getMaxHAM(0)
 	local phaseKey = self:getBossKey(bossID, "phase")
 	local phase = readData(phaseKey)
 
@@ -503,11 +727,77 @@ function randomWorldBossEvent:handleNecrosisDamage(pBoss, pTarget)
 		return 0
 	end
 
-	if health <= (maxHealth * 0.9) and phase == 0 then
+	if healthDamage >= (maxHealth * 0.1) and phase == 0 then
+		writeData(phaseKey, 1)
+		CreatureObject(pBoss):playEffect("clienteffect/combat_special_defender_intimidate.cef", "")
+		self:sendMessageToGroup(pTarget, "Kharzun unleashes a terror-shaking howl!")
+		self:applyGroupIntimidate(pBoss, pTarget, 18, nil)
+	elseif healthDamage >= (maxHealth * 0.25) and phase == 1 then
+		writeData(phaseKey, 2)
+		CreatureObject(pBoss):playEffect("clienteffect/attacker_berserk.cef", "")
+		self:sendMessageToGroup(pTarget, "Dark venom sprays from Kharzun's maw!")
+		self:scheduleKraytQueenPoisonStorm(pBoss, pTarget, 5)
+		self:spawnKraytQueenWave(pBoss, pTarget, {
+			{"event_boss_krayt_whelp", 10, -5, -20},
+			{"event_boss_krayt_whelp", -10, -5, 20},
+		})
+	elseif healthDamage >= (maxHealth * 0.5) and phase == 2 then
+		writeData(phaseKey, 3)
+		CreatureObject(pBoss):playEffect("clienteffect/combat_special_defender_intimidate.cef", "")
+		self:sendMessageToGroup(pTarget, "Kharzun howls, and the Sith hounds surge forward!")
+		self:applyGroupIntimidate(pBoss, pTarget, 18, nil)
+		self:spawnKraytQueenWave(pBoss, pTarget, {
+			{"event_boss_krayt_broodling", 0, 11, 180},
+			{"event_boss_krayt_whelp", 8, -7, -30},
+			{"event_boss_krayt_whelp", -8, -7, 30},
+		})
+	elseif healthDamage >= (maxHealth * 0.7) and phase == 3 then
+		writeData(phaseKey, 4)
+		CreatureObject(pBoss):playEffect("clienteffect/attacker_berserk.cef", "")
+		self:sendMessageToGroup(pTarget, "Dark vapor billows out across the battlefield!")
+		self:scheduleKraytQueenPoisonStorm(pBoss, pTarget, 5)
+		self:spawnKraytQueenWave(pBoss, pTarget, {
+			{"event_boss_krayt_broodling", 7, 8, -45},
+			{"event_boss_krayt_broodling", -7, 8, 45},
+		})
+	elseif healthDamage >= (maxHealth * 0.9) and phase == 4 then
+		writeData(phaseKey, 5)
+		CreatureObject(pBoss):playEffect("clienteffect/combat_special_defender_intimidate.cef", "")
+		self:sendMessageToGroup(pTarget, "Kharzun enters a furious last stand!")
+		self:applyGroupIntimidate(pBoss, pTarget, 24, nil)
+		self:scheduleKraytQueenPoisonStorm(pBoss, pTarget, 6)
+		self:spawnKraytQueenWave(pBoss, pTarget, {
+			{"event_boss_krayt_broodling", 0, 12, 180},
+			{"event_boss_krayt_broodling", 10, 6, -60},
+			{"event_boss_krayt_broodling", -10, 6, 60},
+			{"event_boss_krayt_whelp", 12, -4, -25},
+			{"event_boss_krayt_whelp", -12, -4, 25},
+		})
+	end
+
+	return 0
+end
+
+function randomWorldBossEvent:handleNecrosisDamage(pBoss, pTarget)
+	local boss, maxHealth, healthDamage = self:getBossHealthDamage(pBoss)
+
+	if boss == nil then
+		return 0
+	end
+
+	local bossID = SceneObject(pBoss):getObjectID()
+	local phaseKey = self:getBossKey(bossID, "phase")
+	local phase = readData(phaseKey)
+
+	if maxHealth <= 0 then
+		return 0
+	end
+
+	if healthDamage >= (maxHealth * 0.1) and phase == 0 then
 		writeData(phaseKey, 1)
 		spatialChat(pBoss, "I walked into death centuries ago, and death learned to fear me.")
 		CreatureObject(pBoss):playEffect("clienteffect/pl_storm_lord_special.cef", "")
-	elseif health <= (maxHealth * 0.75) and phase == 1 then
+	elseif healthDamage >= (maxHealth * 0.25) and phase == 1 then
 		writeData(phaseKey, 2)
 		spatialChat(pBoss, "Breathe deep. Let the grave mist settle in your lungs.")
 		CreatureObject(pBoss):playEffect("clienteffect/pl_force_resist_states_self.cef", "")
@@ -516,12 +806,12 @@ function randomWorldBossEvent:handleNecrosisDamage(pBoss, pTarget)
 			{"event_boss_necrotic_thrall", -5, -3, 35},
 			{"event_boss_necrotic_thrall", 5, -3, -35},
 		})
-	elseif health <= (maxHealth * 0.55) and phase == 2 then
+	elseif healthDamage >= (maxHealth * 0.45) and phase == 2 then
 		writeData(phaseKey, 3)
 		spatialChat(pBoss, "Your heartbeat is a prayer. I will answer it with hunger.")
 		CreatureObject(pBoss):playEffect("clienteffect/pl_force_channel_self.cef", "")
 		createEvent(1, self.screenplayName, "necrosisLifeDrain", pBoss, "")
-	elseif health <= (maxHealth * 0.35) and phase == 3 then
+	elseif healthDamage >= (maxHealth * 0.65) and phase == 3 then
 		writeData(phaseKey, 4)
 		spatialChat(pBoss, "Rise, my shadows. The living are nearly yours.")
 		CreatureObject(pBoss):playEffect("clienteffect/combat_special_defender_intimidate.cef", "")
@@ -531,7 +821,7 @@ function randomWorldBossEvent:handleNecrosisDamage(pBoss, pTarget)
 			{"event_boss_necrotic_thrall", -7, 1, 55},
 			{"event_boss_necrotic_thrall", 7, 1, -55},
 		})
-	elseif health <= (maxHealth * 0.15) and phase == 4 then
+	elseif healthDamage >= (maxHealth * 0.85) and phase == 4 then
 		writeData(phaseKey, 5)
 		spatialChat(pBoss, "I am the rot beneath the temple stones. I do not end.")
 		CreatureObject(pBoss):playEffect("clienteffect/pl_force_channel_self.cef", "")
@@ -546,15 +836,13 @@ function randomWorldBossEvent:handleNecrosisDamage(pBoss, pTarget)
 end
 
 function randomWorldBossEvent:handleMotherNharraDamage(pBoss, pTarget)
-	local boss = LuaCreatureObject(pBoss)
+	local boss, maxHealth, healthDamage = self:getBossHealthDamage(pBoss)
 
 	if boss == nil then
 		return 0
 	end
 
 	local bossID = SceneObject(pBoss):getObjectID()
-	local health = boss:getHAM(0)
-	local maxHealth = boss:getMaxHAM(0)
 	local action = boss:getHAM(3)
 	local maxAction = boss:getMaxHAM(3)
 	local phaseKey = self:getBossKey(bossID, "phase")
@@ -570,11 +858,11 @@ function randomWorldBossEvent:handleMotherNharraDamage(pBoss, pTarget)
 		spatialChat(pBoss, "The spirits restore my strength!")
 	end
 
-	if health <= (maxHealth * 0.9) and phase == 0 then
+	if healthDamage >= (maxHealth * 0.1) and phase == 0 then
 		writeData(phaseKey, 1)
 		spatialChat(pBoss, "The spirits warned me that hunters would come.")
 		CreatureObject(pBoss):playEffect("clienteffect/pl_storm_lord_special.cef", "")
-	elseif health <= (maxHealth * 0.75) and phase == 1 then
+	elseif healthDamage >= (maxHealth * 0.25) and phase == 1 then
 		writeData(phaseKey, 2)
 		spatialChat(pBoss, "Daughters of the mist, harvest them!")
 		CreatureObject(pBoss):playEffect("clienteffect/combat_pt_electricalfield.cef", "")
@@ -584,7 +872,7 @@ function randomWorldBossEvent:handleMotherNharraDamage(pBoss, pTarget)
 			{"event_boss_nightsister_reaver", -2, 5, 90},
 			{"event_boss_nightsister_reaver", 2, 5, -90},
 		})
-	elseif health <= (maxHealth * 0.5) and phase == 2 then
+	elseif healthDamage >= (maxHealth * 0.5) and phase == 2 then
 		writeData(phaseKey, 3)
 		spatialChat(pBoss, "Your fear sweetens the air. I will drink it in.")
 		CreatureObject(pBoss):playEffect("clienteffect/pl_force_resist_states_self.cef", "")
@@ -593,7 +881,7 @@ function randomWorldBossEvent:handleMotherNharraDamage(pBoss, pTarget)
 			{"event_boss_nightsister_reaver", -5, 2, 45},
 			{"event_boss_nightsister_reaver", 5, 2, -45},
 		})
-	elseif health <= (maxHealth * 0.25) and phase == 3 then
+	elseif healthDamage >= (maxHealth * 0.75) and phase == 3 then
 		writeData(phaseKey, 4)
 		spatialChat(pBoss, "Even now the dead gather to shield me.")
 		CreatureObject(pBoss):playEffect("clienteffect/pl_storm_lord_special.cef", "")
@@ -603,11 +891,71 @@ function randomWorldBossEvent:handleMotherNharraDamage(pBoss, pTarget)
 			{"event_boss_nightsister_reaver", -3, 6, 110},
 			{"event_boss_nightsister_reaver", 3, 6, -110},
 		})
-	elseif health <= (maxHealth * 0.1) and phase == 4 then
+	elseif healthDamage >= (maxHealth * 0.9) and phase == 4 then
 		writeData(phaseKey, 5)
 		spatialChat(pBoss, "No. The spirits cannot abandon me now!")
 		CreatureObject(pBoss):playEffect("clienteffect/combat_pt_electricalfield.cef", "")
 		createEvent(1, self.screenplayName, "motherNharraForcePulse", pTarget, "")
+	end
+
+	return 0
+end
+
+function randomWorldBossEvent:handlePrideOfMandaloreDamage(pBoss, pTarget)
+	local boss, maxHealth, healthDamage = self:getBossHealthDamage(pBoss)
+
+	if boss == nil then
+		return 0
+	end
+
+	local bossID = SceneObject(pBoss):getObjectID()
+	local phaseKey = self:getBossKey(bossID, "phase")
+	local phase = readData(phaseKey)
+
+	if maxHealth <= 0 then
+		return 0
+	end
+
+	if healthDamage >= (maxHealth * 0.1) and phase == 0 then
+		writeData(phaseKey, 1)
+		spatialChat(pBoss, "You stand before the pride of Mandalore. Hold if you can.")
+		CreatureObject(pBoss):playEffect("clienteffect/combat_special_defender_intimidate.cef", "")
+		self:applyGroupIntimidate(pBoss, pTarget, 14, "The Mandalorian warlord bears down on you with relentless discipline.")
+	elseif healthDamage >= (maxHealth * 0.25) and phase == 1 then
+		writeData(phaseKey, 2)
+		spatialChat(pBoss, "Vanguards, form on me. Break their line.")
+		CreatureObject(pBoss):playEffect("clienteffect/attacker_berserk.cef", "")
+		self:spawnMandalorianWave(pBoss, pTarget, {
+			{"event_boss_deathwatch_vanguard", -6, -3, 35},
+			{"event_boss_deathwatch_vanguard", 6, -3, -35},
+			{"event_boss_deathwatch_veteran", 0, 7, 180},
+		})
+	elseif healthDamage >= (maxHealth * 0.45) and phase == 2 then
+		writeData(phaseKey, 3)
+		spatialChat(pBoss, "Rockets away. Let them learn to fear the sky.")
+		CreatureObject(pBoss):playEffect("clienteffect/pl_storm_lord_special.cef", "")
+		self:scheduleMandalorianMissileBarrage(pBoss, pTarget, 4)
+	elseif healthDamage >= (maxHealth * 0.65) and phase == 3 then
+		writeData(phaseKey, 4)
+		spatialChat(pBoss, "Close ranks. No quarter. No retreat.")
+		CreatureObject(pBoss):playEffect("clienteffect/combat_special_defender_intimidate.cef", "")
+		self:spawnMandalorianWave(pBoss, pTarget, {
+			{"event_boss_deathwatch_veteran", -7, 1, 40},
+			{"event_boss_deathwatch_veteran", 7, 1, -40},
+			{"event_boss_deathwatch_vanguard", -3, 7, 110},
+			{"event_boss_deathwatch_vanguard", 3, 7, -110},
+		})
+		self:applyGroupActionDamage(pBoss, pTarget, 0.35, 200, "A punishing hail of blaster fire drains your reserves.")
+	elseif healthDamage >= (maxHealth * 0.85) and phase == 4 then
+		writeData(phaseKey, 5)
+		spatialChat(pBoss, "This is my final charge. Remember it.")
+		CreatureObject(pBoss):playEffect("clienteffect/attacker_berserk.cef", "")
+		self:spawnMandalorianWave(pBoss, pTarget, {
+			{"event_boss_deathwatch_veteran", -5, -5, 20},
+			{"event_boss_deathwatch_veteran", 5, -5, -20},
+			{"event_boss_deathwatch_veteran", 0, 8, 180},
+		})
+		createEvent(1, self.screenplayName, "mandalorianJetpackSlam", pBoss, "")
 	end
 
 	return 0
@@ -712,6 +1060,50 @@ function randomWorldBossEvent:motherNharraForcePulse(pTarget)
 	return 0
 end
 
+function randomWorldBossEvent:scheduleMandalorianMissileBarrage(pBoss, pTarget, tickCount)
+	if pBoss == nil then
+		return
+	end
+
+	local ticks = tickCount or 4
+	self:sendMessageToGroup(pTarget, "Wrist rockets streak out and scatter explosive fire across the clearing.")
+
+	for i = 0, ticks - 1, 1 do
+		createEvent(i * 4 * 1000, self.screenplayName, "mandalorianMissileVolleyTick", pBoss, "")
+	end
+end
+
+function randomWorldBossEvent:mandalorianMissileVolleyTick(pBoss)
+	if pBoss == nil then
+		return 0
+	end
+
+	local pTarget = self:getCombatTarget(pBoss, nil)
+
+	if pTarget == nil then
+		return 0
+	end
+
+	self:applyGroupHealthDamage(pBoss, pTarget, 950, 1450, 200, "clienteffect/avatar_wke_sonic.cef", "The missile barrage tears across the battlefield!")
+	return 0
+end
+
+function randomWorldBossEvent:mandalorianJetpackSlam(pBoss)
+	if pBoss == nil then
+		return 0
+	end
+
+	local pTarget = self:getCombatTarget(pBoss, nil)
+
+	if pTarget == nil then
+		return 0
+	end
+
+	self:applyGroupHealthDamage(pBoss, pTarget, 2200, 3200, 200, "clienteffect/avatar_wke_sonic.cef", "The Pride of Mandalore crashes down in a jet-assisted shock assault!")
+	self:applyGroupIntimidate(pBoss, pTarget, 18, nil)
+	return 0
+end
+
 function randomWorldBossEvent:spawnNecrosisWave(pBoss, pTarget, waveData)
 	for i = 1, #waveData, 1 do
 		local spawnData = waveData[i]
@@ -733,6 +1125,13 @@ function randomWorldBossEvent:spawnTuskenSupport(pBoss, pTarget)
 end
 
 function randomWorldBossEvent:spawnNightsisterWave(pBoss, pTarget, waveData)
+	for i = 1, #waveData, 1 do
+		local spawnData = waveData[i]
+		self:spawnTrackedSupport(pBoss, spawnData[1], spawnData[2], spawnData[3], spawnData[4], pTarget, nil)
+	end
+end
+
+function randomWorldBossEvent:spawnMandalorianWave(pBoss, pTarget, waveData)
 	for i = 1, #waveData, 1 do
 		local spawnData = waveData[i]
 		self:spawnTrackedSupport(pBoss, spawnData[1], spawnData[2], spawnData[3], spawnData[4], pTarget, nil)
@@ -1124,6 +1523,10 @@ function randomWorldBossEvent:getActiveBossID()
 	return readData(self:getGlobalKey("activeBossID"))
 end
 
+function randomWorldBossEvent:getActiveBossTwinID()
+	return readData(self:getGlobalKey("activeBossTwinID"))
+end
+
 function randomWorldBossEvent:getActiveBossConfig()
 	local configIndex = readData(self:getGlobalKey("activeBossConfigIndex"))
 
@@ -1148,6 +1551,9 @@ end
 
 function randomWorldBossEvent:clearActiveBoss()
 	deleteData(self:getGlobalKey("activeBossID"))
+	deleteData(self:getGlobalKey("activeBossTwinID"))
+	deleteData(self:getGlobalKey("twinHoundBonded"))
+	deleteData(self:getGlobalKey("twinHoundSummoned"))
 	deleteData(self:getGlobalKey("activeBossConfigIndex"))
 	deleteStringData(self:getGlobalKey("activeBossPlanet"))
 	deleteData(self:getGlobalKey("activeBossX"))
@@ -1162,6 +1568,10 @@ function randomWorldBossEvent:resetBossState(bossID)
 	deleteData(self:getBossKey(bossID, "shieldHealth"))
 	deleteData(self:getBossKey(bossID, "shieldAction"))
 	deleteData(self:getBossKey(bossID, "shieldMind"))
+	deleteData(self:getBossKey(bossID, "twinID"))
+	deleteData(self:getBossKey(bossID, "lastHealth"))
+	deleteData(self:getBossKey(bossID, "lastAction"))
+	deleteData(self:getBossKey(bossID, "lastMind"))
 end
 
 function randomWorldBossEvent:getGlobalKey(suffix)

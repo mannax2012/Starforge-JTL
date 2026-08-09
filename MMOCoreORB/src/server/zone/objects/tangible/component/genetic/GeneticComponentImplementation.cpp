@@ -23,11 +23,11 @@ void GeneticComponentImplementation::resetResists(CraftingValues* values) {
 		values->setCurrentValue("dna_comp_armor_kinetic", 0);
 		values->setCurrentPercentage("dna_comp_armor_kinetic",0);
 	}
-	/*if (saberResist > 0 && !isSpecialResist(SharedWeaponObjectTemplate::LIGHTSABER)) {
+	if (saberResist > 0 && !isSpecialResist(SharedWeaponObjectTemplate::LIGHTSABER)) {
 		saberResist = 0;
 		values->setCurrentValue("dna_comp_armor_saber", 0);
 		values->setCurrentPercentage("dna_comp_armor_saber",0);
-	}*/
+	}
 	if (elecResist > 0 && !isSpecialResist(SharedWeaponObjectTemplate::ELECTRICITY)){
 		elecResist = 0;
 		values->setCurrentValue("dna_comp_armor_electric", 0);
@@ -78,15 +78,15 @@ void GeneticComponentImplementation::updateCraftingValues(CraftingValues* values
 	power = values->getCurrentValue("power");
 	hardiness = values->getCurrentValue("hardiness");
 
-	kinResist = values->getCurrentValue("dna_comp_armor_kinetic");
-	energyResist = values->getCurrentValue("dna_comp_armor_energy");
-	blastResist = values->getCurrentValue("dna_comp_armor_blast");
-	heatResist = values->getCurrentValue("dna_comp_armor_heat");
-	coldResist = values->getCurrentValue("dna_comp_armor_cold");
-	elecResist = values->getCurrentValue("dna_comp_armor_electric");
-	acidResist = values->getCurrentValue("dna_comp_armor_acid");
-	stunResist = values->getCurrentValue("dna_comp_armor_stun");
-	//saberResist = values->getCurrentValue("dna_comp_armor_saber");
+	kinResist = Math::max(0.f, values->getCurrentValue("dna_comp_armor_kinetic"));
+	energyResist = Math::max(0.f, values->getCurrentValue("dna_comp_armor_energy"));
+	blastResist = Math::max(0.f, values->getCurrentValue("dna_comp_armor_blast"));
+	heatResist = Math::max(0.f, values->getCurrentValue("dna_comp_armor_heat"));
+	coldResist = Math::max(0.f, values->getCurrentValue("dna_comp_armor_cold"));
+	elecResist = Math::max(0.f, values->getCurrentValue("dna_comp_armor_electric"));
+	acidResist = Math::max(0.f, values->getCurrentValue("dna_comp_armor_acid"));
+	stunResist = Math::max(0.f, values->getCurrentValue("dna_comp_armor_stun"));
+	saberResist = Math::max(0.f, values->getCurrentValue("dna_comp_armor_saber"));
 
 #ifdef DEBUG_GENETIC_LAB
 	info(true) << "Kinetic = " << kinResist << " Enery = " << energyResist << " Blast = " << blastResist << " Heat = " << heatResist << " Cold = " << coldResist;
@@ -109,8 +109,8 @@ void GeneticComponentImplementation::updateCraftingValues(CraftingValues* values
 		setSpecialResist(SharedWeaponObjectTemplate::ACID);
 	if (values->getMinValue("stuneffectiveness") > 0)
 		setSpecialResist(SharedWeaponObjectTemplate::STUN);
-	/*if (values->getMinValue("lightsabereffectiveness") > 0)
-		setSpecialResist(SharedWeaponObjectTemplate::LIGHTSABER);*/
+	if (values->getMinValue("lightsabereffectiveness") > 0)
+		setSpecialResist(SharedWeaponObjectTemplate::LIGHTSABER);
 
 	if (fortitude > 500) {
 		armorRating = 1;
@@ -177,10 +177,10 @@ void GeneticComponentImplementation::updateCraftingValues(CraftingValues* values
 	}
 
 	// max on resists
-	if (kinResist > 60)
-		kinResist = 60;
-	if (energyResist > 60)
-		energyResist = 60;
+	if (kinResist > 80)
+		kinResist = 80;
+	if (energyResist > 80)
+		energyResist = 80;
 	if (blastResist > 100)
 		blastResist = 100;
 	if (heatResist > 100)
@@ -211,6 +211,12 @@ void GeneticComponentImplementation::updateCraftingValues(CraftingValues* values
 	health = (hardiness * 15) + (dexterity * 3);
 	action = (dexterity * 15) + (intellect * 3);
 	mind = (intellect * 15) + (hardiness * 3);
+
+	// Mind is no longer displayed for pets, so apply its crafted value to the
+	// visible HAM pools. Preserve mind itself for systems that still use it.
+	const int healthMindContribution = round(mind * 0.6f);
+	health += healthMindContribution;
+	action += mind - healthMindContribution;
 
 	stamina = (dexterity * 15) + (endurance * 3);
 	willPower = (intellect * 15) + (cleverness * 3);
@@ -266,7 +272,7 @@ String GeneticComponentImplementation::convertSpecialAttack(String &attackName) 
 	if (attackName == "defaultattack" || attackName == "")
 		return "@combat_effects:none";
 	else if (attackName == "creatureareaattack")
-		return "@combat_effects:unknown_attack";
+		return "Creature Area Attack";
 	else
 		return "@combat_effects:" + attackName;
 }
@@ -282,15 +288,6 @@ String GeneticComponentImplementation::resistValue(float input){
 }
 
 void GeneticComponentImplementation::fillAttributeList(AttributeListMessage* alm, CreatureObject* creature) {
-	bool godMode = false;
-
-	if (creature != nullptr && creature->isPlayerCreature()) {
-		auto ghost = creature->getPlayerObject();
-
-		if (ghost != nullptr && ghost->isPrivileged())
-			godMode = true;
-	}
-
 	alm->insertAttribute("volume", 1);
 	alm->insertAttribute("crafter", craftersName);
 	alm->insertAttribute("serial_number", objectSerial);
@@ -351,19 +348,7 @@ void GeneticComponentImplementation::fillAttributeList(AttributeListMessage* alm
 	alm->insertAttribute("dna_comp_armor_electric",resistValue(elecResist));
 	alm->insertAttribute("dna_comp_armor_acid",resistValue(acidResist));
 	alm->insertAttribute("dna_comp_armor_stun",resistValue(stunResist));
-	//alm->insertAttribute("dna_comp_armor_saber",resistValue(saberResist));
-
-	if (godMode) {
-		alm->insertAttribute("dna_comp_armor_kinetic", kinResist);
-		alm->insertAttribute("dna_comp_armor_energy", energyResist);
-		alm->insertAttribute("dna_comp_armor_blast", blastResist);
-		alm->insertAttribute("dna_comp_armor_heat", heatResist);
-		alm->insertAttribute("dna_comp_armor_cold", coldResist);
-		alm->insertAttribute("dna_comp_armor_electric", elecResist);
-		alm->insertAttribute("dna_comp_armor_acid", acidResist);
-		alm->insertAttribute("dna_comp_armor_stun", stunResist);
-		// alm->insertAttribute("dna_comp_armor_saber", saberResist);
-	}
+	alm->insertAttribute("dna_comp_armor_saber",resistValue(saberResist));
 
 	alm->insertAttribute("spec_atk_1",convertSpecialAttack(special1));
 	alm->insertAttribute("spec_atk_2",convertSpecialAttack(special2));

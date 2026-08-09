@@ -12,6 +12,8 @@ JUNKCORSEC = 256
 --custom
 includeFile("items/custom/starforge_token.lua")
 includeFile("items/custom/heavy_starforge_token.lua")
+includeFile("items/custom/tukata_deed_schematic.lua")
+includeFile("items/custom/force_infused_organ.lua")
 includeFile("items/custom/resource_deed_small.lua")
 includeFile("items/custom/resource_deed_medium.lua")
 includeFile("items/custom/resource_deed_large.lua")

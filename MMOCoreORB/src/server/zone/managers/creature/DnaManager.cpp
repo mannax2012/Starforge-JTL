@@ -421,7 +421,7 @@ void DnaManager::generateSample(Creature* creature, CreatureObject* player, int 
 	prototype->setCold(creatureTemplate->getCold());
 	prototype->setElectric(creatureTemplate->getElectricity());
 	prototype->setAcid(creatureTemplate->getAcid());
-	prototype->setSaber(creatureTemplate->getLightSaber());
+	prototype->setSaber(Math::min(creatureTemplate->getLightSaber(), 80.f));
 	prototype->setArmorRating(creatureTemplate->getArmor());
 
 	bool hasRanged = false;
@@ -455,13 +455,27 @@ void DnaManager::generateSample(Creature* creature, CreatureObject* player, int 
 		prototype->setSpecialResist(SharedWeaponObjectTemplate::LIGHTSABER);
 
 	auto attackMap = creatureTemplate->getPrimaryAttacks();
+	String specialAttackOne = "defaultattack";
+	String specialAttackTwo = "defaultattack";
 
-	if (attackMap->size() > 0) {
-		prototype->setSpecialAttackOne(String(attackMap->getCommand(0)));
-		if(attackMap->size() > 1) {
-			prototype->setSpecialAttackTwo(String(attackMap->getCommand(1)));
+	if (attackMap != nullptr) {
+		for (int i = 0; i < attackMap->size(); ++i) {
+			String attackName(attackMap->getCommand(i));
+
+			if (!Genetics::isCraftableSpecialAttack(attackName) || attackName == specialAttackOne)
+				continue;
+
+			if (specialAttackOne == "defaultattack")
+				specialAttackOne = attackName;
+			else {
+				specialAttackTwo = attackName;
+				break;
+			}
 		}
 	}
+
+	prototype->setSpecialAttackOne(specialAttackOne);
+	prototype->setSpecialAttackTwo(specialAttackTwo);
 
 	Locker locker(inventory);
 
@@ -473,18 +487,22 @@ void DnaManager::generateSample(Creature* creature, CreatureObject* player, int 
 }
 
 float DnaManager::valueForLevel(int type, int level) {
+	// DNACharacteristics is a zero-indexed C++ vector whose first entry is
+	// level 1. Convert the game level before looking up the corresponding row.
+	int index = Math::max(0, level - 1);
+
 	float rc = 0;
 	switch(type) {
 		case HIT_LEVEL:
-			return dnaHit.get(level);
+			return dnaHit.get(index);
 		case DPS_LEVEL:
-			return dnaDPS.get(level);
+			return dnaDPS.get(index);
 		case HAM_LEVEL:
-			return dnaHam.get(level);
+			return dnaHam.get(index);
 		case ARM_LEVEL:
-			return dnaArmor.get(level);
+			return dnaArmor.get(index);
 		case REG_LEVEL:
-			return dnaRegen.get(level);
+			return dnaRegen.get(index);
 	}
 	return rc;
 }

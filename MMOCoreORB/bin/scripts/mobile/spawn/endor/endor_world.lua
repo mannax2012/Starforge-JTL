@@ -46,6 +46,15 @@ endor_world = {
 			size = 15,
 		},
 		{
+			lairTemplateName = "endor_blurrg_raptor_lair_neutral_small_boss_01",
+			spawnLimit = -1,
+			minDifficulty = 54,
+			maxDifficulty = 500,
+			numberToSpawn = 15,
+			weighting = 20,
+			size = 15,
+		},
+		{
 			lairTemplateName = "endor_boar_wolf_lair_neutral_small",
 			spawnLimit = -1,
 			minDifficulty = 25,

@@ -397,6 +397,15 @@ yavin4_world = {
 			size = 15,
 		},
 		{
+			lairTemplateName = "yavin4_woolamander_reaper_lair_neutral_medium_boss_01",
+			spawnLimit = -1,
+			minDifficulty = 51,
+			maxDifficulty = 500,
+			numberToSpawn = 15,
+			weighting = 25,
+			size = 15,
+		},
+		{
 			lairTemplateName = "global_pirate_cutthroat_camp_neutral_medium_theater",
 			spawnLimit = -1,
 			minDifficulty = 65,

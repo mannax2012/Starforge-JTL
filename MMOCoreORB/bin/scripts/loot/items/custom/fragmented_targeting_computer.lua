@@ -4,7 +4,7 @@ fragmented_targeting_computer = {
 	minimumLevel = 0,
 	maximumLevel = -1,
 	customObjectName = "Fragmented Targeting Computer",
-	directObjectTemplate = "object/tangible/component/weapon/base_projectile_feed_mechanism_targeting_module.iff",
+	directObjectTemplate = "object/tangible/component/weapon/base_projectile_feed_mechanism_enhancement.iff",
 	craftingValues = {
 		{"maxdamage",40,85,0},
 		{"attackspeed",-0.3,-0.6,2},

@@ -14,8 +14,12 @@
 #include "server/zone/objects/player/sessions/SlicingSession.h"
 #include "server/zone/managers/director/DirectorManager.h"
 #include "server/zone/managers/player/PlayerManager.h"
+#include "server/zone/managers/creature/CreatureTemplateManager.h"
+#include "server/zone/managers/creature/SpawnGroup.h"
+#include "server/zone/managers/creature/LairSpawn.h"
 #include "server/zone/objects/group/GroupObject.h"
 #include "server/zone/objects/player/PlayerObject.h"
+#include "server/zone/objects/player/FactionStatus.h"
 #include "server/zone/objects/player/sui/SuiCallback.h"
 #include "server/zone/objects/player/sui/listbox/SuiListBox.h"
 
@@ -67,6 +71,66 @@ int getMissionDifficultyBracketMin(int bracketMax) {
 	return Math::max(1, bracketMax - MISSION_DIFFICULTY_BRACKET_SIZE + 1);
 }
 
+uint32 getMissionTerminalFaction(const String& terminalType) {
+	if (terminalType == "imperial") {
+		return Factions::FACTIONIMPERIAL;
+	}
+
+	if (terminalType == "rebel") {
+		return Factions::FACTIONREBEL;
+	}
+
+	return Factions::FACTIONNEUTRAL;
+}
+
+String getMissionTerminalDestroyGroup(CreatureObject* player, const String& terminalType) {
+	if (player == nullptr || player->getZone() == nullptr) {
+		return "";
+	}
+
+	uint32 faction = getMissionTerminalFaction(terminalType);
+
+	if (faction == Factions::FACTIONNEUTRAL) {
+		return player->getZone()->getZoneName() + "_destroy_missions";
+	}
+
+	bool neutralMission = player->getFaction() == 0 || player->getFaction() != faction || (player->getFactionStatus() != FactionStatus::OVERT && player->getFactionStatus() != FactionStatus::COVERT);
+
+	if (neutralMission) {
+		return "factional_neutral_destroy_missions";
+	}
+
+	return faction == Factions::FACTIONIMPERIAL ? "factional_imperial_destroy_missions" : "factional_rebel_destroy_missions";
+}
+
+int getMissionTerminalMaxMissionDifficulty(CreatureObject* player, const String& terminalType) {
+	String missionGroup = getMissionTerminalDestroyGroup(player, terminalType);
+	int combatLevel = getMissionTerminalCombatLevel(player, terminalType);
+
+	if (missionGroup.isEmpty()) {
+		return combatLevel;
+	}
+
+	SpawnGroup* destroyMissionGroup = CreatureTemplateManager::instance()->getDestroyMissionGroup(missionGroup.hashCode());
+
+	if (destroyMissionGroup == nullptr) {
+		return combatLevel;
+	}
+
+	int maxLairDifficulty = 0;
+	const Vector<Reference<LairSpawn*> >& spawnList = destroyMissionGroup->getSpawnList();
+
+	for (int i = 0; i < spawnList.size(); i++) {
+		LairSpawn* lairSpawn = spawnList.get(i);
+
+		if (lairSpawn != nullptr) {
+			maxLairDifficulty = Math::max(maxLairDifficulty, lairSpawn->getMaxDifficulty());
+		}
+	}
+
+	return combatLevel + maxLairDifficulty;
+}
+
 String getMissionDifficultyBracketLabel(int bracketMax) {
 	return String::valueOf(getMissionDifficultyBracketMin(bracketMax)) + "-" + String::valueOf(bracketMax);
 }
@@ -98,11 +162,11 @@ public:
 			return;
 		}
 
-		int currentBracketMax = getMissionDifficultyBracketMax(getMissionTerminalCombatLevel(player, terminalType));
+		int currentBracketMax = getMissionDifficultyBracketMax(getMissionTerminalMaxMissionDifficulty(player, terminalType));
 
 		if (index == 0) {
 			ghost->deleteScreenPlayData(MISSION_DIFFICULTY_CHOICE_SCREENPLAY, MISSION_DIFFICULTY_CHOICE_VARIABLE);
-			player->sendSystemMessage("Mission difficulty has been reset to your current combat range.");
+			player->sendSystemMessage("Mission difficulty has been set to your current maximum range.");
 			return;
 		}
 
@@ -115,7 +179,7 @@ public:
 		}
 
 		ghost->setScreenPlayData(MISSION_DIFFICULTY_CHOICE_SCREENPLAY, MISSION_DIFFICULTY_CHOICE_VARIABLE, String::valueOf(selectedBracketMax));
-		player->sendSystemMessage("Mission difficulty has been lowered to the " + getMissionDifficultyBracketLabel(selectedBracketMax) + " bracket. Refresh the terminal to view missions in that range.");
+		player->sendSystemMessage("Mission difficulty has been set to the " + getMissionDifficultyBracketLabel(selectedBracketMax) + " bracket. Refresh the terminal to view only missions in that range.");
 	}
 };
 }
@@ -203,27 +267,21 @@ int MissionTerminalImplementation::handleObjectMenuSelect(CreatureObject* player
 			return 0;
 		}
 
-		int currentBracketMax = getMissionDifficultyBracketMax(getMissionTerminalCombatLevel(player, terminalType));
-
-		if (currentBracketMax <= MISSION_DIFFICULTY_BRACKET_SIZE) {
-			ghost->deleteScreenPlayData(MISSION_DIFFICULTY_CHOICE_SCREENPLAY, MISSION_DIFFICULTY_CHOICE_VARIABLE);
-			player->sendSystemMessage("Your current combat range is already the lowest available mission bracket.");
-			return 0;
-		}
+		int currentBracketMax = getMissionDifficultyBracketMax(getMissionTerminalMaxMissionDifficulty(player, terminalType));
 
 		ManagedReference<SuiListBox*> box = new SuiListBox(player, 0);
 		box->setCallback(new MissionDifficultySelectionSuiCallback(getZoneServer(), terminalType));
 		box->setPromptTitle("Mission Difficulty Selection");
 
 		String baseBracketLabel = getMissionDifficultyBracketLabel(currentBracketMax);
-		String activeBracketLabel = baseBracketLabel;
-		String promptText = "Use this menu to lower combat mission offerings to a fixed level bracket.\n\nBase combat range: " + baseBracketLabel + "\n";
+		String activeBracketLabel = "Current Max (" + baseBracketLabel + ")";
+		String promptText = "Choose an exact mission level bracket. The selected bracket controls the terminal's lair selection, displayed mission difficulty, and payout.\n\nAutomatic maximum: " + baseBracketLabel + "\n";
 		String selectedBracket = ghost->getScreenPlayData(MISSION_DIFFICULTY_CHOICE_SCREENPLAY, MISSION_DIFFICULTY_CHOICE_VARIABLE);
 
 		if (!selectedBracket.isEmpty()) {
 			int selectedBracketMax = Integer::valueOf(selectedBracket);
 
-			if (selectedBracketMax >= MISSION_DIFFICULTY_BRACKET_SIZE && selectedBracketMax < currentBracketMax) {
+			if (selectedBracketMax >= MISSION_DIFFICULTY_BRACKET_SIZE && selectedBracketMax <= currentBracketMax) {
 				activeBracketLabel = getMissionDifficultyBracketLabel(selectedBracketMax);
 			} else {
 				ghost->deleteScreenPlayData(MISSION_DIFFICULTY_CHOICE_SCREENPLAY, MISSION_DIFFICULTY_CHOICE_VARIABLE);
@@ -231,11 +289,10 @@ int MissionTerminalImplementation::handleObjectMenuSelect(CreatureObject* player
 		}
 
 		promptText += "Active mission offering range: " + activeBracketLabel + "\n";
-		promptText += "Mission difficulty values shown in the terminal are scaled display values and may be higher than the active offering range.\n";
-		promptText += "\nChoose Base Range to restore normal mission difficulty. Only lower brackets are listed below.";
+		promptText += "\nChoose Current Max to restore current maximum mission offerings, or select a lower bracket to lock mission generation to that range.";
 		box->setPromptText(promptText);
 
-		box->addMenuItem("Base Range (" + baseBracketLabel + ")");
+		box->addMenuItem("Set to Current Max (" + baseBracketLabel + ")");
 
 		for (int bracketMax = currentBracketMax - MISSION_DIFFICULTY_BRACKET_SIZE; bracketMax >= MISSION_DIFFICULTY_BRACKET_SIZE; bracketMax -= MISSION_DIFFICULTY_BRACKET_SIZE) {
 			box->addMenuItem(getMissionDifficultyBracketLabel(bracketMax));

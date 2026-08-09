@@ -81,6 +81,8 @@ int getCombatMissionLevel(CreatureObject* player, uint32 faction) {
 	return Math::max(1, playerLevel);
 }
 
+int getDestroyMissionMaxDifficulty(CreatureObject* player, uint32 faction);
+
 bool getSelectedLowerMissionDifficultyRange(CreatureObject* player, uint32 faction, int& minLevel, int& maxLevel, bool resetInvalidSelection = false) {
 	if (player == nullptr) {
 		return false;
@@ -99,9 +101,10 @@ bool getSelectedLowerMissionDifficultyRange(CreatureObject* player, uint32 facti
 	}
 
 	int selectedBracketMax = Integer::valueOf(bracketData);
-	int currentBracketMax = getMissionDifficultyBracketMax(getCombatMissionLevel(player, faction));
+	int currentMissionDifficulty = getCombatMissionLevel(player, faction) + getDestroyMissionMaxDifficulty(player, faction);
+	int currentBracketMax = getMissionDifficultyBracketMax(currentMissionDifficulty);
 
-	if (selectedBracketMax < MISSION_DIFFICULTY_BRACKET_SIZE || selectedBracketMax >= currentBracketMax) {
+	if (selectedBracketMax < MISSION_DIFFICULTY_BRACKET_SIZE || selectedBracketMax > currentBracketMax) {
 		if (resetInvalidSelection) {
 			ghost->deleteScreenPlayData(MISSION_DIFFICULTY_CHOICE_SCREENPLAY, MISSION_DIFFICULTY_CHOICE_VARIABLE);
 			player->sendSystemMessage("Mission difficulty has been reset to your current combat range.");
@@ -118,8 +121,9 @@ bool getSelectedLowerMissionDifficultyRange(CreatureObject* player, uint32 facti
 CombatMissionDifficultyRange getCombatMissionDifficultyRange(CreatureObject* player, uint32 faction, bool resetInvalidSelection = false) {
 	CombatMissionDifficultyRange range;
 	range.combatLevel = getCombatMissionLevel(player, faction);
-	range.minLevel = Math::max(1, range.combatLevel - 5);
-	range.maxLevel = range.combatLevel + 5;
+	int currentMissionDifficulty = range.combatLevel + getDestroyMissionMaxDifficulty(player, faction);
+	range.maxLevel = getMissionDifficultyBracketMax(currentMissionDifficulty);
+	range.minLevel = getMissionDifficultyBracketMin(range.maxLevel);
 	range.hasCustomBracket = getSelectedLowerMissionDifficultyRange(player, faction, range.customBracketMin, range.customBracketMax, resetInvalidSelection);
 
 	if (range.hasCustomBracket) {
@@ -128,6 +132,81 @@ CombatMissionDifficultyRange getCombatMissionDifficultyRange(CreatureObject* pla
 	}
 
 	return range;
+}
+
+String getDestroyMissionGroupName(CreatureObject* player, uint32 faction) {
+	if (player == nullptr || player->getZone() == nullptr) {
+		return "";
+	}
+
+	if (faction == Factions::FACTIONNEUTRAL) {
+		return player->getZone()->getZoneName() + "_destroy_missions";
+	}
+
+	bool neutralMission = true;
+
+	if (player->getFaction() != 0 && player->getFaction() == faction) {
+		if (player->getFactionStatus() == FactionStatus::OVERT || player->getFactionStatus() == FactionStatus::COVERT) {
+			neutralMission = false;
+		}
+	}
+
+	if (neutralMission) {
+		return "factional_neutral_destroy_missions";
+	}
+
+	return faction == Factions::FACTIONIMPERIAL ? "factional_imperial_destroy_missions" : "factional_rebel_destroy_missions";
+}
+
+int getDestroyMissionMaxDifficulty(CreatureObject* player, uint32 faction) {
+	String missionGroup = getDestroyMissionGroupName(player, faction);
+
+	if (missionGroup.isEmpty()) {
+		return 0;
+	}
+
+	SpawnGroup* destroyMissionGroup = CreatureTemplateManager::instance()->getDestroyMissionGroup(missionGroup.hashCode());
+
+	if (destroyMissionGroup == nullptr) {
+		return 0;
+	}
+
+	int maxDifficulty = 0;
+	const Vector<Reference<LairSpawn*> >& spawnList = destroyMissionGroup->getSpawnList();
+
+	for (int i = 0; i < spawnList.size(); i++) {
+		LairSpawn* lairSpawn = spawnList.get(i);
+
+		if (lairSpawn != nullptr) {
+			maxDifficulty = Math::max(maxDifficulty, lairSpawn->getMaxDifficulty());
+		}
+	}
+
+	return maxDifficulty;
+}
+
+int getDiminishingRewardDifficulty(int missionDifficulty, int maxPlanetMissionDifficulty) {
+	if (maxPlanetMissionDifficulty <= 0 || missionDifficulty <= maxPlanetMissionDifficulty) {
+		return missionDifficulty;
+	}
+
+	int overflow = missionDifficulty - maxPlanetMissionDifficulty;
+	float rewardDifficulty = maxPlanetMissionDifficulty;
+
+	//Keep a meaningful gain above the planet cap, but progressively reduce the
+	//value of each additional scaled level: 50% for the first 10, 25% for the
+	//next 20, then 10% thereafter.
+	int firstTier = Math::min(overflow, 10);
+	rewardDifficulty += firstTier * 0.50f;
+	overflow -= firstTier;
+
+	int secondTier = Math::min(overflow, 20);
+	rewardDifficulty += secondTier * 0.25f;
+	overflow -= secondTier;
+
+	rewardDifficulty += overflow * 0.10f;
+
+	return Math::max(1, static_cast<int>(rewardDifficulty + 0.5f));
 }
 
 bool hasDirectionalMissionSelection(PlayerObject* ghost) {
@@ -990,16 +1069,10 @@ void MissionManagerImplementation::randomizeGenericDestroyMission(CreatureObject
 	}
 
 	CombatMissionDifficultyRange difficultyRange = getCombatMissionDifficultyRange(player, faction, true);
-	int playerLevel = server->getPlayerManager()->calculatePlayerLevel(player);
 	int maxDiff = randomLairSpawn->getMaxDifficulty();
 	int minDiff = randomLairSpawn->getMinDifficulty();
 	int rolledMinDiff = minDiff;
 	int rolledMaxDiff = maxDiff;
-
-	if (difficultyRange.hasCustomBracket) {
-		rolledMinDiff = Math::max(minDiff, difficultyRange.customBracketMin);
-		rolledMaxDiff = Math::min(maxDiff, difficultyRange.customBracketMax);
-	}
 
 	if (rolledMaxDiff < rolledMinDiff) {
 		rolledMaxDiff = rolledMinDiff;
@@ -1015,21 +1088,11 @@ void MissionManagerImplementation::randomizeGenericDestroyMission(CreatureObject
 	int difficulty = (difficultyLevel - minDiff) / difficultyStep;
 	difficulty = Math::min(difficulty, 4);
 
-	int diffDisplay = difficultyLevel < 5 ? 4 : difficultyLevel;
+	//The active bracket is an exact terminal difficulty, payout, and lair-selection
+	//lock. Automatic uses the current top bracket, matching that bracket when selected.
+	int missionDifficulty = System::random(difficultyRange.maxLevel - difficultyRange.minLevel) + difficultyRange.minLevel;
+	int diffDisplay = missionDifficulty < 5 ? 4 : missionDifficulty;
 	PlayerObject* targetGhost = player->getPlayerObject();
-	if (difficultyRange.hasCustomBracket) {
-		diffDisplay = difficultyLevel < 5 ? 4 : difficultyLevel;
-	} else if (player->isGrouped()) {
-		bool includeFactionPets = faction != Factions::FACTIONNEUTRAL || ConfigManager::instance()->includeFactionPetsForMissionDifficulty();
-		Reference<GroupObject*> group = player->getGroup();
-
-		if (group != nullptr) {
-			Locker locker(group);
-			diffDisplay += group->getGroupLevel(includeFactionPets);
-		}
-	} else {
-		diffDisplay += playerLevel;
-	}
 
 	String dir = targetGhost->getScreenPlayData("mission_direction_choice", "directionChoice");
 	float dirChoice = Float::valueOf(dir);
@@ -1133,11 +1196,12 @@ void MissionManagerImplementation::randomizeGenericDestroyMission(CreatureObject
 	mission->setTargetTemplate(templateObject);
 	mission->setTargetOptionalTemplate(lairTemplate);
 
-	int reward = destroyMissionBaseReward + destroyMissionDifficultyRewardFactor * difficultyLevel;
-	reward += System::random(destroyMissionRandomReward) + System::random(destroyMissionDifficultyRandomReward * difficultyLevel);
+	int rewardDifficulty = getDiminishingRewardDifficulty(missionDifficulty, getDestroyMissionMaxDifficulty(player, faction));
+	int reward = destroyMissionBaseReward + destroyMissionDifficultyRewardFactor * rewardDifficulty;
+	reward += System::random(destroyMissionRandomReward) + System::random(destroyMissionDifficultyRandomReward * rewardDifficulty);
 	mission->setRewardCredits(reward);
 
-	mission->setMissionDifficulty(difficultyLevel, diffDisplay, difficulty);
+	mission->setMissionDifficulty(missionDifficulty, diffDisplay, difficulty);
 	mission->setSize(randomLairSpawn->getSize());
 	mission->setFaction(faction);
 
@@ -2043,29 +2107,12 @@ LairSpawn* MissionManagerImplementation::getRandomLairSpawn(CreatureObject* play
 		return nullptr;
 
 	const Vector<Reference<LairSpawn*> >* availableLairList = nullptr;
-	int minLevelCeiling = 20;
 
 	if (type == MissionTypes::DESTROY) {
-		String missionGroup;
+		String missionGroup = getDestroyMissionGroupName(player, faction);
 
-		if (faction == Factions::FACTIONNEUTRAL) {
-			missionGroup = zone->getZoneName() + "_destroy_missions";
-		} else {
-			bool neutralMission = true;
-
-			if (player->getFaction() != 0 && player->getFaction() == faction) {
-				if (player->getFactionStatus() == FactionStatus::OVERT || player->getFactionStatus() == FactionStatus::COVERT) {
-					neutralMission = false;
-				}
-			}
-
-			if (neutralMission) {
-				missionGroup = "factional_neutral_destroy_missions";
-			} else if (faction == Factions::FACTIONIMPERIAL) {
-				missionGroup = "factional_imperial_destroy_missions";
-			} else {
-				missionGroup = "factional_rebel_destroy_missions";
-			}
+		if (missionGroup.isEmpty()) {
+			return nullptr;
 		}
 
 		SpawnGroup* destroyMissionGroup = CreatureTemplateManager::instance()->getDestroyMissionGroup(missionGroup.hashCode());
@@ -2075,8 +2122,6 @@ LairSpawn* MissionManagerImplementation::getRandomLairSpawn(CreatureObject* play
 		}
 
 		availableLairList = &destroyMissionGroup->getSpawnList();
-		minLevelCeiling = destroyMissionGroup->getMinLevelCeiling();
-
 	} else if (type == MissionTypes::HUNTING) {
 		CreatureManager* creatureManager = zone->getCreatureManager();
 
@@ -2098,8 +2143,8 @@ LairSpawn* MissionManagerImplementation::getRandomLairSpawn(CreatureObject* play
 
 	LairSpawn* lairSpawn = nullptr;
 
-	//Cap the minLevel to prevent a group from being too high to get missions on a planet
-	int minLevel = difficultyRange.hasCustomBracket ? difficultyRange.minLevel : Math::min(difficultyRange.minLevel, minLevelCeiling);
+	//Mission selection uses the player's selected bracket or current combat range.
+	int minLevel = difficultyRange.minLevel;
 	int maxLevel = difficultyRange.maxLevel;
 
 	//Try to pick random lair within playerLevel +-5;
@@ -2146,21 +2191,120 @@ LairSpawn* MissionManagerImplementation::getRandomLairSpawn(CreatureObject* play
 		}
 	}
 
+
 	if (!foundLair) {
-		//There are no lairs within playerLevel +-5, pick the first lair below playerLevel +5
+		//No lair overlaps the requested bracket. Find the highest available tier instead
+		//of taking the first entry in the spawn group (which commonly produced starter lairs).
+		int highestAvailableDifficulty = -1;
+
 		for (int i = 0; i < availableLairList->size(); i++) {
 			LairSpawn* randomLairSpawn = availableLairList->get(i);
-			if (randomLairSpawn->getMinDifficulty() <= maxLevel) {
-				if (type == MissionTypes::DESTROY) {
-					lairSpawn = randomLairSpawn;
-					break;
-				} else {
-					LairTemplate* lairTemp = CreatureTemplateManager::instance()->getLairTemplate(randomLairSpawn->getLairTemplateName().hashCode());
+			if (randomLairSpawn == nullptr || randomLairSpawn->getMaxDifficulty() >= minLevel) {
+				continue;
+			}
 
-					if (lairTemp->getMobType() == LairTemplate::CREATURE) {
-						lairSpawn = randomLairSpawn;
+			if (type == MissionTypes::HUNTING) {
+				LairTemplate* lairTemp = CreatureTemplateManager::instance()->getLairTemplate(randomLairSpawn->getLairTemplateName().hashCode());
+				if (lairTemp == nullptr || lairTemp->getMobType() != LairTemplate::CREATURE) {
+					continue;
+				}
+			}
+
+			if (randomLairSpawn->getMaxDifficulty() > highestAvailableDifficulty) {
+				highestAvailableDifficulty = randomLairSpawn->getMaxDifficulty();
+			}
+		}
+
+		if (highestAvailableDifficulty >= 0) {
+			//Once scaling exceeds a world's authored range, favor its top tier while
+			//still allowing the next and lower tiers to appear. This keeps every planet
+			//varied without falling back to starter lairs.
+		int availableTierCounts[3] = { 0, 0, 0 };
+
+			for (int i = 0; i < availableLairList->size(); i++) {
+				LairSpawn* randomLairSpawn = availableLairList->get(i);
+				if (randomLairSpawn == nullptr || randomLairSpawn->getMaxDifficulty() >= minLevel) {
+					continue;
+				}
+
+				if (type == MissionTypes::HUNTING) {
+					LairTemplate* lairTemp = CreatureTemplateManager::instance()->getLairTemplate(randomLairSpawn->getLairTemplateName().hashCode());
+					if (lairTemp == nullptr || lairTemp->getMobType() != LairTemplate::CREATURE) {
+						continue;
+					}
+				}
+
+				int tierOffset = (highestAvailableDifficulty - randomLairSpawn->getMaxDifficulty()) / MISSION_DIFFICULTY_BRACKET_SIZE;
+				int tier = tierOffset <= 0 ? 0 : (tierOffset == 1 ? 1 : 2);
+				availableTierCounts[tier]++;
+			}
+
+			int tierRoll = System::random(99);
+			int selectedTier = tierRoll < 70 ? 0 : (tierRoll < 90 ? 1 : 2);
+
+			if (availableTierCounts[selectedTier] == 0) {
+				for (int tier = selectedTier + 1; tier < 3; tier++) {
+					if (availableTierCounts[tier] > 0) {
+						selectedTier = tier;
 						break;
 					}
+				}
+
+				if (availableTierCounts[selectedTier] == 0) {
+					for (int tier = selectedTier - 1; tier >= 0; tier--) {
+						if (availableTierCounts[tier] > 0) {
+							selectedTier = tier;
+							break;
+						}
+					}
+				}
+			}
+
+			for (int i = 0; i < availableLairList->size(); i++) {
+				LairSpawn* randomLairSpawn = availableLairList->get(i);
+				if (randomLairSpawn == nullptr || randomLairSpawn->getMaxDifficulty() >= minLevel) {
+					continue;
+				}
+
+				if (type == MissionTypes::HUNTING) {
+					LairTemplate* lairTemp = CreatureTemplateManager::instance()->getLairTemplate(randomLairSpawn->getLairTemplateName().hashCode());
+					if (lairTemp == nullptr || lairTemp->getMobType() != LairTemplate::CREATURE) {
+						continue;
+					}
+				}
+
+				int tierOffset = (highestAvailableDifficulty - randomLairSpawn->getMaxDifficulty()) / MISSION_DIFFICULTY_BRACKET_SIZE;
+				int tier = tierOffset <= 0 ? 0 : (tierOffset == 1 ? 1 : 2);
+				if (tier != selectedTier) {
+					continue;
+				}
+
+				if (lairSpawn == nullptr || System::random(1) == 0) {
+					lairSpawn = randomLairSpawn;
+				}
+			}
+		}
+
+		if (lairSpawn == nullptr) {
+			//The requested bracket is below every available lair. Select from the closest higher tier.
+			int lowestAvailableDifficulty = 0;
+
+			for (int i = 0; i < availableLairList->size(); i++) {
+				LairSpawn* randomLairSpawn = availableLairList->get(i);
+				if (randomLairSpawn == nullptr || randomLairSpawn->getMinDifficulty() <= maxLevel) {
+					continue;
+				}
+
+				if (type == MissionTypes::HUNTING) {
+					LairTemplate* lairTemp = CreatureTemplateManager::instance()->getLairTemplate(randomLairSpawn->getLairTemplateName().hashCode());
+					if (lairTemp == nullptr || lairTemp->getMobType() != LairTemplate::CREATURE) {
+						continue;
+					}
+				}
+
+				if (lowestAvailableDifficulty == 0 || randomLairSpawn->getMinDifficulty() < lowestAvailableDifficulty || (randomLairSpawn->getMinDifficulty() == lowestAvailableDifficulty && System::random(1) == 0)) {
+					lairSpawn = randomLairSpawn;
+					lowestAvailableDifficulty = randomLairSpawn->getMinDifficulty();
 				}
 			}
 		}

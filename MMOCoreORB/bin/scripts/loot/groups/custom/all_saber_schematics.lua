@@ -5,11 +5,12 @@ all_saber_schematics = {
 	minimumLevel = 0,
 	maximumLevel = 0,
 	lootItems = {
-		{itemTemplate = "cal_lightsaber_schematics", weight = 2000000},
-		{itemTemplate = "ezra_lightsaber_schematics", weight = 2000000},
-		{itemTemplate = "ezra2_lightsaber_schematics", weight = 2000000},
-		{itemTemplate = "kanan_lightsaber_schematics", weight = 2000000},
-		{itemTemplate = "rahm_lightsaber_schematics", weight = 2000000}
+		{itemTemplate = "cal_lightsaber_schematics",      weight = 1666666},
+		{itemTemplate = "ezra_lightsaber_schematics",     weight = 1666667},
+		{itemTemplate = "ezra2_lightsaber_schematics",    weight = 1666667},
+		{itemTemplate = "kanan_lightsaber_schematics",    weight = 1666667},
+		{itemTemplate = "rahm_lightsaber_schematics",     weight = 1666667},
+		{itemTemplate = "unstable_lightsaber_schematics", weight = 1666666},
 	}
 }
 

@@ -44,6 +44,9 @@
 
 --Children folder includes
 
+--Custom
+includeFile("draft_schematic/bio_engineer/creature/creature_tukata.lua")
+
 -- Server Objects
 includeFile("draft_schematic/bio_engineer/creature/creature_angler.lua")
 includeFile("draft_schematic/bio_engineer/creature/creature_bageraset.lua")

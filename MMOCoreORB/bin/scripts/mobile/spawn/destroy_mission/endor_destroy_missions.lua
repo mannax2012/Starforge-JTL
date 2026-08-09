@@ -248,6 +248,12 @@ endor_destroy_missions = {
 			maxDifficulty = 58,
 			size = 25,
 		},
+		{
+			lairTemplateName = "endor_blurrg_raptor_lair_neutral_small_boss_01",
+			minDifficulty = 54,
+			maxDifficulty = 58,
+			size = 25,
+		},
 	}
 }
 
