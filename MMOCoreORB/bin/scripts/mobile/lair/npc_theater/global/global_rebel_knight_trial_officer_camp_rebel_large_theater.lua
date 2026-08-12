@@ -3,7 +3,7 @@ global_rebel_knight_trial_officer_camp_rebel_large_theater = Lair:new {
 		{"rebel_commando", 5},
 		{"rebel_trooper", 5}
 	},
-	bossMobiles = {{"corvette_rebel_rear_admiral", 2}},
+	bossMobiles = {{"rebel_rear_admiral", 2}},
 	spawnLimit = 15,
 	buildingsVeryEasy = {"object/building/poi/anywhere_rebel_base_large_1.iff"},
 	buildingsEasy = {"object/building/poi/anywhere_rebel_base_large_1.iff"},
