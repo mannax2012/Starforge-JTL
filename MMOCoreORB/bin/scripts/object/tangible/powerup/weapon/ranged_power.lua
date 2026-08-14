@@ -57,7 +57,6 @@ object_tangible_powerup_weapon_ranged_power = object_tangible_powerup_weapon_sha
 	},
 
 	secondary = {
-		{"mindAttackCost", "Compensation", "cat_pup.pup_wpn_attack_cost_mind"},
 		{"idealRange", "Overpowering", "cat_pup.pup_wpn_range_attack_mod_mid"},
 		{"pointBlankAccuracy", "Searing", "cat_pup.pup_wpn_range_attack_mod_zero"}
 	},

@@ -53,11 +53,9 @@ object_tangible_powerup_weapon_ranged_grip = object_tangible_powerup_weapon_shar
 		{"idealRange", "Ergonomic", "cat_pup.pup_wpn_range_mid"},
 		{"idealAccuracy", "Fitted Grip", "cat_pup.pup_wpn_range_attack_mod_mid"},
 		{"attackSpeed", "Hair-Trigger", "cat_pup.pup_wpn_attack_speed"},
-		{"mindAttackCost", "Lightened", "cat_pup.pup_wpn_attack_cost_mind"}
 	},
 
 	secondary = {
-		{"healthAttackCost", "Recoil-Deadening", "cat_pup.pup_wpn_attack_cost_health"},
 		{"minDamage", "Aiming", "cat_pup.pup_wpn_damage_min"},
 		{"woundsRatio", "Reckoning", "cat_pup.pup_wpn_wound_chance"},
 		{"maxRangeAccuracy", "Steadying", "cat_pup.pup_wpn_range_attack_mod_max"}
