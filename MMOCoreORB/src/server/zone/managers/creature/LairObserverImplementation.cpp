@@ -96,7 +96,7 @@ int LairObserverImplementation::notifyObserverEvent(unsigned int eventType, Obse
 					lairObserver->checkForNewSpawns(lairRef, attackerRef);
 				}, "CheckForNewSpawnsLambda", 1000, zoneQueueName.toCharArray());
 			// Check to see if we should spawn a boss mobile
-			} else if ((getMobType() == LairTemplate::CREATURE) && !lair->isDestroyed() && lairTemplate->hasBossMobs()) {
+			} else if ((getMobType() == LairTemplate::CREATURE || getMobType() == LairTemplate::NPC) && !lair->isDestroyed() && lairTemplate->hasBossMobs()) {
 				int lairMaxCondition = lair->getMaxCondition();
 				int lairConditionDamage = lair->getConditionDamage();
 				int difficultyLevel = getDifficultyLevel();
@@ -557,20 +557,51 @@ void LairObserverImplementation::checkForBossSpawn(TangibleObject* lair, Tangibl
 		return;
 	}
 
-	int totalBossMobiles = bossMobiles->size();
+	Vector<int> validBossEntries;
 
-	// Get a random boss mobile template from the list and spawn it
-	try {
-		int randomBoss = System::random(totalBossMobiles - 1);
-		String templateToSpawn = bossMobiles->elementAt(randomBoss).getKey();
+	for (int i = 0; i < bossMobiles->size(); ++i) {
+		const auto& bossEntry = bossMobiles->elementAt(i);
+		const String& bossTemplate = bossEntry.getKey();
 
-		Reference<SpawnLairMobileTask*> spawnTask = new SpawnLairMobileTask(lairObject, spawnNumber, templateToSpawn, false);
-
-		if (spawnTask == nullptr) {
-			return;
+		if (bossEntry.getValue() <= 0) {
+			warning() << "Lair " << lairTemplate->getName() << " has a non-positive boss spawn count for " << bossTemplate;
+			continue;
 		}
 
-		spawnTask->schedule(500);
+		if (CreatureTemplateManager::instance()->getTemplate(bossTemplate) == nullptr) {
+			warning() << "Lair " << lairTemplate->getName() << " has an invalid boss mobile template " << bossTemplate;
+			continue;
+		}
+
+		validBossEntries.add(i);
+	}
+
+	if (validBossEntries.size() < 1) {
+		warning() << "Lair " << lairTemplate->getName() << " has no valid boss mobile entries";
+		// Do not reprocess a malformed configuration after every hit on this lair.
+		bossesSpawned.increment();
+		return;
+	}
+
+	// Select one configured boss entry, then honor its configured spawn count.
+	try {
+		int randomBoss = validBossEntries.get(System::random(validBossEntries.size() - 1));
+		const auto& bossEntry = bossMobiles->elementAt(randomBoss);
+		const String& templateToSpawn = bossEntry.getKey();
+		int bossCount = bossEntry.getValue();
+
+		for (int i = 0; i < bossCount; ++i) {
+			Reference<SpawnLairMobileTask*> spawnTask = new SpawnLairMobileTask(lairObject, spawnNumber, templateToSpawn, false);
+
+			if (spawnTask == nullptr) {
+				warning() << "Failed to create a boss spawn task for lair " << lairTemplate->getName();
+				continue;
+			}
+
+			// SpawnLairMobileTask uses the normal lair placement calculation, so each
+			// instance receives an independent position around the lair.
+			spawnTask->schedule((i + 1) * 200);
+		}
 
 		bossesSpawned.increment();
 	} catch (Exception& e) {
@@ -658,6 +689,7 @@ void LairObserverImplementation::spawnLairMobile(LairObject* lair, int spawnNumb
 	auto creatureTemplate = CreatureTemplateManager::instance()->getTemplate(templateToSpawn);
 
 	if (creatureTemplate == nullptr) {
+		warning() << "Lair " << lairTemplate->getName() << " could not resolve mobile template " << templateToSpawn;
 		return;
 	}
 
@@ -674,7 +706,27 @@ void LairObserverImplementation::spawnLairMobile(LairObject* lair, int spawnNumb
 		}
 	}
 
-	if (spawnedCreatures.size() >= spawnLimit) {
+	bool isBossMobile = false;
+	int totalBossSpawns = 0;
+	const VectorMap<String, int>* bossMobiles = lairTemplate->getBossMobiles();
+
+	if (bossMobiles != nullptr) {
+		for (int i = 0; i < bossMobiles->size(); ++i) {
+			const auto& bossEntry = bossMobiles->elementAt(i);
+
+			if (bossEntry.getValue() <= 0) {
+				continue;
+			}
+
+			totalBossSpawns += bossEntry.getValue();
+			isBossMobile = isBossMobile || bossEntry.getKey() == templateToSpawn;
+		}
+	}
+
+	// Boss entries are additional spawns. NPC lairs can otherwise reach their
+	// regular spawn limit before their boss wave is requested. The configured
+	// aggregate count is the upper bound for this extra boss capacity.
+	if (spawnedCreatures.size() >= spawnLimit && (!isBossMobile || spawnedCreatures.size() >= spawnLimit + totalBossSpawns)) {
 		return;
 	}
 
@@ -701,6 +753,7 @@ void LairObserverImplementation::spawnLairMobile(LairObject* lair, int spawnNumb
 	}
 
 	if (creature == nullptr || !creature->isAiAgent()) {
+		warning() << "Lair " << lairTemplate->getName() << " failed to spawn AI mobile " << templateToSpawn;
 		return;
 	}
 
