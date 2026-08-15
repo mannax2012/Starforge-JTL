@@ -51,7 +51,6 @@ object_tangible_powerup_weapon_ranged_scope = object_tangible_powerup_weapon_sha
 
 	primary = {
 		{"maxRangeAccuracy", "Calibrated", "cat_pup.pup_wpn_range_attack_mod_max"},
-		{"mindAttackCost", "Powered", "cat_pup.pup_wpn_attack_cost_mind"},
 		{"minDamage", "Precision", "cat_pup.pup_wpn_damage_min"},
 		{"idealAccuracy", "Ranged", "cat_pup.pup_wpn_range_attack_mod_mid"}
 	},

@@ -52,7 +52,6 @@ object_tangible_powerup_weapon_ranged_stock = object_tangible_powerup_weapon_sha
 	primary = {
 		{"maxRangeAccuracy", "Anti-Jitter", "cat_pup.pup_wpn_range_attack_mod_max"},
 		{"idealRange", "Balanced", "cat_pup.pup_wpn_range_mid"},
-		{"healthAttackCost", "Reactive", "cat_pup.pup_wpn_attack_cost_health"}
 	},
 
 	secondary = {

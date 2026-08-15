@@ -50,9 +50,7 @@ object_tangible_powerup_weapon_melee_generic = object_tangible_powerup_weapon_sh
 	baseName = "Melee Powerup",
 
 	primary = {
-		{"healthAttackCost", "Balancing", "cat_pup.pup_wpn_attack_cost_health"},
 		{"pointBlankAccuracy", "Barbing", "cat_pup.pup_wpn_range_attack_mod_zero"},
-		{"mindAttackCost", "Compensating", "cat_pup.pup_wpn_attack_cost_mind"},
 		{"idealRange", "Extending", "cat_pup.pup_wpn_range_mid"},
 	},
 

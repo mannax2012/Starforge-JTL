@@ -206,6 +206,62 @@ void DynamicSpawnObserverImplementation::spawnInitialMobiles(SceneObject* buildi
 			}
 		}
 	}
+
+	// Theater and dynamic NPC lairs do not receive damage-wave callbacks, so
+	// configured bosses are spawned with their initial mobile set. They use the
+	// same CreatureManager path and SpawnObserver tracking as every other lair
+	// mobile, which preserves template-defined faction and AI behavior.
+	const VectorMap<String, int>* bossMobiles = lairTemplate->getBossMobiles();
+
+	if (bossMobiles == nullptr) {
+		return;
+	}
+
+	for (int i = 0; i < bossMobiles->size(); ++i) {
+		const auto& bossEntry = bossMobiles->elementAt(i);
+		const String& templateToSpawn = bossEntry.getKey();
+		int bossCount = bossEntry.getValue();
+
+		if (bossCount <= 0) {
+			warning() << "Dynamic lair " << lairTemplate->getName() << " has a non-positive boss spawn count for " << templateToSpawn;
+			continue;
+		}
+
+		if (CreatureTemplateManager::instance()->getTemplate(templateToSpawn) == nullptr) {
+			warning() << "Dynamic lair " << lairTemplate->getName() << " has an invalid boss mobile template " << templateToSpawn;
+			continue;
+		}
+
+		for (int j = 0; j < bossCount; ++j) {
+			float x = building->getPositionX() + (size - System::random(size * 20) / 10.0f);
+			float y = building->getPositionY() + (size - System::random(size * 20) / 10.0f);
+			float z = building->getZone()->getHeight(x, y);
+
+			ManagedReference<CreatureObject*> creo = creatureManager->spawnCreatureWithAi(templateToSpawn.hashCode(), x, z, y);
+
+			if (creo == nullptr || !creo->isAiAgent()) {
+				warning() << "Dynamic lair " << lairTemplate->getName() << " failed to spawn AI boss mobile " << templateToSpawn;
+				continue;
+			}
+
+			auto agent = creo->asAiAgent();
+
+			if (agent == nullptr) {
+				continue;
+			}
+
+			Locker clocker(agent, building);
+
+			agent->setDespawnOnNoPlayerInRange(false);
+			agent->setHomeLocation(x, z, y);
+			agent->setRespawnTimer(0);
+			agent->resetRespawnCounter();
+			agent->setHomeObject(building);
+			agent->setLairTemplateCRC(lairTemplateCRC);
+
+			spawnedCreatures.add(creo);
+		}
+	}
 }
 
 CreatureHerdObserver* DynamicSpawnObserverImplementation::getHerdObserver() {
