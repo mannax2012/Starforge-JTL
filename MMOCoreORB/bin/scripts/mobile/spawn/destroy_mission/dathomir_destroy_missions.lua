@@ -153,6 +153,12 @@ dathomir_destroy_missions = {
 			size = 35,
 		},
 		{
+			lairTemplateName = "global_black_sun_neutral_none",
+			minDifficulty = 87,
+			maxDifficulty = 91,
+			size = 35,
+		},
+		{
 			lairTemplateName = "dathomir_rancor_enraged_bull_lair_neutral_large_boss_01",
 			minDifficulty = 87,
 			maxDifficulty = 91,
