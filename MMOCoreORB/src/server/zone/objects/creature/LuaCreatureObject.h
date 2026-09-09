@@ -120,6 +120,7 @@ namespace creature {
 		int setShockWounds(lua_State* L);
 		int getForceSensitiveSkillCount(lua_State* L);
 		int villageKnightPrereqsMet(lua_State* L);
+		int getCombatContributorList(lua_State* L);
 		int getDamageDealerList(lua_State* L);
 		int getHealingThreatList(lua_State* L);
 		int getAllThreatsList(lua_State* L);

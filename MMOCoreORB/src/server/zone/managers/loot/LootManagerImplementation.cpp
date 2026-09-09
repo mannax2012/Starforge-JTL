@@ -391,7 +391,7 @@ TangibleObject* LootManagerImplementation::createLootObject(TransactionLog& trx,
 	}
 
 	if (templateObject->isShipComponent()) {
-		return createShipComponent(trx, templateObject);
+		return createShipComponent(trx, templateObject, level);
 	}
 
 	ManagedReference<TangibleObject*> prototype = zoneServer->createObject(directTemplateObject.hashCode(), 2).castTo<TangibleObject*>();
@@ -501,12 +501,13 @@ TangibleObject* LootManagerImplementation::createLootObject(TransactionLog& trx,
 	return prototype;
 }
 
-TangibleObject* LootManagerImplementation::createShipComponent(TransactionLog& trx, const LootItemTemplate* itemTemplate) {
+TangibleObject* LootManagerImplementation::createShipComponent(TransactionLog& trx, const LootItemTemplate* itemTemplate, int level) {
 	if (itemTemplate == nullptr || !itemTemplate->isShipComponent()) {
 		return nullptr;
 	}
 
 	uint32 templateCRC = itemTemplate->getDirectObjectTemplate().hashCode();
+	level = Math::clamp((int)LEVELMIN, level, (int)LEVELMAX);
 
 	if (templateCRC == 0) {
 		return nullptr;
@@ -520,10 +521,14 @@ TangibleObject* LootManagerImplementation::createShipComponent(TransactionLog& t
 
 	Locker objLocker(prototype);
 
+	trx.addState("lootVersion", 2);
+	trx.addState("lootTemplate", itemTemplate->getDirectObjectTemplate());
+	trx.addState("lootLevel", level);
+
 	setCustomizationData(itemTemplate, prototype);
 	setCustomObjectName(prototype, itemTemplate, 0.f);
 
-	auto lootValues = LootValues(itemTemplate, 0, 1.f);
+	auto lootValues = LootValues(itemTemplate, level, LootValues::EXPERIMENTAL);
 	prototype->updateCraftingValues(&lootValues, true);
 
 	return prototype;
@@ -760,7 +765,7 @@ uint64 LootManagerImplementation::createLoot(TransactionLog& trx, SceneObject* c
 		return 0;
 	}
 
-	return createLoot(trx, container, lootMapEntry, 0, true);
+	return createLoot(trx, container, lootMapEntry, shipAgent->getLevel(), true);
 }
 
 bool LootManagerImplementation::createLootFromCollection(TransactionLog& trx, SceneObject* container, const LootGroupCollection* lootCollection, int level) {
@@ -861,7 +866,7 @@ uint64 LootManagerImplementation::createLoot(TransactionLog& trx, SceneObject* c
 
 		obj = createLootResource(lootEntry, zone->getZoneName());
 	} else if (itemTemplate->isShipComponent()) {
-		obj = createShipComponent(trx, itemTemplate);
+		obj = createShipComponent(trx, itemTemplate, level);
 	} else {
 		obj = createLootObject(trx, itemTemplate, level, maxCondition);
 	}
