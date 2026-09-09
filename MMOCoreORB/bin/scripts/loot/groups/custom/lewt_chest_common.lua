@@ -7,11 +7,12 @@ lewt_chest_common = {
 	lootItems = {
 		{itemTemplate = "unstable_crystal_pack", weight = 1500000},
 		{itemTemplate = "acid_vibro_unit", weight = 1500000},
-		{itemTemplate = "force_color_crystal_bw", weight = 2000000},
+		{itemTemplate = "force_color_crystal_bw", weight = 1500000},
 		{itemTemplate = "acklay", weight = 1500000},
 		{itemTemplate = "krayt_pearls", weight = 1500000},
 		{itemTemplate = "clothing_attachments", weight = 1000000},
-		{itemTemplate = "armor_attachments", weight = 1000000}
+		{itemTemplate = "armor_attachments", weight = 1000000},
+		{itemTemplate = "lightsaber_layer_schematic", weight = 500000},
 	}
 }
 

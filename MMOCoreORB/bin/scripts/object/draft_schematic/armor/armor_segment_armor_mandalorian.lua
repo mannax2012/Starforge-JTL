@@ -41,22 +41,38 @@
 --this exception also makes it possible to release a modified version 
 
 
-object_tangible_deed_vehicle_deed_jetpack_deed = object_tangible_deed_vehicle_deed_shared_jetpack_deed:new {
+object_draft_schematic_armor_armor_segment_armor_mandalorian = object_draft_schematic_armor_shared_armor_segment_mandalorian:new {
 
-	templateType = VEHICLEDEED,	
+	templateType = DRAFTSCHEMATIC,
 
-	controlDeviceObjectTemplate = "object/intangible/vehicle/jetpack_pcd.iff",
-	generatedObjectTemplate = "object/mobile/vehicle/jetpack.iff",
+	customObjectName = "Beskar Armor Segment",
 
-	numberExperimentalProperties = {1, 1, 3, 1, 3, 3, 3},
-	experimentalProperties = {"XX", "XX", "OQ", "SR", "UT", "XX", "OQ", "DR", "MA", "OQ", "SR", "MA", "OQ", "DR", "SR"},
-	experimentalWeights = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-	experimentalGroupTitles = {"null", "null", "exp_durability", "null", "exp_speed", "exp_handling", "exp_acceleration"},
-	experimentalSubGroupTitles = {"null", "null", "hit_points", "vehicle_resists", "vehicle_speed", "vehicle_handling", "vehicle_acceleration"},
-	experimentalMin = {0, 0, 2750, 0, 20, 75, 12.5},
-	experimentalMax = {0, 0, 4000, 0, 40, 80, 15},
-	experimentalPrecision = {0, 0, 0, 0, 2, 1, 2},
-	experimentalCombineType = {0, 0, 1, 1, 1, 1, 1},
+	craftingToolTab = 2, -- (See DraftSchematicObjectTemplate.h)
+	complexity = 30,
+	size = 6,
+	factoryCrateSize = 1000,
+	factoryCrateType = "object/factory/factory_crate_armor.iff",
+
+	xpType = "crafting_clothing_armor",
+	xp = 35,
+
+	assemblySkill = "armor_assembly",
+	experimentingSkill = "armor_experimentation",
+	customizationSkill = "armor_customization",
+
+	customizationOptions = {},
+	customizationStringNames = {},
+	customizationDefaults = {},
+
+	ingredientTemplateNames = {"craft_armor_ingredients_n", "craft_armor_ingredients_n", "craft_armor_ingredients_n", "craft_armor_ingredients_n", "craft_armor_ingredients_n", "craft_armor_ingredients_n", "mando_n"},
+	ingredientTitleNames = {"segment_layer_assembly_plate", "armor_layer_weld_tabs", "segment_mounting_tabs", "defensive_layer", "defensive_layer_2", "defensive_layer_3", "segment_enhancement"},
+	ingredientSlotType = {0, 0, 0, 3, 3, 3, 3},
+	resourceTypes = {"metal", "steel", "steel", "object/tangible/component/armor/shared_armor_layer.iff", "object/tangible/component/armor/shared_armor_layer.iff", "object/tangible/component/armor/shared_armor_layer.iff", "object/tangible/component/armor/shared_base_armor_segment_enhancement.iff"},
+	resourceQuantities = {10, 5, 3, 1, 1, 1, 1},
+	contribution = {100, 100, 100, 100, 100, 100, 100},
+
+	targetTemplate = "object/tangible/component/armor/armor_segment_armor_mandalorian.iff",
+
+	additionalTemplates = {}
 }
-
-ObjectTemplates:addTemplate(object_tangible_deed_vehicle_deed_jetpack_deed, "object/tangible/deed/vehicle_deed/jetpack_deed.iff")
+ObjectTemplates:addTemplate(object_draft_schematic_armor_armor_segment_armor_mandalorian, "object/draft_schematic/armor/armor_segment_armor_mandalorian.iff")

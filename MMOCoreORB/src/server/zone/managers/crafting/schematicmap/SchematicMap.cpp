@@ -83,6 +83,12 @@ void SchematicMap::loadDraftSchematicDatabase() {
 		ManagedReference<DraftSchematic* > draftSchematic = zoneServer->getObject(objectID).castTo<DraftSchematic*>();
 
 		if(draftSchematic != nullptr) {
+			// Persisted schematics can retain a client CRC from an older template.
+			// Refresh it before indexing so the client receives the current schematic IFF.
+			auto templateData = draftSchematic->getObjectTemplate();
+			if (templateData != nullptr) {
+				draftSchematic->setClientObjectCRC(templateData->getClientObjectCRC());
+			}
 
 			if(!schematicCrcMap.contains(draftSchematic->getClientObjectCRC()))
 				schematicCrcMap.put(draftSchematic->getClientObjectCRC(), draftSchematic);

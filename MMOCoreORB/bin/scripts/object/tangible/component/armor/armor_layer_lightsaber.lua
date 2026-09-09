@@ -40,23 +40,30 @@
 --gives permission to release a modified version without this exception; 
 --this exception also makes it possible to release a modified version 
 
+--[[
+armor_special_type
+1 = kinetic
+2 = energy
+4 = blast
+8 = stun
+16 = lightsaber
+32 = heat
+64 = cold
+128 = acid
+256 = electrical
+--]]
 
-object_tangible_deed_vehicle_deed_jetpack_deed = object_tangible_deed_vehicle_deed_shared_jetpack_deed:new {
+object_tangible_component_armor_armor_layer_lightsaber = object_tangible_component_armor_shared_armor_layer_lightsaber:new {
 
-	templateType = VEHICLEDEED,	
-
-	controlDeviceObjectTemplate = "object/intangible/vehicle/jetpack_pcd.iff",
-	generatedObjectTemplate = "object/mobile/vehicle/jetpack.iff",
-
-	numberExperimentalProperties = {1, 1, 3, 1, 3, 3, 3},
-	experimentalProperties = {"XX", "XX", "OQ", "SR", "UT", "XX", "OQ", "DR", "MA", "OQ", "SR", "MA", "OQ", "DR", "SR"},
-	experimentalWeights = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-	experimentalGroupTitles = {"null", "null", "exp_durability", "null", "exp_speed", "exp_handling", "exp_acceleration"},
-	experimentalSubGroupTitles = {"null", "null", "hit_points", "vehicle_resists", "vehicle_speed", "vehicle_handling", "vehicle_acceleration"},
-	experimentalMin = {0, 0, 2750, 0, 20, 75, 12.5},
-	experimentalMax = {0, 0, 4000, 0, 40, 80, 15},
-	experimentalPrecision = {0, 0, 0, 0, 2, 1, 2},
-	experimentalCombineType = {0, 0, 1, 1, 1, 1, 1},
+  numberExperimentalProperties = {1, 1, 1, 2, 2, 2, 2, 2, 1, 1, 2, 1},
+  experimentalProperties = {"XX", "XX", "XX", "OQ", "SR", "OQ", "UT", "MA", "OQ", "MA", "OQ", "MA", "OQ", "XX", "XX", "OQ", "SR", "XX"},
+  experimentalWeights = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+  experimentalGroupTitles = {"null", "null", "exp_durability", "exp_quality", "exp_durability", "exp_durability", "exp_durability", "exp_durability", "null", "null", "exp_resistance", "null"},
+  experimentalSubGroupTitles = {"null", "null", "hit_points", "armor_effectiveness", "armor_integrity", "armor_health_encumbrance", "armor_action_encumbrance", "armor_mind_encumbrance", "armor_rating", "armor_special_type", "armor_special_effectiveness", "armor_special_integrity"},
+  experimentalMin = {0, 0, 1000, 1, 100, 0, 0, 0, 1, 16, 1, 20},
+  experimentalMax = {0, 0, 1000, 5, 1000, 0, 0, 0, 1, 16, 30, 50},
+  experimentalPrecision = {0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0},
+  experimentalCombineType = {0, 0, 1, 1, 1, 1, 1, 1, 4, 4, 4, 1},
 }
 
-ObjectTemplates:addTemplate(object_tangible_deed_vehicle_deed_jetpack_deed, "object/tangible/deed/vehicle_deed/jetpack_deed.iff")
+ObjectTemplates:addTemplate(object_tangible_component_armor_armor_layer_lightsaber, "object/tangible/component/armor/armor_layer_lightsaber.iff")

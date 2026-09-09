@@ -37,6 +37,8 @@ DeathWatchBunkerScreenPlay = ScreenPlay:new {
 		protectiveLiquid = "object/tangible/loot/dungeon/death_watch_bunker/emulsion_protection.iff"
 	},
 
+	jetpackRewardSchematic = { template = "object/draft_schematic/vehicle/civilian/jetpack.iff", displayName = "Jetpack" },
+
 	targetItems = {
 		--Armorsmith Crafting Terminal
 		{ "object/tangible/wearables/armor/mandalorian/armor_mandalorian_chest_plate.iff",
@@ -52,7 +54,7 @@ DeathWatchBunkerScreenPlay = ScreenPlay:new {
 			"object/tangible/wearables/armor/mandalorian/armor_mandalorian_gloves.iff",
 			"object/tangible/wearables/armor/mandalorian/armor_mandalorian_belt.iff" },
 		-- Jetpack Crafting Terminal
-		{ "object/tangible/deed/vehicle_deed/jetpack_deed.iff" },
+		{ "object/draft_schematic/vehicle/civilian/jetpack.iff" },
 	},
 
 	doorData = {
@@ -110,14 +112,14 @@ DeathWatchBunkerScreenPlay = ScreenPlay:new {
 			"object/tangible/wearables/armor/bounty_hunter/armor_bounty_hunter_belt.iff" },
 
 		-- Jetpack Crafting Terminal
-		{ "object/tangible/deed/vehicle_deed/jetpack_deed.iff" },
+		{ "object/draft_schematic/vehicle/civilian/jetpack.iff" },
 	},
 
 	partStrings = { "@dungeon/death_watch:armorsmith_items", "@dungeon/death_watch:droid_engineer_items", "@dungeon/death_watch:tailored_items" },
 
-	terminalSkills = { "", "", "", "", "crafting_armorsmith_master", "crafting_droidengineer_master", "crafting_tailor_master", "crafting_artisan_master" },
+	terminalSkills = { "", "", "", "", "crafting_armorsmith_master", "crafting_droidengineer_master", "crafting_tailor_master", "crafting_mechanic_master" },
 
-	terminalSkillMessage = { "@dungeon/death_watch:master_armorsmith_required", "@dungeon/death_watch:master_droidengineer_required", "@dungeon/death_watch:master_tailor_required", "@dungeon/death_watch:master_artisan_required" },
+	terminalSkillMessage = { "@dungeon/death_watch:master_armorsmith_required", "@dungeon/death_watch:master_droidengineer_required", "@dungeon/death_watch:master_tailor_required", "You must be a Master Mechanic to use this terminal." },
 
 	missingSkillMessage = { "", "", "", "", "@dungeon/death_watch:not_enough_armorsmith_skill", "@dungeon/death_watch:not_enough_droidengineer_skill", "@dungeon/death_watch:not_enough_tailor_skill" },
 
@@ -1358,6 +1360,32 @@ function DeathWatchBunkerScreenPlay:hasRequiredSkill(room, pCreature)
 	return CreatureObject(pCreature):hasSkill(self.terminalSkills[room])
 end
 
+function DeathWatchBunkerScreenPlay:teachJetpackSchematic(pCreature)
+	if pCreature == nil then
+		return false
+	end
+
+	local pGhost = CreatureObject(pCreature):getPlayerObject()
+
+	if pGhost == nil then
+		return false
+	end
+
+	local schematic = self.jetpackRewardSchematic
+	local grantedSchematic = PlayerObject(pGhost):addRewardedSchematic(schematic.template, 2, -1, true)
+
+	if grantedSchematic == false then
+		CreatureObject(pCreature):sendSystemMessage("Error: Unable to teach jetpack schematic.")
+		return false
+	end
+
+	local messageString = LuaStringIdChatParameter("@loot_schematic:skill_granted")
+	messageString:setTO(schematic.displayName)
+	CreatureObject(pCreature):sendSystemMessage(messageString:_getObject())
+
+	return true
+end
+
 -- Checks whether a creature has an Alum Mineral
 function DeathWatchBunkerScreenPlay:hasAlumMineral(pCreature)
 	if pCreature == nil then
@@ -1721,24 +1749,29 @@ function DeathWatchBunkerScreenPlay:stopCraftingProcess(pCreature, pTerm, succes
 	deleteData(statusPrefix .. "bharmorpart")
 
 	if successful == true then
-		local pInventory = SceneObject(pCreature):getSlottedObject("inventory")
+		if (number == 4) then
+			if (self:teachJetpackSchematic(pCreature) == false) then
+				return 0
+			end
 
-		if (pInventory == nil) then
-			return 0
-		end
+			CreatureObject(pCreature):sendSystemMessage("@dungeon/death_watch:crafting_finished")
+		else
+			local pInventory = SceneObject(pCreature):getSlottedObject("inventory")
 
-		local targetItems = self.targetItems[number]
-		local pReward = giveItem(pInventory, targetItems[target], -1)
+			if (pInventory == nil) then
+				return 0
+			end
 
+			local targetItems = self.targetItems[number]
+			local pReward = giveItem(pInventory, targetItems[target], -1)
 
-		CreatureObject(pCreature):sendSystemMessage("@dungeon/death_watch:crafting_finished")
+			CreatureObject(pCreature):sendSystemMessage("@dungeon/death_watch:crafting_finished")
 
-		if (pReward == nil) then
-			CreatureObject(pCreature):sendSystemMessage("Error: Unable to generate item.")
-			return 0
-		end
+			if (pReward == nil) then
+				CreatureObject(pCreature):sendSystemMessage("Error: Unable to generate item.")
+				return 0
+			end
 
-		if (number ~= 4) then
 			TangibleObject(pReward):setCustomizationVariable("/private/index_color_1", self.primaryArmorColors[getRandomNumber(1,8)])
 			TangibleObject(pReward):setCustomizationVariable("/private/index_color_2", self.secondaryArmorColors[getRandomNumber(1,8)])
 		end

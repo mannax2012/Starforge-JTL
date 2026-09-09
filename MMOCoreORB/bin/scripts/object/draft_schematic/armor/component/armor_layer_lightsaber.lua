@@ -41,22 +41,38 @@
 --this exception also makes it possible to release a modified version 
 
 
-object_tangible_deed_vehicle_deed_jetpack_deed = object_tangible_deed_vehicle_deed_shared_jetpack_deed:new {
+object_draft_schematic_armor_component_armor_layer_lightsaber = object_draft_schematic_armor_component_shared_armor_layer_lightsaber:new {
 
-	templateType = VEHICLEDEED,	
+	templateType = DRAFTSCHEMATIC,
 
-	controlDeviceObjectTemplate = "object/intangible/vehicle/jetpack_pcd.iff",
-	generatedObjectTemplate = "object/mobile/vehicle/jetpack.iff",
+	customObjectName = "Lightsaber Armor Layer",
 
-	numberExperimentalProperties = {1, 1, 3, 1, 3, 3, 3},
-	experimentalProperties = {"XX", "XX", "OQ", "SR", "UT", "XX", "OQ", "DR", "MA", "OQ", "SR", "MA", "OQ", "DR", "SR"},
-	experimentalWeights = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-	experimentalGroupTitles = {"null", "null", "exp_durability", "null", "exp_speed", "exp_handling", "exp_acceleration"},
-	experimentalSubGroupTitles = {"null", "null", "hit_points", "vehicle_resists", "vehicle_speed", "vehicle_handling", "vehicle_acceleration"},
-	experimentalMin = {0, 0, 2750, 0, 20, 75, 12.5},
-	experimentalMax = {0, 0, 4000, 0, 40, 80, 15},
-	experimentalPrecision = {0, 0, 0, 0, 2, 1, 2},
-	experimentalCombineType = {0, 0, 1, 1, 1, 1, 1},
+	craftingToolTab = 2, -- (See DraftSchematicObjectTemplate.h)
+	complexity = 20,
+	size = 3,
+	factoryCrateSize = 1000,
+	factoryCrateType = "object/factory/factory_crate_generic_items.iff",
+
+	xpType = "crafting_clothing_armor",
+	xp = 90,
+
+	assemblySkill = "armor_assembly",
+	experimentingSkill = "armor_experimentation",
+	customizationSkill = "armor_customization",
+
+	customizationOptions = {},
+	customizationStringNames = {},
+	customizationDefaults = {},
+
+	ingredientTemplateNames = {"craft_armor_ingredients_n", "craft_armor_ingredients_n", "craft_armor_ingredients_n", "craft_armor_ingredients_n"},
+	ingredientTitleNames = {"armor_layer_frame", "ablative_damage_absorbtion_medium", "energy_sink", "second_tier_insulation_medium"},
+	ingredientSlotType = {0, 0, 0, 0},
+	resourceTypes = {"metal", "petrochem_inert_polymer", "gas_inert_known", "ore_siliclastic_cortosis"},
+	resourceQuantities = {20, 8, 8, 5},
+	contribution = {100, 100, 100, 100},
+
+	targetTemplate = "object/tangible/component/armor/armor_layer_lightsaber.iff",
+
+	additionalTemplates = {}
 }
-
-ObjectTemplates:addTemplate(object_tangible_deed_vehicle_deed_jetpack_deed, "object/tangible/deed/vehicle_deed/jetpack_deed.iff")
+ObjectTemplates:addTemplate(object_draft_schematic_armor_component_armor_layer_lightsaber, "object/draft_schematic/armor/component/armor_layer_lightsaber.iff")

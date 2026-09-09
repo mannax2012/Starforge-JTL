@@ -41,8 +41,39 @@
 --this exception also makes it possible to release a modified version 
 
 
-object_draft_schematic_vehicle_civilian_jetpack = object_draft_schematic_vehicle_civilian_shared_jetpack:new {
-    factoryCrateType = "object/factory/factory_crate_installation.iff"
-}
 
+object_draft_schematic_vehicle_civilian_jetpack = object_draft_schematic_vehicle_civilian_shared_jetpack:new {
+
+	templateType = DRAFTSCHEMATIC,
+
+	customObjectName = "Jetpack",
+
+	craftingToolTab = 16, -- (See DraftSchematicObjectTemplate.h)
+	complexity = 25,
+	size = 10,
+	factoryCrateSize = 1000,
+	factoryCrateType = "object/factory/factory_crate_installation.iff",
+
+	xpType = "crafting_mechanic",
+	xp = 1800,
+
+	assemblySkill = "vehicle_assembly",
+	experimentingSkill = "vehicle_experimentation",
+	customizationSkill = "",
+
+	customizationOptions = {},
+	customizationStringNames = {},
+	customizationDefaults = {},
+
+	ingredientTemplateNames = {"craft_clothing_ingredients_n", "craft_clothing_ingredients_n", "item_n", "item_n", "item_n", "item_n", "item_n", "item_n", "craft_vehicle_ingredients_n", "craft_vehicle_ingredients_n"},
+	ingredientTitleNames = {"binding_and_hardware", "hardware_and_attachments", "alum_reward", "jetpack_base", "jetpack_stabilizer", "jetpack_ducted_fan", "jetpack_injector_tank", "jetpack_fuel_dispersion_unit", "vehicle_enhancement_1", "vehicle_enhancement_2"},
+	ingredientSlotType = {0, 0, 1, 1, 1, 1, 1, 1, 3, 3},
+	resourceTypes = {"aluminum", "steel", "object/tangible/loot/dungeon/death_watch_bunker/shared_mining_drill_reward.iff", "object/tangible/loot/dungeon/death_watch_bunker/shared_jetpack_base.iff", "object/tangible/loot/dungeon/death_watch_bunker/shared_jetpack_stabilizer.iff", "object/tangible/loot/dungeon/death_watch_bunker/shared_ducted_fan.iff", "object/tangible/loot/dungeon/death_watch_bunker/shared_fuel_injector_tank.iff", "object/tangible/loot/dungeon/death_watch_bunker/shared_fuel_dispersion_unit.iff", "object/tangible/component/vehicle/shared_base_vehicle_enhancement.iff", "object/tangible/component/vehicle/shared_base_vehicle_enhancement.iff"},
+	resourceQuantities = {2000, 4000, 1, 1, 1, 1, 1, 1, 1, 1},
+	contribution = {100, 100, 100, 100, 100, 100, 100, 100, 100, 100},
+
+	targetTemplate = "object/tangible/deed/vehicle_deed/jetpack_deed.iff",
+
+	additionalTemplates = {}
+}
 ObjectTemplates:addTemplate(object_draft_schematic_vehicle_civilian_jetpack, "object/draft_schematic/vehicle/civilian/jetpack.iff")

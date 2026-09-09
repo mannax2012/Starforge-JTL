@@ -43,6 +43,16 @@
 
 schematics = {
 
+	--DWB
+	{path="object/draft_schematic/vehicle/civilian/jetpack.iff"},
+
+	{path="object/draft_schematic/clothing/clothing_armor_mandalorian_helmet.iff"},{path="object/draft_schematic/clothing/clothing_armor_mandalorian_chest_plate.iff"},
+	{path="object/draft_schematic/clothing/clothing_armor_mandalorian_bicep_l.iff"},{path="object/draft_schematic/clothing/clothing_armor_mandalorian_bicep_r.iff"},
+	{path="object/draft_schematic/clothing/clothing_armor_mandalorian_bracer_l.iff"},{path="object/draft_schematic/clothing/clothing_armor_mandalorian_bracer_r.iff"},
+	{path="object/draft_schematic/clothing/clothing_armor_mandalorian_gloves.iff"},{path="object/draft_schematic/clothing/clothing_armor_mandalorian_belt.iff"},
+	{path="object/draft_schematic/clothing/clothing_armor_mandalorian_leggings.iff"},{path="object/draft_schematic/clothing/clothing_armor_mandalorian_boots.iff"},
+	{path="object/draft_schematic/armor/armor_segment_mandalorian.iff"},{path="object/draft_schematic/armor/component/armor_layer_lightsaber.iff"},
+
 	--Custom Pets
 	{path="object/draft_schematic/bio_engineer/creature/creature_tukata.iff"},
 	
@@ -263,6 +273,7 @@ schematics = {
 	{path="object/draft_schematic/armor/armor_segment_padded_advanced.iff"},
 	{path="object/draft_schematic/armor/armor_segment_kashyyykian_black_mtn_advanced.iff"},
 	{path="object/draft_schematic/armor/armor_segment_composite.iff"},
+	{path="object/draft_schematic/armor/armor_segment_armor_mandalorian.iff"},
 	{path="object/draft_schematic/clothing/clothing_armor_padded_belt.iff"},
 	{path="object/draft_schematic/clothing/clothing_armor_padded_bicep_l.iff"},
 	{path="object/draft_schematic/clothing/clothing_armor_padded_bicep_r.iff"},
@@ -314,6 +325,7 @@ schematics = {
 	{path="object/draft_schematic/clothing/clothing_armor_kashyyykian_hunting_bracer_r.iff"},
 	{path="object/draft_schematic/armor/component/armor_layer_kinetic.iff"},
 	{path="object/draft_schematic/armor/component/armor_layer_energy.iff"},
+	{path="object/draft_schematic/armor/component/armor_layer_lightsaber.iff"},
 	{path="object/draft_schematic/armor/component/armor_layer_blast.iff"},
 	{path="object/draft_schematic/armor/component/armor_layer_heat.iff"},
 	{path="object/draft_schematic/armor/component/armor_layer_cold.iff"},

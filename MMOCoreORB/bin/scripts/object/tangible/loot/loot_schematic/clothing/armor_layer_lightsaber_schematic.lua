@@ -12,7 +12,7 @@
 --This program is distributed in the hope that it will be useful, 
 --but WITHOUT ANY WARRANTY; without even the implied warranty of 
 --MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
---See the GNU Lesser General Public License for
+--See the GNU Lesser General Public License fo
 --more details.
 
 --You should have received a copy of the GNU Lesser General 
@@ -41,22 +41,13 @@
 --this exception also makes it possible to release a modified version 
 
 
-object_tangible_deed_vehicle_deed_jetpack_deed = object_tangible_deed_vehicle_deed_shared_jetpack_deed:new {
-
-	templateType = VEHICLEDEED,	
-
-	controlDeviceObjectTemplate = "object/intangible/vehicle/jetpack_pcd.iff",
-	generatedObjectTemplate = "object/mobile/vehicle/jetpack.iff",
-
-	numberExperimentalProperties = {1, 1, 3, 1, 3, 3, 3},
-	experimentalProperties = {"XX", "XX", "OQ", "SR", "UT", "XX", "OQ", "DR", "MA", "OQ", "SR", "MA", "OQ", "DR", "SR"},
-	experimentalWeights = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-	experimentalGroupTitles = {"null", "null", "exp_durability", "null", "exp_speed", "exp_handling", "exp_acceleration"},
-	experimentalSubGroupTitles = {"null", "null", "hit_points", "vehicle_resists", "vehicle_speed", "vehicle_handling", "vehicle_acceleration"},
-	experimentalMin = {0, 0, 2750, 0, 20, 75, 12.5},
-	experimentalMax = {0, 0, 4000, 0, 40, 80, 15},
-	experimentalPrecision = {0, 0, 0, 0, 2, 1, 2},
-	experimentalCombineType = {0, 0, 1, 1, 1, 1, 1},
+object_tangible_loot_loot_schematic_clothing_armor_layer_lightsaber_schematic = object_tangible_loot_loot_schematic_clothing_shared_armor_layer_lightsaber_schematic:new {
+	templateType = LOOTSCHEMATIC,
+	objectMenuComponent = "LootSchematicMenuComponent",
+	attributeListComponent = "LootSchematicAttributeListComponent",
+	requiredSkill = "crafting_armorsmith_master",
+	targetDraftSchematic = "object/draft_schematic/armor/component/armor_layer_lightsaber.iff",
+	targetUseCount = 5
 }
 
-ObjectTemplates:addTemplate(object_tangible_deed_vehicle_deed_jetpack_deed, "object/tangible/deed/vehicle_deed/jetpack_deed.iff")
+ObjectTemplates:addTemplate(object_tangible_loot_loot_schematic_clothing_armor_layer_lightsaber_schematic, "object/tangible/loot/loot_schematic/clothing/armor_layer_lightsaber_schematic.iff")
