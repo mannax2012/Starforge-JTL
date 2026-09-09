@@ -41,30 +41,40 @@
 --this exception also makes it possible to release a modified version 
 
 
+object_draft_schematic_clothing_clothing_hat_invisible_10 = object_draft_schematic_clothing_shared_clothing_hat_invisible_10:new {
 
---Children folder includes
+   templateType = DRAFTSCHEMATIC,
 
--- Server Objects
-includeFile("tangible/wearables/hat/hat_chef_s01.lua")
-includeFile("tangible/wearables/hat/hat_chef_s02.lua")
-includeFile("tangible/wearables/hat/hat_imp_s01.lua")
-includeFile("tangible/wearables/hat/hat_s02.lua")
-includeFile("tangible/wearables/hat/hat_s04.lua")
-includeFile("tangible/wearables/hat/hat_s10.lua")
-includeFile("tangible/wearables/hat/hat_s12.lua")
-includeFile("tangible/wearables/hat/hat_s13.lua")
-includeFile("tangible/wearables/hat/hat_s14.lua")
-includeFile("tangible/wearables/hat/hat_twilek_s01.lua")
-includeFile("tangible/wearables/hat/hat_twilek_s02.lua")
-includeFile("tangible/wearables/hat/hat_twilek_s03.lua")
-includeFile("tangible/wearables/hat/hat_twilek_s04.lua")
-includeFile("tangible/wearables/hat/hat_twilek_s05.lua")
-includeFile("tangible/wearables/hat/hat_tusken_raider_crafted.lua")
-includeFile("tangible/wearables/hat/nightsister_hat_s01.lua")
-includeFile("tangible/wearables/hat/nightsister_hat_s02.lua")
-includeFile("tangible/wearables/hat/nightsister_hat_s03.lua")
-includeFile("tangible/wearables/hat/singing_mountain_clan_hat_s01.lua")
-includeFile("tangible/wearables/hat/singing_mountain_clan_hat_s02.lua")
-includeFile("tangible/wearables/hat/singing_mountain_clan_mask_s01.lua")
+   customObjectName = "Invisible Hat",
 
-includeFile("tangible/wearables/hat/appearance_invisible_s10.lua")
+   craftingToolTab = 8, -- (See DraftSchematicObjectTemplate.h)
+   complexity = 19, 
+   size = 3, 
+   factoryCrateType = "object/factory/factory_crate_clothing.iff",
+   factoryCrateSize = 1000,
+   xpType = "crafting_clothing_general", 
+   xp = 60, 
+
+   assemblySkill = "clothing_assembly", 
+   experimentingSkill = "clothing_experimentation", 
+   customizationSkill = "clothing_customization", 
+
+   customizationOptions = {2, 1},
+   customizationStringNames = {"/private/index_color_1", "/private/index_color_2"},
+   customizationDefaults = {1, 37},
+
+   ingredientTemplateNames = {"craft_clothing_ingredients_n", "craft_clothing_ingredients_n", "craft_clothing_ingredients_n"},
+   ingredientTitleNames = {"shell", "binding_and_weatherproofing", "liner"},
+   ingredientSlotType = {1, 0, 1},
+   resourceTypes = {"object/tangible/component/clothing/shared_synthetic_cloth.iff", "petrochem_inert", "object/tangible/component/clothing/shared_synthetic_cloth.iff"},
+   resourceQuantities = {1, 25, 2},
+   contribution = {100, 100, 100},
+
+
+   targetTemplate = "object/tangible/wearables/hat/appearance_invisible_s10.iff",
+
+   additionalTemplates = {
+             }
+
+}
+ObjectTemplates:addTemplate(object_draft_schematic_clothing_clothing_hat_invisible_10, "object/draft_schematic/clothing/clothing_hat_invisible_10.iff")
