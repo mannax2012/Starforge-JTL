@@ -107,6 +107,9 @@ void ArmorObjectImplementation::fillAttributeList(AttributeListMessage* alm, Cre
 	if (remainingSockets > 0)
 		alm->insertAttribute("sockets", remainingSockets);
 
+	// Belts and other armor with no combat hit location provide no protection.
+	// Keep their sockets and ordinary item attributes, but do not advertise armor stats.
+	if (hitLocation != ArmorObjectTemplate::NOLOCATION) {
 	// Armor Rating
 	if (rating == LIGHT)
 		alm->insertAttribute("armorrating", "@obj_attr_n:armor_pierce_light"); //Light
@@ -262,6 +265,7 @@ void ArmorObjectImplementation::fillAttributeList(AttributeListMessage* alm, Cre
 	alm->insertAttribute("cat_armor_encumbrance.health", getHealthEncumbrance());
 	alm->insertAttribute("cat_armor_encumbrance.action", getActionEncumbrance());
 	alm->insertAttribute("cat_armor_encumbrance.mind", getMindEncumbrance());
+	}
 
 	alm->insertAttribute("crafter", craftersName);
 	alm->insertAttribute("serial_number", objectSerial);
