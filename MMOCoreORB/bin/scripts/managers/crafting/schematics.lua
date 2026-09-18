@@ -51,7 +51,7 @@ schematics = {
 	{path="object/draft_schematic/clothing/clothing_armor_mandalorian_bracer_l.iff"},{path="object/draft_schematic/clothing/clothing_armor_mandalorian_bracer_r.iff"},
 	{path="object/draft_schematic/clothing/clothing_armor_mandalorian_gloves.iff"},{path="object/draft_schematic/clothing/clothing_armor_mandalorian_belt.iff"},
 	{path="object/draft_schematic/clothing/clothing_armor_mandalorian_leggings.iff"},{path="object/draft_schematic/clothing/clothing_armor_mandalorian_boots.iff"},
-	{path="object/draft_schematic/armor/armor_segment_mandalorian.iff"},{path="object/draft_schematic/armor/component/armor_layer_lightsaber.iff"},
+	{path="object/draft_schematic/armor/component/armor_layer_lightsaber.iff"},
 
 	--Custom Pets
 	{path="object/draft_schematic/bio_engineer/creature/creature_tukata.iff"},
