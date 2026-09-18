@@ -16,6 +16,26 @@
 #include "server/zone/ZoneServer.h"
 #include "templates/customization/AssetCustomizationManagerTemplate.h"
 
+namespace {
+	constexpr byte COLOR_MENU = 81;
+	constexpr byte FIRST_COLOR_SLOT_MENU = 82;
+
+	Vector<String> getColorSlots(SceneObject* object) {
+		Vector<String> slots;
+		String appearanceFilename = object->getObjectTemplate()->getAppearanceFilename();
+		VectorMap<String, Reference<CustomizationVariable*> > variables;
+		AssetCustomizationManagerTemplate::instance()->getCustomizationVariables(appearanceFilename.hashCode(), variables, false);
+
+		for (int i = 0; i < variables.size(); ++i) {
+			const String& name = variables.elementAt(i).getKey();
+			if (name.contains("index_color"))
+				slots.add(name);
+		}
+
+		return slots;
+	}
+}
+
 void ArmorObjectMenuComponent::fillObjectMenuResponse(SceneObject* sceneObject, ObjectMenuResponse* menuResponse, CreatureObject* player) const {
 	if (!sceneObject->isWearableObject())
 		return;
@@ -36,15 +56,27 @@ void ArmorObjectMenuComponent::fillObjectMenuResponse(SceneObject* sceneObject, 
 			return;
 	}
 
-	String text = "Color Change";
-	menuResponse->addRadialMenuItem(81, 3, text);
+	Vector<String> colorSlots = getColorSlots(sceneObject);
+	if (!colorSlots.isEmpty()) {
+		menuResponse->addRadialMenuItem(COLOR_MENU, 3, "Color Change");
+
+		if (colorSlots.size() > 1) {
+			for (int i = 0; i < colorSlots.size() && i <= 255 - FIRST_COLOR_SLOT_MENU; ++i)
+				menuResponse->addRadialMenuItemToRadialID(COLOR_MENU, FIRST_COLOR_SLOT_MENU + i, 3, "Color Slot " + String::valueOf(i + 1));
+		}
+	}
 
 	WearableObjectMenuComponent::fillObjectMenuResponse(sceneObject, menuResponse, player);
 }
 
 int ArmorObjectMenuComponent::handleObjectMenuSelect(SceneObject* sceneObject, CreatureObject* player, byte selectedID) const {
 
-	if (selectedID == 81) {
+	if (selectedID == COLOR_MENU || selectedID >= FIRST_COLOR_SLOT_MENU) {
+		Vector<String> colorSlots = getColorSlots(sceneObject);
+		int slot = selectedID == COLOR_MENU ? 0 : selectedID - FIRST_COLOR_SLOT_MENU;
+		if (slot >= colorSlots.size())
+			return WearableObjectMenuComponent::handleObjectMenuSelect(sceneObject, player, selectedID);
+
 		ManagedReference<SceneObject*> parent = sceneObject->getParent().get();
 
 		if (parent == nullptr)
@@ -72,15 +104,10 @@ int ArmorObjectMenuComponent::handleObjectMenuSelect(SceneObject* sceneObject, C
 		ZoneServer* server = player->getZoneServer();
 
 		if (server != nullptr) {
-			// The color index.
-			String appearanceFilename = sceneObject->getObjectTemplate()->getAppearanceFilename();
-			VectorMap<String, Reference<CustomizationVariable*> > variables;
-			AssetCustomizationManagerTemplate::instance()->getCustomizationVariables(appearanceFilename.hashCode(), variables, false);
-
 			// The Sui Box.
 			ManagedReference<SuiColorBox*> cbox = new SuiColorBox(player, SuiWindowType::COLOR_ARMOR);
 			cbox->setCallback(new ColorArmorSuiCallback(server));
-			cbox->setColorPalette(variables.elementAt(1).getKey()); // First one seems to be the frame of it? Skip to 2nd.
+			cbox->setColorPalette(colorSlots.get(slot));
 			cbox->setUsingObject(sceneObject);
 
 			int skillMod = 255; //player->getSkillMod("armor_customization");
