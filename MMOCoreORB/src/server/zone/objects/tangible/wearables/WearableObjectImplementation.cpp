@@ -16,6 +16,30 @@
 #include "server/zone/objects/transaction/TransactionLog.h"
 
 namespace {
+// Add exact crafted object template paths here to guarantee 1-4 sockets.
+// Other wearables continue to use the normal skill-based socket roll.
+const char* const guaranteedSocketTemplates[] = {
+	"object/tangible/wearables/armor/mandalorian/armor_mandalorian_belt.iff",
+	"object/tangible/wearables/armor/mandalorian/armor_mandalorian_bicep_l.iff",
+	"object/tangible/wearables/armor/mandalorian/armor_mandalorian_bicep_r.iff",
+	"object/tangible/wearables/armor/mandalorian/armor_mandalorian_bracer_l.iff",
+	"object/tangible/wearables/armor/mandalorian/armor_mandalorian_bracer_r.iff",
+	"object/tangible/wearables/armor/mandalorian/armor_mandalorian_chest_plate.iff",
+	"object/tangible/wearables/armor/mandalorian/armor_mandalorian_gloves.iff",
+	"object/tangible/wearables/armor/mandalorian/armor_mandalorian_helmet.iff",
+	"object/tangible/wearables/armor/mandalorian/armor_mandalorian_leggings.iff",
+	"object/tangible/wearables/armor/mandalorian/armor_mandalorian_shoes.iff",
+};
+
+bool guaranteesSockets(const String& templateName) {
+	for (const char* guaranteedTemplate : guaranteedSocketTemplates) {
+		if (templateName == guaranteedTemplate)
+			return true;
+	}
+
+	return false;
+}
+
 VectorMap<String, int> collectWearableMods(const VectorMap<String, int>& wearableSkillMods, const VectorMap<String, int>* templateSkillMods) {
 	VectorMap<String, int> allMods;
 	allMods.setAllowOverwriteInsertPlan();
@@ -83,6 +107,13 @@ void WearableObjectImplementation::updateCraftingValues(CraftingValues* values, 
 
 void WearableObjectImplementation::generateSockets(CraftingValues* craftingValues) {
 	if (socketsGenerated) {
+		return;
+	}
+
+	if (guaranteesSockets(getObjectTemplate()->getFullTemplateString())) {
+		usedSocketCount = 0;
+		socketCount = System::random(MAXSOCKETS - 1) + 1;
+		socketsGenerated = true;
 		return;
 	}
 
