@@ -64,7 +64,7 @@ diseaseDotChance = 0.35
 fireDotChance = 0.15
 
 -- Dot Distribution chance by HAM type. They must equate to 1.0
-healthDotChance = 0.50
+healthDotChance = 0.65
 actionDotChance = 0.35
 mindDotChance = 0
 
