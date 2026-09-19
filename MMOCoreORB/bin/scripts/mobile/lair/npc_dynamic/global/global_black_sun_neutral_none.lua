@@ -11,6 +11,7 @@ global_black_sun_neutral_none = Lair:new {
 	buildingsMedium = {},
 	buildingsHard = {},
 	buildingsVeryHard = {},
+	missionBuilding = "object/tangible/lair/base/objective_banner_generic_2.iff",
 	mobType = "npc",
 	buildingType = "none"
 }

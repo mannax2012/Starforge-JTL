@@ -42,7 +42,37 @@
 
 
 object_draft_schematic_clothing_clothing_armor_mandalorian_belt = object_draft_schematic_clothing_shared_clothing_armor_mandalorian_belt:new {
-    factoryCrateType = "object/factory/factory_crate_clothing.iff"
-}
 
+   templateType = DRAFTSCHEMATIC,
+
+   customObjectName = "Mandalorian Armor Belt",
+
+   craftingToolTab = 2, -- (See DraftSchematicObjectTemplate.h)
+   complexity = 15,
+   size = 1,
+   factoryCrateType = "object/factory/factory_crate_clothing.iff",
+   factoryCrateSize = 0,
+
+   xpType = "crafting_clothing_general",
+   xp = 145,
+
+   assemblySkill = "clothing_assembly",
+   experimentingSkill = "clothing_experimentation",
+   customizationSkill = "clothing_customization",
+
+   customizationOptions = {2},
+   customizationStringNames = {"/private/index_color_1"},
+   customizationDefaults = {0},
+
+   ingredientTemplateNames = {"craft_clothing_ingredients_n", "craft_clothing_ingredients_n", "craft_clothing_ingredients_n", "starforge_n", "starforge_n", "starforge_n", "starforge_n"},
+   ingredientTitleNames = {"shell", "binding_and_reinforcement", "hardware", "binary_liquid", "protective_liquid", "mining_drill_reward", "bounty_hunter_belt"},
+   ingredientSlotType = {0, 0, 0, 1, 1, 1, 1},
+   resourceTypes = {"petrochem_inert", "petrochem_inert", "metal", "object/tangible/loot/dungeon/death_watch_bunker/shared_binary_liquid.iff", "object/tangible/loot/dungeon/death_watch_bunker/shared_emulsion_protection.iff", "object/tangible/loot/dungeon/death_watch_bunker/shared_mining_drill_reward.iff", "object/tangible/wearables/armor/bounty_hunter/shared_armor_bounty_hunter_belt.iff"},
+   resourceQuantities = {25, 25, 10, 1, 1, 1, 1},
+   contribution = {100, 100, 100, 100, 100, 100, 100},
+
+   targetTemplate = "object/tangible/wearables/armor/mandalorian/armor_mandalorian_belt.iff",
+
+   additionalTemplates = {}
+}
 ObjectTemplates:addTemplate(object_draft_schematic_clothing_clothing_armor_mandalorian_belt, "object/draft_schematic/clothing/clothing_armor_mandalorian_belt.iff")

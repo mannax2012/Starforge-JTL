@@ -230,6 +230,7 @@ function randomWorldBossEvent:spawnRandomBoss()
 	writeData(self:getBossKey(bossID, "supportCount"), 0)
 
 	createObserver(DAMAGERECEIVED, self.screenplayName, "onBossDamaged", pBoss)
+	createObserver(CREATUREDEATH, self.screenplayName, "rewardBossParticipants", pBoss)
 	createObserver(OBJECTDESTRUCTION, self.screenplayName, "onBossKilled", pBoss)
 
 	self:broadcastGalaxy(self:getSpawnAnnouncement(config, spawnLocation.planet), pBoss)
@@ -320,6 +321,38 @@ function randomWorldBossEvent:onBossDamaged(pBoss, pPlayer)
 	end
 
 	return handler(self, pBoss, pTarget)
+end
+
+-- CREATUREDEATH runs before the killer loses combat state and the boss loses defenders.
+-- Each boss (including each hound) awards one chest per qualifying player.
+function randomWorldBossEvent:rewardBossParticipants(pBoss)
+	if pBoss == nil then
+		return 0
+	end
+
+	local bossID = SceneObject(pBoss):getObjectID()
+	local rewardKey = self:getBossKey(bossID, "participationRewarded")
+	if not self:isActiveBossMember(bossID) or readData(rewardKey) == 1 then
+		return 0
+	end
+	writeData(rewardKey, 1)
+
+	local participants = CreatureObject(pBoss):getCombatContributorList()
+	for i = 1, #participants do
+		local pPlayer = participants[i]
+		local pInventory = SceneObject(pPlayer):getSlottedObject("inventory")
+		local lootID = 0
+		if pInventory ~= nil then
+			lootID = createLoot(pInventory, "lewt_chest_rare_drop", 300, true) or 0
+		end
+		if lootID ~= 0 then
+			CreatureObject(pPlayer):sendSystemMessage("You received a Rare Lewt Chest for participating in the world boss battle!")
+		else
+			print("World boss participation reward failed: boss=" .. bossID .. " player=" .. SceneObject(pPlayer):getObjectID())
+			CreatureObject(pPlayer):sendSystemMessage("Your world boss participation chest could not be delivered. Please contact staff.")
+		end
+	end
+	return 0
 end
 
 function randomWorldBossEvent:onBossKilled(pBoss)
@@ -422,6 +455,7 @@ function randomWorldBossEvent:summonTwinHound(pBoss, pTarget, config)
 	self:initializeTwinHoundPools(pTwin)
 
 	createObserver(DAMAGERECEIVED, self.screenplayName, "onBossDamaged", pTwin)
+	createObserver(CREATUREDEATH, self.screenplayName, "rewardBossParticipants", pTwin)
 	createObserver(OBJECTDESTRUCTION, self.screenplayName, "onBossKilled", pTwin)
 
 	spatialChat(pBoss, "A second hound answers my call!")
@@ -1562,6 +1596,7 @@ function randomWorldBossEvent:clearActiveBoss()
 end
 
 function randomWorldBossEvent:resetBossState(bossID)
+	deleteData(self:getBossKey(bossID, "participationRewarded"))
 	deleteData(self:getBossKey(bossID, "phase"))
 	deleteData(self:getBossKey(bossID, "supportCount"))
 	deleteData(self:getBossKey(bossID, "shieldCount"))

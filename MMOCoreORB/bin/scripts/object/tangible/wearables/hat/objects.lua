@@ -45,6 +45,10 @@ clientTemplateFileName = "object/tangible/wearables/hat/shared_hat_tusken_raider
 ObjectTemplates:addClientTemplate(object_tangible_wearables_hat_shared_hat_tusken_raider_crafted, 
 "object/tangible/wearables/hat/shared_hat_tusken_raider_crafted.iff")
 
+object_tangible_wearables_hat_shared_appearance_invisible_s10 = SharedTangibleObjectTemplate:new {
+clientTemplateFileName = "object/tangible/wearables/hat/shared_appearance_invisible_s10.iff"}
+ObjectTemplates:addClientTemplate(object_tangible_wearables_hat_shared_appearance_invisible_s10, 
+"object/tangible/wearables/hat/shared_appearance_invisible_s10.iff")
 
 object_tangible_wearables_hat_shared_hat_chef_s01 = SharedTangibleObjectTemplate:new {
 	clientTemplateFileName = "object/tangible/wearables/hat/shared_hat_chef_s01.iff"

@@ -235,7 +235,8 @@ deathWatchStaticSpawns = {
 
 	{"death_watch_s_battle_droid", 300, -155.3, -60.0, -106.8, 88, 5996365},
 	{"death_watch_s_battle_droid", 300, -222.2, -60.0, -129.0, -4, 5996367},
-	{"death_watch_s_battle_droid", 300, -288.3, -60.0, -124.8, 88, 5996371},
+	-- Western side room: reuse the existing droid position; 30-minute boss respawn.
+	{"death_watch_siege_captain", 1800, -288.3, -60.0, -124.8, 88, 5996371},
 	{"death_watch_battle_droid", 300, -281.9, -60.0, -120.7, 177, 5996371},
 	{"death_watch_battle_droid", 300, -281.9, -60.0, -129.6, -3, 5996371},
 

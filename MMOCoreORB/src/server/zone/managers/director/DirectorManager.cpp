@@ -587,6 +587,7 @@ void DirectorManager::initializeLuaEngine(Lua* luaEngine) {
 	luaEngine->setGlobalInt("NEWBIECLOSEINVENTORY", ObserverEventType::NEWBIECLOSEINVENTORY);
 	luaEngine->setGlobalInt("OBJECTRADIALUSED", ObserverEventType::OBJECTRADIALUSED);
 	luaEngine->setGlobalInt("DAMAGERECEIVED", ObserverEventType::DAMAGERECEIVED);
+	luaEngine->setGlobalInt("CREATUREDEATH", ObserverEventType::CREATUREDEATH);
 	luaEngine->setGlobalInt("DAMAGECHECKPOINT", ObserverEventType::DAMAGECHECKPOINT);
 	luaEngine->setGlobalInt("OBJECTNAMECHANGED", ObserverEventType::OBJECTNAMECHANGED);
 	luaEngine->setGlobalInt("SURVEY", ObserverEventType::SURVEY);

@@ -22,6 +22,17 @@
 class JediQueueCommand : public QueueCommand {
 
 protected:
+	static constexpr const char* FORCE_RUN_2_3_COOLDOWN = "force_run_2_3";
+
+	bool isForceRun2Or3() const {
+		return buffCRC == BuffCRC::JEDI_FORCE_RUN_2 || buffCRC == BuffCRC::JEDI_FORCE_RUN_3;
+	}
+
+	bool isForceRun2Or3OnCooldown(CreatureObject* creature) const {
+		CooldownTimerMap* cooldownTimerMap = creature->getCooldownTimerMap();
+		return cooldownTimerMap != nullptr && !cooldownTimerMap->isPast(FORCE_RUN_2_3_COOLDOWN);
+	}
+
 	void logForceRunTrace(CreatureObject* creature, const String& phase) const {
 		return;
 
@@ -170,6 +181,11 @@ public:
 
 			creature->removeBuff(buffCRC);
 			return SUCCESS;
+		}
+
+		if (isForceRun2Or3() && isForceRun2Or3OnCooldown(creature)) {
+			creature->sendSystemMessage("You are too exhausted to use this, your body is recovering. You must wait before using a Force Power this strong again.");
+			return GENERALERROR;
 		}
 
 		// Do checks first.

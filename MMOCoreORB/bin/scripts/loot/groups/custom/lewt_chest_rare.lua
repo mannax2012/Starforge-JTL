@@ -5,11 +5,12 @@ lewt_chest_rare = {
 	minimumLevel = 0,
 	maximumLevel = 0,
 	lootItems = {
-		{itemTemplate = "lewt_chest_common", weight = 2500000},
-		{itemTemplate = "krayt_dragon_tissue_uncommon", weight = 2500000},
+		{itemTemplate = "lewt_chest_common", weight = 1500000},
+		{itemTemplate = "krayt_dragon_tissue_uncommon", weight = 1500000},
 		{itemTemplate = "all_saber_schematics", weight = 2000000},
 		{itemTemplate = "lance_trando_pike_schematic", weight = 1500000},
-		{itemTemplate = "baton_gaderiffi_elite_schematic", weight = 1500000}
+		{itemTemplate = "baton_gaderiffi_elite_schematic", weight = 1500000},
+		{itemTemplate = "mando_armor_loot", weight = 2000000},
 	}
 }
 

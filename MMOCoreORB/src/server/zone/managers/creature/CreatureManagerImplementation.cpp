@@ -588,6 +588,9 @@ int CreatureManagerImplementation::notifyDestruction(TangibleObject* destructor,
 	destructedObject->clearOptionBit(OptionBitmask::INTERESTING);
 	destructedObject->clearOptionBit(OptionBitmask::JTLINTERESTING);
 
+	// Screenplays must evaluate participation before defenders and combat state are cleared.
+	destructedObject->notifyObservers(ObserverEventType::CREATUREDEATH, destructor, condition);
+
 	destructedObject->updateTimeOfDeath();
 	destructedObject->setPosture(CreaturePosture::DEAD, !isCombatAction, !isCombatAction);
 

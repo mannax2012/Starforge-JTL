@@ -254,6 +254,12 @@ endor_destroy_missions = {
 			maxDifficulty = 58,
 			size = 25,
 		},
+		{
+			lairTemplateName = "global_black_sun_neutral_none",
+			minDifficulty = 54,
+			maxDifficulty = 58,
+			size = 35,
+		},
 	}
 }
 

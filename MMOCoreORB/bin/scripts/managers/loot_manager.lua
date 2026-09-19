@@ -64,7 +64,7 @@ diseaseDotChance = 0.35
 fireDotChance = 0.15
 
 -- Dot Distribution chance by HAM type. They must equate to 1.0
-healthDotChance = 0.50
+healthDotChance = 0.65
 actionDotChance = 0.35
 mindDotChance = 0
 
@@ -149,6 +149,8 @@ lootableArmorAttachmentStatMods = {
   "unarmed_accuracy",
   "unarmed_damage",
   "unarmed_speed",
+  "vehicle_assembly",
+  "vehicle_experimentation",
   --"volley",
   --"warcry"
 }
@@ -268,6 +270,8 @@ lootableClothingAttachmentStatMods = {
   "unarmed_damage",
   "unarmed_speed",
   "unarmed_toughness",
+  "vehicle_assembly",
+  "vehicle_experimentation",
  -- "volley",
  -- "warcry",
   "weapon_assembly",
@@ -401,6 +405,8 @@ lootableArmorStatMods = {
 	"unarmed_accuracy",
 	"unarmed_damage",
 	"unarmed_speed",
+	"vehicle_assembly",
+    "vehicle_experimentation",
 	"volley",
 	"warcry",
 	"weapon_assembly",
@@ -513,6 +519,8 @@ lootableClothingStatMods = {
 	"unarmed_damage",
 	"unarmed_speed",
 	"volley",
+	"vehicle_assembly",
+    "vehicle_experimentation",
 	"warcry",
 	"weapon_assembly",
 	"weapon_experimentation",

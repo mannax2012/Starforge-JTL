@@ -40,7 +40,17 @@
 --this exception also makes it possible to release a modified version
 --which carries forward this exception.
 
-object_tangible_component_armor_shared_armor_segment_enhancement_kunga = SharedTangibleObjectTemplate:new {
+object_tangible_component_armor_shared_armor_segment_armor_mandalorian= SharedTangibleObjectTemplate:new {
+	clientTemplateFileName = "object/tangible/component/armor/shared_armor_segment_armor_mandalorian.iff"}
+ObjectTemplates:addClientTemplate(object_tangible_component_armor_shared_armor_segment_armor_mandalorian,
+ "object/tangible/component/armor/shared_armor_segment_armor_mandalorian.iff")
+
+object_tangible_component_armor_shared_armor_layer_lightsaber = SharedTangibleObjectTemplate:new {
+	clientTemplateFileName = "object/tangible/component/armor/shared_armor_layer_lightsaber.iff"}
+ObjectTemplates:addClientTemplate(object_tangible_component_armor_shared_armor_layer_lightsaber,
+ "object/tangible/component/armor/shared_armor_layer_lightsaber.iff")
+
+ object_tangible_component_armor_shared_armor_segment_enhancement_kunga = SharedTangibleObjectTemplate:new {
 	clientTemplateFileName = "object/tangible/component/armor/shared_armor_segment_enhancement_kunga.iff"}
 ObjectTemplates:addClientTemplate(object_tangible_component_armor_shared_armor_segment_enhancement_kunga,
  "object/tangible/component/armor/shared_armor_segment_enhancement_kunga.iff")

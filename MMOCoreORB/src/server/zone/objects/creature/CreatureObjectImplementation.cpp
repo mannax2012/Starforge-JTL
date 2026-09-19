@@ -3065,6 +3065,8 @@ bool CreatureObjectImplementation::removeBuff(uint32 buffcrc) {
 	const bool traceForceRun = buffcrc == BuffCRC::JEDI_FORCE_RUN_1
 		|| buffcrc == BuffCRC::JEDI_FORCE_RUN_2
 		|| buffcrc == BuffCRC::JEDI_FORCE_RUN_3;
+	const bool startsForceRun2Or3Cooldown = buffcrc == BuffCRC::JEDI_FORCE_RUN_2
+		|| buffcrc == BuffCRC::JEDI_FORCE_RUN_3;
 
 	if (traceForceRun) {
 		removePendingTask("forceRunEffect");
@@ -3072,6 +3074,13 @@ bool CreatureObjectImplementation::removeBuff(uint32 buffcrc) {
 	}
 
 	Reference<Buff*> buff = getBuff(buffcrc);
+
+	if (buff != nullptr && startsForceRun2Or3Cooldown) {
+		CooldownTimerMap* cooldownTimerMap = getCooldownTimerMap();
+
+		if (cooldownTimerMap != nullptr)
+			cooldownTimerMap->updateToCurrentAndAddMili("force_run_2_3", 60 * 1000);
+	}
 
 	//BuffList::removeBuff checks to see if the buffcrc exists in the map.
 	bool ret = creatureBuffs.removeBuff(buffcrc);
@@ -3102,6 +3111,15 @@ bool CreatureObjectImplementation::removeStateBuff(uint64 state) {
 void CreatureObjectImplementation::removeBuff(Buff* buff) {
 	if (buff == nullptr)
 		return;
+
+	uint32 buffcrc = buff->getBuffCRC();
+
+	if (buffcrc == BuffCRC::JEDI_FORCE_RUN_2 || buffcrc == BuffCRC::JEDI_FORCE_RUN_3) {
+		CooldownTimerMap* cooldownTimerMap = getCooldownTimerMap();
+
+		if (cooldownTimerMap != nullptr)
+			cooldownTimerMap->updateToCurrentAndAddMili("force_run_2_3", 60 * 1000);
+	}
 
 	//BuffList::removeBuff checks to see if the buffcrc exists in the map.
 	creatureBuffs.removeBuff(buff);

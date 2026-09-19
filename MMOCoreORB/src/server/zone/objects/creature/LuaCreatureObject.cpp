@@ -152,6 +152,7 @@ Luna<LuaCreatureObject>::RegType LuaCreatureObject::Register[] = {
 		{ "isOvert", &LuaTangibleObject::isOvert },
 		{ "isCovert", &LuaTangibleObject::isCovert },
 		{ "setFactionStatus", &LuaTangibleObject::setFactionStatus },
+		{ "getCombatContributorList", &LuaCreatureObject::getCombatContributorList },
 		{ "getDamageDealerList", &LuaCreatureObject::getDamageDealerList },
 		{ "getHealingThreatList", &LuaCreatureObject::getHealingThreatList },
 		{ "getAllThreatsList", &LuaCreatureObject::getAllThreatsList },
@@ -1117,6 +1118,34 @@ int LuaCreatureObject::villageKnightPrereqsMet(lua_State* L) {
 
 	lua_pushboolean(L, result);
 
+	return 1;
+}
+
+// Call before death cleanup; retained damage alone does not imply current combat.
+int LuaCreatureObject::getCombatContributorList(lua_State* L) {
+	ThreatMap copyThreatMap(*realObject->getThreatMap());
+	lua_newtable(L);
+	int count = 0;
+
+	for (int i = 0; i < copyThreatMap.size(); ++i) {
+		TangibleObject* contributor = copyThreatMap.elementAt(i).getKey();
+		ThreatMapEntry& entry = copyThreatMap.elementAt(i).getValue();
+		if (contributor == nullptr || !contributor->isPlayerCreature() ||
+			entry.getAggroMod() <= 0 || (entry.getTotalDamage() == 0 && entry.getHeal() <= 0))
+			continue;
+
+		CreatureObject* player = contributor->asCreatureObject();
+		if (!player->isOnline() || player->isDead() || !player->isInCombat() ||
+			player->getZone() != realObject->getZone())
+			continue;
+
+		// Healing creates boss threat without necessarily adding a reciprocal defender.
+		if (entry.getHeal() <= 0 && !player->hasDefender(realObject) && !realObject->hasDefender(player))
+			continue;
+
+		lua_pushlightuserdata(L, player);
+		lua_rawseti(L, -2, ++count);
+	}
 	return 1;
 }
 
