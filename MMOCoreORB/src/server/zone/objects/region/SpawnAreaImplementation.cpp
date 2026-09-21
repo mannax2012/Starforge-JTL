@@ -162,16 +162,32 @@ int SpawnAreaImplementation::notifyObserverEvent(unsigned int eventType, Observa
 		if (sceneO->isLairObject() && thisZone != nullptr) {
 			ManagedReference<ActiveArea*> area = (ServerCore::getZoneServer()->createObject(STRING_HASHCODE("object/active_area.iff"), 0)).castTo<ActiveArea*>();
 
-			Locker locker(area);
+			if (area == nullptr) {
+				return 1;
+			}
 
-			area->setRadius(ConfigManager::instance()->getSpawnCheckRange());
+			Locker areaLocker(area);
+
+			auto configManager = ConfigManager::instance();
+			float noSpawnRadius = Math::max(configManager->getSpawnCheckRange(), configManager->getDestroyedLairNoSpawnRadius());
+
+			area->setRadius(noSpawnRadius);
 			area->addAreaFlag(ActiveArea::NOSPAWNAREA);
 			area->initializePosition(sceneO->getPositionX(), sceneO->getPositionZ(), sceneO->getPositionY());
 
 			thisZone->transferObject(area, -1, true);
 
 			Reference<Task*> task = new RemoveNoSpawnAreaTask(area);
-			task->schedule(30000);
+
+			int cooldownMin = Math::max(0, configManager->getDestroyedLairSpawnCooldownMin());
+			int cooldownMax = Math::max(cooldownMin, configManager->getDestroyedLairSpawnCooldownMax());
+			int cooldown = cooldownMin;
+
+			if (cooldownMax > cooldownMin) {
+				cooldown += System::random(cooldownMax - cooldownMin);
+			}
+
+			task->schedule(cooldown);
 		}
 	}
 
