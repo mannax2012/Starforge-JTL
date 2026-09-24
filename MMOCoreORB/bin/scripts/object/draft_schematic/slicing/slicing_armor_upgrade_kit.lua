@@ -52,7 +52,7 @@ object_draft_schematic_slicing_slicing_armor_upgrade_kit = object_draft_schemati
 	factoryCrateType = "object/factory/factory_crate_electronics.iff",
 
 	xpType = "crafting_clothing_armor",
-	xp = 60,
+	xp = 300,
 
 	assemblySkill = "armor_assembly",
 	experimentingSkill = "armor_experimentation",
