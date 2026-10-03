@@ -78,6 +78,30 @@ class WearableObject extends TangibleObject {
 		return socketCount - usedSocketCount;
 	}
 
+	@read
+	public int getAttachedSEAcount() {
+		int attachedModCount = wearableSkillMods.size() - modsNotInSockets;
+
+		if (attachedModCount < 0)
+			attachedModCount = 0;
+
+		if (attachedModCount < usedSocketCount)
+			return attachedModCount;
+
+		return usedSocketCount;
+	}
+
+	@read
+	public int getAttachedSEAModIndex(int attachmentIndex) {
+		if (attachmentIndex < 0 || attachmentIndex >= getAttachedSEAcount())
+			return -1;
+
+		return modsNotInSockets + attachmentIndex;
+	}
+
+	@preLocked
+	public native boolean removeAttachedSEA(CreatureObject player, int attachmentIndex);
+
 	private native void generateSockets(CraftingValues craftingValues);
 
 	public native string repairAttempt(int repairChance);
