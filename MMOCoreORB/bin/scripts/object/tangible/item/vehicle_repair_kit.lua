@@ -41,13 +41,23 @@
 --this exception also makes it possible to release a modified version 
 
 
+object_tangible_item_vehicle_repair_kit = object_tangible_item_shared_vehicle_repair_kit:new {
+	templateType = REPAIRTOOL,
+	gameObjectType = 32771, -- SceneObjectType::REPAIRTOOL
+	objectMenuComponent = "TangibleObjectMenuComponent",
+	canRepairType = 0,
+	useCount = 10,
+	stationType = 7,
 
---Children folder includes
-includeFile("draft_schematic/vehicle/civilian/serverobjects.lua")
-includeFile("draft_schematic/vehicle/component/serverobjects.lua")
-includeFile("draft_schematic/vehicle/military/serverobjects.lua")
+	numberExperimentalProperties = {1, 1, 1, 1},
+	experimentalProperties = {"XX", "XX", "UT", "CD"},
+	experimentalWeights = {1, 1, 1, 1},
+	experimentalGroupTitles = {"null", "null", "exp_charges", "exp_quality"},
+	experimentalSubGroupTitles = {"null", "null", "charges", "quality"},
+	experimentalMin = {0, 0, 10, 1},
+	experimentalMax = {0, 0, 20, 100},
+	experimentalCombineType = {0, 0, 1, 1},
+	experimentalPrecision = {0, 0, 0, 0},
+}
 
--- Server Objects
-includeFile("draft_schematic/vehicle/vehicle_customization_kit.lua")
-includeFile("draft_schematic/vehicle/vehicle_repair_kit.lua")
-includeFile("draft_schematic/vehicle/vehicle_repair_tool.lua")
+ObjectTemplates:addTemplate(object_tangible_item_vehicle_repair_kit, "object/tangible/item/vehicle_repair_kit.iff")

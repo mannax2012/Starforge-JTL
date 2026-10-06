@@ -41,13 +41,40 @@
 --this exception also makes it possible to release a modified version 
 
 
+object_draft_schematic_vehicle_vehicle_repair_tool = object_draft_schematic_vehicle_shared_vehicle_repair_tool:new {
 
---Children folder includes
-includeFile("draft_schematic/vehicle/civilian/serverobjects.lua")
-includeFile("draft_schematic/vehicle/component/serverobjects.lua")
-includeFile("draft_schematic/vehicle/military/serverobjects.lua")
+   templateType = DRAFTSCHEMATIC,
 
--- Server Objects
-includeFile("draft_schematic/vehicle/vehicle_customization_kit.lua")
-includeFile("draft_schematic/vehicle/vehicle_repair_kit.lua")
-includeFile("draft_schematic/vehicle/vehicle_repair_tool.lua")
+   customObjectName = "Vehicle Customization Kit",
+
+   craftingToolTab = 16, -- (See DraftSchematicObjectTemplate.h)
+   complexity = 12, 
+   size = 1, 
+   factoryCrateType = "object/factory/factory_crate_electronics.iff",
+   
+   xpType = "crafting_general", 
+   xp = 40, 
+
+   assemblySkill = "general_assembly", 
+   experimentingSkill = "general_experimentation", 
+   customizationSkill = "clothing_customization", 
+
+   customizationOptions = {},
+   customizationStringNames = {},
+   customizationDefaults = {},
+
+   ingredientTemplateNames = {"craft_item_ingredients_n", "craft_droid_ingredients_n", "craft_droid_ingredients_n", "craft_item_ingredients_n"},
+   ingredientTitleNames = {"assembly_enclosure", "thermal_shielding", "colors", "electronic_control_unit"},
+   ingredientSlotType = {0, 0, 0, 1},
+   resourceTypes = {"metal", "mineral", "radioactive", "object/tangible/component/item/shared_electronic_control_unit.iff"},
+   resourceQuantities = {22, 9, 16, 1},
+   contribution = {100, 100, 100, 100},
+
+
+   targetTemplate = "object/tangible/item/vehicle_repair_tool.iff",
+
+   additionalTemplates = {
+             }
+
+}
+ObjectTemplates:addTemplate(object_draft_schematic_vehicle_vehicle_repair_tool, "object/draft_schematic/vehicle/vehicle_repair_tool.iff")

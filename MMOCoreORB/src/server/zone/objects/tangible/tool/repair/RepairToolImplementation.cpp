@@ -24,7 +24,10 @@ void RepairToolImplementation::fillAttributeList(AttributeListMessage* msg, Crea
 }
 
 void RepairToolImplementation::updateCraftingValues(CraftingValues* values, bool firstUpdate) {
-	quality = values->getCurrentValue("quality");
+	TangibleObjectImplementation::updateCraftingValues(values, firstUpdate);
+
+	if (values->hasExperimentalAttribute("quality"))
+		quality = values->getCurrentValue("quality");
 }
 int RepairToolImplementation::handleObjectMenuSelect(CreatureObject* player, byte selectedID) {
 

@@ -41,13 +41,8 @@
 --this exception also makes it possible to release a modified version 
 
 
+object_tangible_item_vehicle_repair_tool = object_tangible_item_shared_vehicle_repair_tool:new {
+    objectMenuComponent = "VehicleRepairToolMenuComponent",
+}
 
---Children folder includes
-includeFile("draft_schematic/vehicle/civilian/serverobjects.lua")
-includeFile("draft_schematic/vehicle/component/serverobjects.lua")
-includeFile("draft_schematic/vehicle/military/serverobjects.lua")
-
--- Server Objects
-includeFile("draft_schematic/vehicle/vehicle_customization_kit.lua")
-includeFile("draft_schematic/vehicle/vehicle_repair_kit.lua")
-includeFile("draft_schematic/vehicle/vehicle_repair_tool.lua")
+ObjectTemplates:addTemplate(object_tangible_item_vehicle_repair_tool, "object/tangible/item/vehicle_repair_tool.iff")

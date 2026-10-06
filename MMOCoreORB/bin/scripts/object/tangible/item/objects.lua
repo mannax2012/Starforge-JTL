@@ -66,10 +66,20 @@ object_tangible_item_shared_starforge_token_generic = SharedTangibleObjectTempla
 ObjectTemplates:addClientTemplate(object_tangible_item_shared_starforge_token_generic, 
 "object/tangible/item/shared_starforge_token_generic.iff")
 
+object_tangible_item_shared_vehicle_repair_kit = SharedTangibleObjectTemplate:new {
+	clientTemplateFileName = "object/tangible/item/shared_vehicle_repair_kit.iff"}
+ObjectTemplates:addClientTemplate(object_tangible_item_shared_vehicle_repair_kit,
+"object/tangible/item/shared_vehicle_repair_kit.iff")
+
 object_tangible_item_shared_clothing_sea_tool = SharedTangibleObjectTemplate:new {
 	clientTemplateFileName = "object/tangible/item/shared_clothing_sea_tool.iff"}
 ObjectTemplates:addClientTemplate(object_tangible_item_shared_clothing_sea_tool, 
 "object/tangible/item/shared_clothing_sea_tool.iff")
+
+object_tangible_item_shared_vehicle_repair_tool = SharedTangibleObjectTemplate:new {
+	clientTemplateFileName = "object/tangible/item/shared_vehicle_repair_tool.iff"}
+ObjectTemplates:addClientTemplate(object_tangible_item_shared_vehicle_repair_tool,
+"object/tangible/item/shared_vehicle_repair_tool.iff")
 
 object_tangible_item_shared_force_infused_organ = SharedTangibleObjectTemplate:new {
 	clientTemplateFileName = "object/tangible/item/shared_force_infused_organ.iff"}

@@ -48,6 +48,9 @@ includeFile("draft_schematic/item/quest_item/serverobjects.lua")
 includeFile("draft_schematic/item/theme_park/serverobjects.lua")
 includeFile("draft_schematic/item/bounty_hunter/serverobjects.lua")
 
+--Custom
+includeFile("draft_schematic/item/sea_tool.lua")
+
 -- Server Objects
 includeFile("draft_schematic/item/craftable_bug_habitat.lua")
 includeFile("draft_schematic/item/item_agitator_motor.lua")
