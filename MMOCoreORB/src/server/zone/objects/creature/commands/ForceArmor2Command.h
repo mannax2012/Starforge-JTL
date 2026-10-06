@@ -35,12 +35,12 @@ public:
 		// Client Effect upon hit (needed)
 		player->playEffect("clienteffect/pl_force_armor_hit.cef", "");
 
-		// Charge 10% of the absorbed damage. Master Enhancers retain the lower
-		// 50 Force per-hit ceiling; all other users have a 75% higher ceiling.
+		// Charge 10% of the absorbed damage. Master Enhancers have a lower
+		// 15 Force per-hit ceiling; all other users have a 20 Force ceiling.
 		// Keep a floor on the FRS-modified multiplier so Force Armor always has
 		// a meaningful upkeep cost.
 		float costMultiplier = Math::max(0.05f, getFrsModifiedExtraForceCost(player, 0.10f));
-		int forceCostCap = player->hasSkill("force_discipline_enhancements_master") ? 50 : 88;
+		int forceCostCap = player->hasSkill("force_discipline_enhancements_master") ? 15 : 20;
 		int fCost = Math::min((int)(param * costMultiplier), forceCostCap);
 		if (ghost->getForcePower() <= fCost) { // Remove buff if not enough force.
 			Buff* buff = player->getBuff(BuffCRC::JEDI_FORCE_ARMOR_2);
