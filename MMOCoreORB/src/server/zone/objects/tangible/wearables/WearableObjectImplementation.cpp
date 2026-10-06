@@ -237,6 +237,36 @@ void WearableObjectImplementation::applyAttachment(CreatureObject* player, Attac
 	}
 }
 
+bool WearableObjectImplementation::removeAttachedSEA(CreatureObject* player, int attachmentIndex) {
+	if (player == nullptr || !isASubChildOf(player))
+		return false;
+
+	int modIndex = getAttachedSEAModIndex(attachmentIndex);
+
+	if (modIndex < 0 || modIndex >= wearableSkillMods.size())
+		return false;
+
+	bool equipped = isEquipped();
+
+	if (equipped)
+		removeSkillModsFrom(player);
+
+	wearableSkillMods.removeElementAt(modIndex);
+
+	if (usedSocketCount > 0)
+		usedSocketCount--;
+
+	const VectorMap<String, int>* templateSkillMods = getTemplateSkillMods();
+
+	if (usedSocketCount == 0 && wearableSkillMods.size() == 0 && (templateSkillMods == nullptr || templateSkillMods->size() == 0))
+		removeMagicBit(true);
+
+	if (equipped)
+		applySkillModsTo(player);
+
+	return true;
+}
+
 void WearableObjectImplementation::applySkillModsTo(CreatureObject* creature) const {
 	if (creature == nullptr) {
 		return;

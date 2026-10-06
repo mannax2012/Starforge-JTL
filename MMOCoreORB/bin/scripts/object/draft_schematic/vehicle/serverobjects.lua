@@ -49,3 +49,5 @@ includeFile("draft_schematic/vehicle/military/serverobjects.lua")
 
 -- Server Objects
 includeFile("draft_schematic/vehicle/vehicle_customization_kit.lua")
+includeFile("draft_schematic/vehicle/vehicle_repair_kit.lua")
+includeFile("draft_schematic/vehicle/vehicle_repair_tool.lua")

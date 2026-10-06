@@ -129,7 +129,13 @@ schematics = {
 	--Starforge Bag
 	{path="object/draft_schematic/clothing/custom/starforge_backpack_schematic.iff"},
 	{path="object/draft_schematic/clothing/custom/backpack_mando_cape_schematic.iff"},
+
+	--SEA Tool
+	{path="object/draft_schematic/clothing/sea_tool.iff"},
+
 	--Mechanic
+	{path="object/draft_schematic/vehicle/vehicle_repair_tool.iff"},
+	{path="object/draft_schematic/vehicle/vehicle_repair_kit.iff"},
 	{path="object/draft_schematic/vehicle/civilian/landspeeder_x31.iff"},
 	{path="object/draft_schematic/vehicle/civilian/speederbike_flash.iff"},
 	{path="object/draft_schematic/vehicle/civilian/air2_swoop_speeder.iff"},

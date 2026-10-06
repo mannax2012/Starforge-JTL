@@ -41,36 +41,23 @@
 --this exception also makes it possible to release a modified version 
 
 
-object_draft_schematic_slicing_slicing_armor_upgrade_kit = object_draft_schematic_slicing_shared_slicing_armor_upgrade_kit:new {
-	templateType = DRAFTSCHEMATIC,
+object_tangible_item_vehicle_repair_kit = object_tangible_item_shared_vehicle_repair_kit:new {
+	templateType = REPAIRTOOL,
+	gameObjectType = 32771, -- SceneObjectType::REPAIRTOOL
+	objectMenuComponent = "TangibleObjectMenuComponent",
+	canRepairType = 0,
+	useCount = 10,
+	stationType = 7,
 
-	customObjectName = "Armor Upgrade Kit",
+	numberExperimentalProperties = {1, 1, 1, 1},
+	experimentalProperties = {"XX", "XX", "UT", "CD"},
+	experimentalWeights = {1, 1, 1, 1},
+	experimentalGroupTitles = {"null", "null", "exp_charges", "exp_quality"},
+	experimentalSubGroupTitles = {"null", "null", "charges", "quality"},
+	experimentalMin = {0, 0, 10, 1},
+	experimentalMax = {0, 0, 20, 100},
+	experimentalCombineType = {0, 0, 1, 1},
+	experimentalPrecision = {0, 0, 0, 0},
+}
 
-	craftingToolTab = 524288, -- (See DraftSchematicObjectTemplate.h)
-	complexity = 15,
-	size = 1,
-	factoryCrateType = "object/factory/factory_crate_electronics.iff",
-
-	xpType = "crafting_clothing_armor",
-	xp = 300,
-
-	assemblySkill = "armor_assembly",
-	experimentingSkill = "armor_experimentation",
-	customizationSkill = "armor_customization",
-
-	customizationOptions = {},
-	customizationStringNames = {},
-	customizationDefaults = {},
-
-	ingredientTemplateNames = {"craft_item_ingredients_n", "craft_item_ingredients_n", "craft_item_ingredients_n"},
-	ingredientTitleNames = {"assembly_enclosure", "tools", "chemicals"},
-	ingredientSlotType = {0, 0, 0},
-	resourceTypes = {"metal", "metal", "chemical"},
-	resourceQuantities = {10, 10, 10},
-	contribution = {100, 100, 100},
-
-
-	targetTemplate = "object/tangible/slicing/slicing_armor_upgrade_kit.iff",
-
-	additionalTemplates = { }
-} ObjectTemplates:addTemplate(object_draft_schematic_slicing_slicing_armor_upgrade_kit, "object/draft_schematic/slicing/slicing_armor_upgrade_kit.iff")
+ObjectTemplates:addTemplate(object_tangible_item_vehicle_repair_kit, "object/tangible/item/vehicle_repair_kit.iff")

@@ -41,36 +41,8 @@
 --this exception also makes it possible to release a modified version 
 
 
-object_draft_schematic_slicing_slicing_armor_upgrade_kit = object_draft_schematic_slicing_shared_slicing_armor_upgrade_kit:new {
-	templateType = DRAFTSCHEMATIC,
+object_tangible_item_clothing_sea_tool = object_tangible_item_shared_clothing_sea_tool:new {
+    objectMenuComponent = "SEAToolMenuComponent",
+}
 
-	customObjectName = "Armor Upgrade Kit",
-
-	craftingToolTab = 524288, -- (See DraftSchematicObjectTemplate.h)
-	complexity = 15,
-	size = 1,
-	factoryCrateType = "object/factory/factory_crate_electronics.iff",
-
-	xpType = "crafting_clothing_armor",
-	xp = 300,
-
-	assemblySkill = "armor_assembly",
-	experimentingSkill = "armor_experimentation",
-	customizationSkill = "armor_customization",
-
-	customizationOptions = {},
-	customizationStringNames = {},
-	customizationDefaults = {},
-
-	ingredientTemplateNames = {"craft_item_ingredients_n", "craft_item_ingredients_n", "craft_item_ingredients_n"},
-	ingredientTitleNames = {"assembly_enclosure", "tools", "chemicals"},
-	ingredientSlotType = {0, 0, 0},
-	resourceTypes = {"metal", "metal", "chemical"},
-	resourceQuantities = {10, 10, 10},
-	contribution = {100, 100, 100},
-
-
-	targetTemplate = "object/tangible/slicing/slicing_armor_upgrade_kit.iff",
-
-	additionalTemplates = { }
-} ObjectTemplates:addTemplate(object_draft_schematic_slicing_slicing_armor_upgrade_kit, "object/draft_schematic/slicing/slicing_armor_upgrade_kit.iff")
+ObjectTemplates:addTemplate(object_tangible_item_clothing_sea_tool, "object/tangible/item/clothing_sea_tool.iff")

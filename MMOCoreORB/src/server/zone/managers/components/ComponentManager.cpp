@@ -168,6 +168,7 @@
 #include "server/zone/objects/tangible/components/PobShipObjectMenuComponent.h"
 #include "server/zone/objects/tangible/components/StarshipPaintKitObjectMenuComponent.h"
 #include "server/zone/objects/tangible/components/StarshipTextureKitObjectMenuComponent.h"
+#include "server/zone/objects/tangible/components/SEAToolMenuComponent.h"
 
 ComponentManager::ComponentManager() {
 	components.put("ContainerComponent", new ContainerComponent());
@@ -388,4 +389,5 @@ ComponentManager::ComponentManager() {
 	components.put("PobShipObjectMenuComponent", new PobShipObjectMenuComponent());
 	components.put("StarshipPaintKitObjectMenuComponent", new StarshipPaintKitObjectMenuComponent());
 	components.put("StarshipTextureKitObjectMenuComponent", new StarshipTextureKitObjectMenuComponent());
+	components.put("SEAToolMenuComponent", new SEAToolMenuComponent());
 }

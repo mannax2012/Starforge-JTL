@@ -45,6 +45,11 @@ object_draft_schematic_item_shared_item_survey_tool_creature = SharedDraftSchema
 ObjectTemplates:addClientTemplate(object_draft_schematic_item_shared_item_survey_tool_creature, 
 "object/draft_schematic/item/shared_item_survey_tool_creature.iff")
 
+object_draft_schematic_item_shared_sea_tool = SharedDraftSchematicObjectTemplate:new {
+	clientTemplateFileName = "object/draft_schematic/clothing/shared_sea_tool.iff"}
+ObjectTemplates:addClientTemplate(object_draft_schematic_item_shared_sea_tool, 
+"object/draft_schematic/clothing/shared_sea_tool.iff")
+
 object_draft_schematic_item_shared_craftable_bug_habitat = SharedDraftSchematicObjectTemplate:new {
 	clientTemplateFileName = "object/draft_schematic/item/shared_craftable_bug_habitat.iff"
 	--Data below here is deprecated and loaded from the tres, keeping for easy lookups

@@ -41,36 +41,40 @@
 --this exception also makes it possible to release a modified version 
 
 
-object_draft_schematic_slicing_slicing_armor_upgrade_kit = object_draft_schematic_slicing_shared_slicing_armor_upgrade_kit:new {
-	templateType = DRAFTSCHEMATIC,
+object_draft_schematic_vehicle_vehicle_repair_tool = object_draft_schematic_vehicle_shared_vehicle_repair_tool:new {
 
-	customObjectName = "Armor Upgrade Kit",
+   templateType = DRAFTSCHEMATIC,
 
-	craftingToolTab = 524288, -- (See DraftSchematicObjectTemplate.h)
-	complexity = 15,
-	size = 1,
-	factoryCrateType = "object/factory/factory_crate_electronics.iff",
+   customObjectName = "Vehicle Customization Kit",
 
-	xpType = "crafting_clothing_armor",
-	xp = 300,
+   craftingToolTab = 16, -- (See DraftSchematicObjectTemplate.h)
+   complexity = 12, 
+   size = 1, 
+   factoryCrateType = "object/factory/factory_crate_electronics.iff",
+   
+   xpType = "crafting_general", 
+   xp = 40, 
 
-	assemblySkill = "armor_assembly",
-	experimentingSkill = "armor_experimentation",
-	customizationSkill = "armor_customization",
+   assemblySkill = "general_assembly", 
+   experimentingSkill = "general_experimentation", 
+   customizationSkill = "clothing_customization", 
 
-	customizationOptions = {},
-	customizationStringNames = {},
-	customizationDefaults = {},
+   customizationOptions = {},
+   customizationStringNames = {},
+   customizationDefaults = {},
 
-	ingredientTemplateNames = {"craft_item_ingredients_n", "craft_item_ingredients_n", "craft_item_ingredients_n"},
-	ingredientTitleNames = {"assembly_enclosure", "tools", "chemicals"},
-	ingredientSlotType = {0, 0, 0},
-	resourceTypes = {"metal", "metal", "chemical"},
-	resourceQuantities = {10, 10, 10},
-	contribution = {100, 100, 100},
+   ingredientTemplateNames = {"craft_item_ingredients_n", "craft_droid_ingredients_n", "craft_droid_ingredients_n", "craft_item_ingredients_n"},
+   ingredientTitleNames = {"assembly_enclosure", "thermal_shielding", "colors", "electronic_control_unit"},
+   ingredientSlotType = {0, 0, 0, 1},
+   resourceTypes = {"metal", "mineral", "radioactive", "object/tangible/component/item/shared_electronic_control_unit.iff"},
+   resourceQuantities = {22, 9, 16, 1},
+   contribution = {100, 100, 100, 100},
 
 
-	targetTemplate = "object/tangible/slicing/slicing_armor_upgrade_kit.iff",
+   targetTemplate = "object/tangible/item/vehicle_repair_tool.iff",
 
-	additionalTemplates = { }
-} ObjectTemplates:addTemplate(object_draft_schematic_slicing_slicing_armor_upgrade_kit, "object/draft_schematic/slicing/slicing_armor_upgrade_kit.iff")
+   additionalTemplates = {
+             }
+
+}
+ObjectTemplates:addTemplate(object_draft_schematic_vehicle_vehicle_repair_tool, "object/draft_schematic/vehicle/vehicle_repair_tool.iff")

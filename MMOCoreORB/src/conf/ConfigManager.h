@@ -746,6 +746,45 @@ namespace conf {
 			return cachedMinSpawnDelay;
 		}
 
+		inline int getDestroyedLairSpawnCooldownMin() {
+			static uint32 cachedVersion = 0;
+			static int cachedCooldownMin;
+
+			if (configVersion.get() > cachedVersion) {
+				Locker guard(&mutex);
+				cachedCooldownMin = getInt("Core3.Regions.destroyedLairSpawnCooldownMin", 15000);
+				cachedVersion = configVersion.get();
+			}
+
+			return cachedCooldownMin;
+		}
+
+		inline int getDestroyedLairSpawnCooldownMax() {
+			static uint32 cachedVersion = 0;
+			static int cachedCooldownMax;
+
+			if (configVersion.get() > cachedVersion) {
+				Locker guard(&mutex);
+				cachedCooldownMax = getInt("Core3.Regions.destroyedLairSpawnCooldownMax", 30000);
+				cachedVersion = configVersion.get();
+			}
+
+			return cachedCooldownMax;
+		}
+
+		inline float getDestroyedLairNoSpawnRadius() {
+			static uint32 cachedVersion = 0;
+			static float cachedNoSpawnRadius;
+
+			if (configVersion.get() > cachedVersion) {
+				Locker guard(&mutex);
+				cachedNoSpawnRadius = getFloat("Core3.Regions.destroyedLairNoSpawnRadius", 128.f);
+				cachedVersion = configVersion.get();
+			}
+
+			return cachedNoSpawnRadius;
+		}
+
 		inline int getMinSpaceSpawnInterval() {
 			static uint32 cachedVersion = 0;
 			static int cachedMinSpaceSpawnDelay;
